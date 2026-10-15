@@ -347,6 +347,7 @@
 
             <div class="note" id="playNote">Pick a version, then Play. The first Play on a version
               downloads the game and a JDK.</div>
+            <div class="note" id="staticHelp" hidden></div>
 
             <div class="fields">
               <div class="field">
@@ -534,6 +535,9 @@
 
   // Served two ways: by tools/local-ui.py, which can play, and as plain files on GitHub Pages,
   // which cannot start anything on a visitor's machine. Everything shown from data is a file.
+  // The browser-native launcher is the project's other route: there the client runs inside the
+  // page, so a published page can really play, which this one deliberately cannot.
+  const BROWSER_NATIVE = "https://amphibiandev.github.io/webmc-port/";
   async function fetchData(name) {
     try {
       return await fetchJson("api/" + name);
@@ -595,22 +599,36 @@
   // ------------------------------------------------------------- static copy
   function goStatic(problem) {
     state.static = true;
-    el("playButton").disabled = true;
+    // Left clickable on purpose: a greyed-out button explains nothing, and the click is worth
+    // answering with the two ways to actually play.
+    el("playButton").disabled = false;
+    el("playButton").setAttribute("aria-disabled", "true");
     el("stopButton").disabled = true;
     el("pfHint").textContent = "Published copy: there is no launcher service on this machine, so "
       + "nothing here can start a game. The catalogue, the playability scan and the mods view work "
       + "because they are files.";
     el("pfList").textContent = "";
     el("pfActions").textContent = "";
-    el("playNote").textContent = "To play: clone the repository and run "
-      + "python3 tools/local-ui.py — the same page with a launcher behind it, installing the game "
-      + "under ~/.webmc on your own machine.";
+    el("playNote").textContent = "Play on this page needs the launcher service that only runs on "
+      + "your own machine — read the line below for the two ways to play.";
+    const help = el("staticHelp");
+    help.hidden = false;
+    help.textContent = "Want a Play button that works in a web page? ";
+    const link = document.createElement("a");
+    link.href = BROWSER_NATIVE;
+    link.textContent = "Open the browser-native launcher";
+    help.append(link, document.createTextNode(
+      " — there the client runs inside the page, so nothing needs installing. "
+      + "To use this one instead: "));
+    const code = document.createElement("code");
+    code.textContent = "git clone https://github.com/AmphibianDev/webmc-launcher && cd webmc-launcher && python3 tools/local-ui.py";
+    help.append(code, document.createTextNode(" and open 127.0.0.1:8130."));
     el("sessionHint").textContent = "not running (published copy)";
     el("log").textContent = "this copy of the page has no launcher behind it.\n\n"
-      + "git clone <this repository>\ncd <the clone>\npython3 tools/local-ui.py\n\n"
-      + "then open http://127.0.0.1:8130/ — that copy installs Minecraft into\n"
-      + "~/.webmc/minecraft and runs it natively. No stream, no runner, nothing of the game is\n"
-      + "kept in the repository.\n";
+      + "git clone https://github.com/AmphibianDev/webmc-launcher\ncd webmc-launcher\n"
+      + "python3 tools/local-ui.py\n\nthen open http://127.0.0.1:8130/ — that copy installs Minecraft\n"
+      + "into ~/.webmc/minecraft and runs it natively on this machine. No stream, no runner,\n"
+      + "nothing of the game is kept in the repository.\n";
     if (problem && problem.message) el("buildInfo").title = String(problem.message);
   }
 
@@ -983,6 +1001,14 @@
   }
 
   async function play() {
+    if (state.static) {
+      // Not a failure: say where Play does work, and open the detail rather than leaving the
+      // click unanswered.
+      showPane("pane-session");
+      el("playNote").textContent = "This published copy has no launcher behind it. Use the "
+        + "browser-native launcher linked below, or run tools/local-ui.py on your own machine.";
+      return;
+    }
     if (!state.chosen) return;
     el("playButton").disabled = true;
     el("log").textContent = "";

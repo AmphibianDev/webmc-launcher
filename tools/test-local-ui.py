@@ -140,6 +140,10 @@ def test_page() -> None:
             "fetchData" in script and 'fetchJson(name + ".json")' in script,
         "and says so instead of offering a Play that cannot work": "goStatic" in script
                                                                      and "published copy" in script,
+        "the published copy still answers a Play click, and points somewhere it does work":
+            'if (state.static)' in script and "BROWSER_NATIVE" in script
+            and "amphibiandev.github.io/webmc-port" in script
+            and 'id="staticHelp"' in page,
         "the switcher can filter by what runs on this machine": 'data-play="native"' in page
                                                                and "state.plays" in script,
         "the switcher defaults to the arm64 ones": re.search(
