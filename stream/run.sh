@@ -5,6 +5,7 @@
 #   bash stream/run.sh --password pick-something    # http://127.0.0.1:8080
 #   bash stream/run.sh --password ... --public      # on every interface
 #   WEBMC_STREAM_PASSWORD=... bash stream/run.sh --tunnel
+#   bash stream/run.sh --password ... --user alice --port 9000 --seconds 120
 #
 # This is the only way this project's streaming half is meant to run: on a
 # machine you own or rent. It is deliberately not a workflow — see STREAMING.md
@@ -23,11 +24,13 @@ NAME="${WEBMC_NAME:-webmc-stream}"
 PORT="${WEBMC_STREAM_PORT:-8080}"
 
 password="${WEBMC_STREAM_PASSWORD:-}"
+user="${WEBMC_STREAM_USER:-webmc}"
 public=0
 tunnel=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --password) password="${2:-}"; shift 2 ;;
+    --user)     user="${2:-}"; shift 2 ;;
     --port)     PORT="${2:-}"; shift 2 ;;
     --image)    IMAGE="${2:-}"; shift 2 ;;
     --seconds)  seconds="${2:-}"; WEBMC_SECONDS="${2:-}"; shift 2 ;;
@@ -88,6 +91,7 @@ else
 fi
 
 env_args=(
+  -e "SELKIES_BASIC_AUTH_USER=${user}"
   -e "SELKIES_BASIC_AUTH_PASSWORD=${password}"
   -e "WEBMC_MC_DIR=/home/ubuntu/.webmc/minecraft"
 )
@@ -100,6 +104,21 @@ done
 
 docker rm -f "$NAME" >/dev/null 2>&1 || true
 
+# GHCR packages are private when they are first published, so a host that has
+# never logged in will get a 403 that says almost nothing. Pull first and say
+# the actual remedy rather than letting `docker run` report it.
+if ! docker pull -q "$IMAGE" >/dev/null 2>&1; then
+  if ! docker image inspect "$IMAGE" >/dev/null 2>&1; then
+    fail "cannot pull ${IMAGE}.
+  If it is still a private package (the default on first publish), log in once:
+      echo \$GITHUB_TOKEN | docker login ghcr.io -u <your-github-username> --password-stdin
+  or make the package public in its settings, or build it here and pass --image:
+      docker build -f stream/Dockerfile -t webmc-stream:local .
+      bash stream/run.sh --image webmc-stream:local --password ..."
+  fi
+  say "image: using the copy already on this machine (no registry reachable)"
+fi
+
 say "starting ${IMAGE}"
 # ${arr[@]+...} rather than ${arr[@]}: macOS ships bash 3.2, where an empty
 # array under `set -u` is an unbound variable — and "no /dev/dri" is the common
@@ -110,7 +129,7 @@ docker run -d --name "$NAME" --shm-size=2g \
   "$IMAGE" >/dev/null || fail "docker run failed — read the message above"
 
 say ""
-say "The session is up. Open http://localhost:${PORT} and log in as webmc."
+say "The session is up. Open http://localhost:${PORT} and log in as ${user}."
 say "It takes a minute on the first run: the JDK, then Minecraft, then the mods."
 say ""
 say "  logs:    docker logs -f ${NAME}          (Selkies and the session)"

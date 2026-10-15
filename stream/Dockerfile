@@ -107,10 +107,15 @@ ENV WEBMC_MC_DIR="/home/ubuntu/.webmc/minecraft"
 
 # No password is baked in, deliberately: an image with a password in it is an
 # image with the same password in everyone's session. The base image warns at
-# startup while its published placeholder login is still in use — set
-# SELKIES_BASIC_AUTH_PASSWORD (webmc-play.sh's run.sh does this for you) before
-# anything other than this machine can reach the port.
-ENV SELKIES_BASIC_AUTH_USER="webmc"
+# startup while its published placeholder login is still in use. stream/run.sh
+# passes SELKIES_BASIC_AUTH_USER and SELKIES_BASIC_AUTH_PASSWORD at `docker run`
+# time; set the password before anything other than this machine can reach the
+# port.
+#
+# Neither is set here with ENV, and not only for tidiness: Docker's build linter
+# flags any ENV whose name mentions auth, because the moment somebody turns one
+# of these into an actual secret it would be readable in `docker history`
+# forever. Keeping credentials out of the image means the image has none to leak.
 
 # Back to the session user the base image ships. The `USER 0` above is only for
 # installing packages; the container has to run, and the session has to log in,

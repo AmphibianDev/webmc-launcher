@@ -26,9 +26,21 @@ WEBMC_STREAM_PASSWORD=... bash stream/run.sh --public
 WEBMC_STREAM_PASSWORD=... bash stream/run.sh --tunnel   # needs cloudflared
 ```
 
-Then open <http://localhost:8080>, log in as `webmc`, and the desktop comes up with Minecraft
-starting in it. The first run downloads a JDK (Adoptium), the client (Mojang), Fabric and the
-assets, which takes a few minutes; after that they are in the mounted volume and it is quick.
+The first pull needs a GitHub login, because a GHCR package is private when it is first
+published — which is the default, and the opposite of convenient for this use:
+
+```sh
+echo "$GITHUB_TOKEN" | docker login ghcr.io -u your-github-username --password-stdin
+```
+
+Make the package public in its settings (`github.com/users/AmphibianDev/packages`) and no
+host ever needs a credential to run the stream. `run.sh` says the same thing, in the same
+words, when the pull is refused.
+
+Then open <http://localhost:8080>, log in as `webmc` (`--user` changes it), and the desktop
+comes up with Minecraft starting in it. The first run downloads a JDK (Adoptium), the client
+(Mojang), Fabric and the assets, which takes a few minutes; after that they are in the
+mounted volume and it is quick.
 
 The raw command, if you would rather see it:
 
@@ -132,7 +144,13 @@ over, and `docker load` it there. It is a normal OCI image for `linux/amd64` and
 | `tools/`, `mods/` | this repository's own code, at `/opt/webmc`, so `play-local.py` resolves `ROOT` the way it does on a desktop |
 | `/etc/xdg/autostart/webmc-play.desktop` | starts the game inside the session, through `stream/webmc-play.sh` |
 
-No password, no game, no jars, and no session that starts on its own.
+No password, no game, no jars, and no session that starts on its own. The login is supplied
+at `docker run`; it is not an `ENV` in the image, because anything an image records stays
+readable in `docker history` long after it stops being a secret.
+
+Built and published by
+[`.github/workflows/publish-stream-image.yml`](../.github/workflows/publish-stream-image.yml)
+for `linux/amd64` and `linux/arm64`.
 
 ## If something goes wrong
 

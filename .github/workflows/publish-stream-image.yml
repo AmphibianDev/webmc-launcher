@@ -95,9 +95,9 @@ jobs:
           tags: |
             ${{ steps.ref.outputs.image }}:latest
             ${{ steps.ref.outputs.image }}:sha-${{ github.sha }}
-          # Anonymous pulls, so a host that just wants to run the stream needs
-          # no GitHub login at all. Point this at the package's own settings if
-          # that turns out to be wrong for you.
+          # Note: a GHCR package is PRIVATE when it is first published. Until it
+          # is made public in its settings a host needs `docker login ghcr.io`
+          # once before it can pull - stream/run.sh says so when the pull fails.
           labels: |
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
             org.opencontainers.image.title=WebMC stream host
