@@ -1,0 +1,19 @@
+# Build context for stream/Dockerfile. Nothing here is needed by it.
+
+.git
+.github
+.gitignore
+.nojekyll
+.DS_Store
+
+# the published page and the catalogue: the image serves a stream, not the site
+index.html
+playable.json
+versions.json
+
+# logs, caches, and the bundle this tree was assembled from
+*.log
+**/__pycache__
+*__pycache__/**
+*.bundle
+*.pyc

@@ -1,16 +1,22 @@
 # Streaming a session, on a machine you own
 
-Two shapes live in this project, and they are deliberately different things:
+Three shapes live in this project, and they are deliberately different things:
 
 | | |
 | --- | --- |
 | **the launcher page** (`index.html`) | starts Minecraft on the machine that opened the page. Latency is whatever your own machine is. |
 | **this** (`tools/stream.sh`) | runs the game on one machine and lets a browser somewhere else watch it, through a temporary https URL. |
+| **`stream/`** | the same thing packaged as a container, so a host needs one `docker run` instead of the packages below. `stream/README.md`. |
 
 `tools/stream.sh` is the whole stack: a virtual screen (`Xvfb`) → the encoder (Selkies, or
 `x11vnc` + noVNC when the browser cannot decode H.264) → a temporary Cloudflare tunnel →
 an https URL. It prints that URL at the end, and writes it into `docs/session.json` when
 that file exists, so a launcher page can pick it up without anybody needing a token.
+
+`stream/` is that same stack built once as an image — Selkies' own reference desktop image,
+this project's `tools/` on top, and the game downloaded at first run rather than carried in
+the image. Use it when the host has Docker (most VMs, and an Apple Silicon Mac); use
+`stream.sh` when it is a plain Linux box that does not.
 
 ## Where it may run
 
@@ -82,6 +88,27 @@ Useful dials, all environment variables:
 | `WEBMC_STREAM_FPS` | `30` | frame cap |
 | `WEBMC_VIDEO_BITRATE` | `4000` | kbps cap for the encoder |
 | `WEBMC_VIDEO_CRF` | `28` | higher is a cheaper picture |
+
+## The container, in short
+
+```sh
+bash stream/run.sh --password pick-something     # http://127.0.0.1:8080, this machine only
+WEBMC_STREAM_PASSWORD=... bash stream/run.sh --public
+```
+
+The image is built and published by `.github/workflows/publish-stream-image.yml`, which
+builds it for `linux/amd64` and `linux/arm64` (an Apple Silicon Mac, an Always Free Ampere
+VM) and pushes it to GHCR. That workflow builds and publishes and nothing else: it holds no
+session a player could reach. Building and publishing the project's software is what Actions
+is for; the thing below is not.
+
+Would you rather build it yourself, or run it on a host with no registry access? Then
+
+```sh
+docker build -f stream/Dockerfile -t webmc-launcher-stream:local .
+```
+
+and `docker save` / `docker load` it across.
 
 ## Worth knowing
 

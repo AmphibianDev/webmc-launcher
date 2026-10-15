@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Minecraft
+GenericName=WebMC session
+Comment=Run the real Minecraft: Java Edition client on this machine
+Exec=/opt/webmc/webmc-play.sh
+Icon=minecraft
+Terminal=false
+StartupNotify=false
+# lxqt-session reads /etc/xdg/autostart and starts the entries whose OnlyShowIn
+# names the desktop it is running, which is how the panel and the PolicyKit
+# agent are started in this image too.
+OnlyShowIn=LXQt;
+X-LXQt-Need-Tray=false
