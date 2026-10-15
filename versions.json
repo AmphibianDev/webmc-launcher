@@ -1,0 +1,4599 @@
+{
+  "latest": {
+    "release": "26.3",
+    "snapshot": "26.4-snapshot-3"
+  },
+  "count": 918,
+  "versions": [
+    {
+      "id": "26.4-snapshot-3",
+      "type": "snapshot",
+      "released": "2026-10-06"
+    },
+    {
+      "id": "26.4-snapshot-2",
+      "type": "snapshot",
+      "released": "2026-09-29"
+    },
+    {
+      "id": "26.4-snapshot-1",
+      "type": "snapshot",
+      "released": "2026-09-22"
+    },
+    {
+      "id": "26.3",
+      "type": "release",
+      "released": "2026-09-15"
+    },
+    {
+      "id": "26.3-rc-3",
+      "type": "snapshot",
+      "released": "2026-09-14"
+    },
+    {
+      "id": "26.3-rc-2",
+      "type": "snapshot",
+      "released": "2026-09-11"
+    },
+    {
+      "id": "26.3-rc-1",
+      "type": "snapshot",
+      "released": "2026-09-10"
+    },
+    {
+      "id": "26.3-pre-3",
+      "type": "snapshot",
+      "released": "2026-09-08"
+    },
+    {
+      "id": "26.3-pre-2",
+      "type": "snapshot",
+      "released": "2026-09-04"
+    },
+    {
+      "id": "26.3-pre-1",
+      "type": "snapshot",
+      "released": "2026-09-01"
+    },
+    {
+      "id": "26.3-snapshot-10",
+      "type": "snapshot",
+      "released": "2026-08-25"
+    },
+    {
+      "id": "26.3-snapshot-9",
+      "type": "snapshot",
+      "released": "2026-08-17"
+    },
+    {
+      "id": "26.3-snapshot-8",
+      "type": "snapshot",
+      "released": "2026-08-12"
+    },
+    {
+      "id": "26.3-snapshot-7",
+      "type": "snapshot",
+      "released": "2026-08-04"
+    },
+    {
+      "id": "26.3-snapshot-6",
+      "type": "snapshot",
+      "released": "2026-07-28"
+    },
+    {
+      "id": "26.3-snapshot-5",
+      "type": "snapshot",
+      "released": "2026-07-21"
+    },
+    {
+      "id": "26.3-snapshot-4",
+      "type": "snapshot",
+      "released": "2026-07-16"
+    },
+    {
+      "id": "26.3-snapshot-3",
+      "type": "snapshot",
+      "released": "2026-07-07"
+    },
+    {
+      "id": "26.3-snapshot-2",
+      "type": "snapshot",
+      "released": "2026-06-30"
+    },
+    {
+      "id": "26.3-snapshot-1",
+      "type": "snapshot",
+      "released": "2026-06-23"
+    },
+    {
+      "id": "26.2",
+      "type": "release",
+      "released": "2026-06-16"
+    },
+    {
+      "id": "26.2-rc-2",
+      "type": "snapshot",
+      "released": "2026-06-12"
+    },
+    {
+      "id": "26.2-rc-1",
+      "type": "snapshot",
+      "released": "2026-06-11"
+    },
+    {
+      "id": "26.2-pre-6",
+      "type": "snapshot",
+      "released": "2026-06-10"
+    },
+    {
+      "id": "26.2-pre-5",
+      "type": "snapshot",
+      "released": "2026-06-08"
+    },
+    {
+      "id": "26.2-pre-4",
+      "type": "snapshot",
+      "released": "2026-06-04"
+    },
+    {
+      "id": "26.2-pre-3",
+      "type": "snapshot",
+      "released": "2026-06-02"
+    },
+    {
+      "id": "26.2-pre-2",
+      "type": "snapshot",
+      "released": "2026-05-28"
+    },
+    {
+      "id": "26.2-pre-1",
+      "type": "snapshot",
+      "released": "2026-05-26"
+    },
+    {
+      "id": "26.2-snapshot-8",
+      "type": "snapshot",
+      "released": "2026-05-19"
+    },
+    {
+      "id": "26.2-snapshot-7",
+      "type": "snapshot",
+      "released": "2026-05-12"
+    },
+    {
+      "id": "26.2-snapshot-6",
+      "type": "snapshot",
+      "released": "2026-05-05"
+    },
+    {
+      "id": "26.2-snapshot-5",
+      "type": "snapshot",
+      "released": "2026-04-28"
+    },
+    {
+      "id": "26.2-snapshot-4",
+      "type": "snapshot",
+      "released": "2026-04-21"
+    },
+    {
+      "id": "26.2-snapshot-3",
+      "type": "snapshot",
+      "released": "2026-04-14"
+    },
+    {
+      "id": "26.2-snapshot-2",
+      "type": "snapshot",
+      "released": "2026-04-09"
+    },
+    {
+      "id": "26.1.2",
+      "type": "release",
+      "released": "2026-04-09"
+    },
+    {
+      "id": "26.1.2-rc-1",
+      "type": "snapshot",
+      "released": "2026-04-08"
+    },
+    {
+      "id": "26.2-snapshot-1",
+      "type": "snapshot",
+      "released": "2026-04-07"
+    },
+    {
+      "id": "26w14a",
+      "type": "snapshot",
+      "released": "2026-04-01"
+    },
+    {
+      "id": "26.1.1",
+      "type": "release",
+      "released": "2026-04-01"
+    },
+    {
+      "id": "26.1.1-rc-1",
+      "type": "snapshot",
+      "released": "2026-03-31"
+    },
+    {
+      "id": "26.1",
+      "type": "release",
+      "released": "2026-03-24"
+    },
+    {
+      "id": "26.1-rc-3",
+      "type": "snapshot",
+      "released": "2026-03-23"
+    },
+    {
+      "id": "26.1-rc-2",
+      "type": "snapshot",
+      "released": "2026-03-20"
+    },
+    {
+      "id": "26.1-rc-1",
+      "type": "snapshot",
+      "released": "2026-03-19"
+    },
+    {
+      "id": "26.1-pre-3",
+      "type": "snapshot",
+      "released": "2026-03-17"
+    },
+    {
+      "id": "26.1-pre-2",
+      "type": "snapshot",
+      "released": "2026-03-13"
+    },
+    {
+      "id": "26.1-pre-1",
+      "type": "snapshot",
+      "released": "2026-03-10"
+    },
+    {
+      "id": "26.1-snapshot-11",
+      "type": "snapshot",
+      "released": "2026-03-03"
+    },
+    {
+      "id": "26.1-snapshot-10",
+      "type": "snapshot",
+      "released": "2026-02-24"
+    },
+    {
+      "id": "26.1-snapshot-9",
+      "type": "snapshot",
+      "released": "2026-02-18"
+    },
+    {
+      "id": "26.1-snapshot-8",
+      "type": "snapshot",
+      "released": "2026-02-17"
+    },
+    {
+      "id": "26.1-snapshot-7",
+      "type": "snapshot",
+      "released": "2026-02-11"
+    },
+    {
+      "id": "26.1-snapshot-6",
+      "type": "snapshot",
+      "released": "2026-02-03"
+    },
+    {
+      "id": "26.1-snapshot-5",
+      "type": "snapshot",
+      "released": "2026-01-27"
+    },
+    {
+      "id": "26.1-snapshot-4",
+      "type": "snapshot",
+      "released": "2026-01-20"
+    },
+    {
+      "id": "26.1-snapshot-3",
+      "type": "snapshot",
+      "released": "2026-01-13"
+    },
+    {
+      "id": "26.1-snapshot-2",
+      "type": "snapshot",
+      "released": "2026-01-07"
+    },
+    {
+      "id": "26.1-snapshot-1",
+      "type": "snapshot",
+      "released": "2025-12-16"
+    },
+    {
+      "id": "1.21.11",
+      "type": "release",
+      "released": "2025-12-09"
+    },
+    {
+      "id": "1.21.11-rc3",
+      "type": "snapshot",
+      "released": "2025-12-08"
+    },
+    {
+      "id": "1.21.11-rc2",
+      "type": "snapshot",
+      "released": "2025-12-05"
+    },
+    {
+      "id": "1.21.11-rc1",
+      "type": "snapshot",
+      "released": "2025-12-04"
+    },
+    {
+      "id": "1.21.11-pre5",
+      "type": "snapshot",
+      "released": "2025-12-03"
+    },
+    {
+      "id": "1.21.11-pre4",
+      "type": "snapshot",
+      "released": "2025-12-01"
+    },
+    {
+      "id": "1.21.11-pre3",
+      "type": "snapshot",
+      "released": "2025-11-25"
+    },
+    {
+      "id": "1.21.11-pre2",
+      "type": "snapshot",
+      "released": "2025-11-21"
+    },
+    {
+      "id": "1.21.11-pre1",
+      "type": "snapshot",
+      "released": "2025-11-19"
+    },
+    {
+      "id": "25w46a",
+      "type": "snapshot",
+      "released": "2025-11-11"
+    },
+    {
+      "id": "25w45a",
+      "type": "snapshot",
+      "released": "2025-11-04"
+    },
+    {
+      "id": "25w44a",
+      "type": "snapshot",
+      "released": "2025-10-28"
+    },
+    {
+      "id": "25w43a",
+      "type": "snapshot",
+      "released": "2025-10-21"
+    },
+    {
+      "id": "25w42a",
+      "type": "snapshot",
+      "released": "2025-10-14"
+    },
+    {
+      "id": "25w41a",
+      "type": "snapshot",
+      "released": "2025-10-09"
+    },
+    {
+      "id": "1.21.10",
+      "type": "release",
+      "released": "2025-10-07"
+    },
+    {
+      "id": "1.21.10-rc1",
+      "type": "snapshot",
+      "released": "2025-10-02"
+    },
+    {
+      "id": "1.21.9",
+      "type": "release",
+      "released": "2025-09-30"
+    },
+    {
+      "id": "1.21.9-rc1",
+      "type": "snapshot",
+      "released": "2025-09-25"
+    },
+    {
+      "id": "1.21.9-pre4",
+      "type": "snapshot",
+      "released": "2025-09-23"
+    },
+    {
+      "id": "1.21.9-pre3",
+      "type": "snapshot",
+      "released": "2025-09-22"
+    },
+    {
+      "id": "1.21.9-pre2",
+      "type": "snapshot",
+      "released": "2025-09-19"
+    },
+    {
+      "id": "1.21.9-pre1",
+      "type": "snapshot",
+      "released": "2025-09-16"
+    },
+    {
+      "id": "25w37a",
+      "type": "snapshot",
+      "released": "2025-09-09"
+    },
+    {
+      "id": "25w36b",
+      "type": "snapshot",
+      "released": "2025-09-02"
+    },
+    {
+      "id": "25w36a",
+      "type": "snapshot",
+      "released": "2025-09-02"
+    },
+    {
+      "id": "25w35a",
+      "type": "snapshot",
+      "released": "2025-08-26"
+    },
+    {
+      "id": "25w34b",
+      "type": "snapshot",
+      "released": "2025-08-19"
+    },
+    {
+      "id": "25w34a",
+      "type": "snapshot",
+      "released": "2025-08-19"
+    },
+    {
+      "id": "25w33a",
+      "type": "snapshot",
+      "released": "2025-08-12"
+    },
+    {
+      "id": "25w32a",
+      "type": "snapshot",
+      "released": "2025-08-05"
+    },
+    {
+      "id": "25w31a",
+      "type": "snapshot",
+      "released": "2025-07-29"
+    },
+    {
+      "id": "1.21.8",
+      "type": "release",
+      "released": "2025-07-17"
+    },
+    {
+      "id": "1.21.8-rc1",
+      "type": "snapshot",
+      "released": "2025-07-15"
+    },
+    {
+      "id": "1.21.7",
+      "type": "release",
+      "released": "2025-06-30"
+    },
+    {
+      "id": "1.21.7-rc2",
+      "type": "snapshot",
+      "released": "2025-06-26"
+    },
+    {
+      "id": "1.21.7-rc1",
+      "type": "snapshot",
+      "released": "2025-06-25"
+    },
+    {
+      "id": "1.21.6",
+      "type": "release",
+      "released": "2025-06-17"
+    },
+    {
+      "id": "1.21.6-rc1",
+      "type": "snapshot",
+      "released": "2025-06-12"
+    },
+    {
+      "id": "1.21.6-pre4",
+      "type": "snapshot",
+      "released": "2025-06-10"
+    },
+    {
+      "id": "1.21.6-pre3",
+      "type": "snapshot",
+      "released": "2025-06-04"
+    },
+    {
+      "id": "1.21.6-pre2",
+      "type": "snapshot",
+      "released": "2025-06-02"
+    },
+    {
+      "id": "1.21.6-pre1",
+      "type": "snapshot",
+      "released": "2025-05-28"
+    },
+    {
+      "id": "25w21a",
+      "type": "snapshot",
+      "released": "2025-05-20"
+    },
+    {
+      "id": "25w20a",
+      "type": "snapshot",
+      "released": "2025-05-13"
+    },
+    {
+      "id": "25w19a",
+      "type": "snapshot",
+      "released": "2025-05-06"
+    },
+    {
+      "id": "25w18a",
+      "type": "snapshot",
+      "released": "2025-04-29"
+    },
+    {
+      "id": "25w17a",
+      "type": "snapshot",
+      "released": "2025-04-22"
+    },
+    {
+      "id": "25w16a",
+      "type": "snapshot",
+      "released": "2025-04-15"
+    },
+    {
+      "id": "25w15a",
+      "type": "snapshot",
+      "released": "2025-04-08"
+    },
+    {
+      "id": "25w14craftmine",
+      "type": "snapshot",
+      "released": "2025-04-01"
+    },
+    {
+      "id": "1.21.5",
+      "type": "release",
+      "released": "2025-03-25"
+    },
+    {
+      "id": "1.21.5-rc2",
+      "type": "snapshot",
+      "released": "2025-03-24"
+    },
+    {
+      "id": "1.21.5-rc1",
+      "type": "snapshot",
+      "released": "2025-03-20"
+    },
+    {
+      "id": "1.21.5-pre3",
+      "type": "snapshot",
+      "released": "2025-03-18"
+    },
+    {
+      "id": "1.21.5-pre2",
+      "type": "snapshot",
+      "released": "2025-03-12"
+    },
+    {
+      "id": "1.21.5-pre1",
+      "type": "snapshot",
+      "released": "2025-03-11"
+    },
+    {
+      "id": "25w10a",
+      "type": "snapshot",
+      "released": "2025-03-05"
+    },
+    {
+      "id": "25w09b",
+      "type": "snapshot",
+      "released": "2025-02-27"
+    },
+    {
+      "id": "25w09a",
+      "type": "snapshot",
+      "released": "2025-02-26"
+    },
+    {
+      "id": "25w08a",
+      "type": "snapshot",
+      "released": "2025-02-19"
+    },
+    {
+      "id": "25w07a",
+      "type": "snapshot",
+      "released": "2025-02-13"
+    },
+    {
+      "id": "25w06a",
+      "type": "snapshot",
+      "released": "2025-02-05"
+    },
+    {
+      "id": "25w05a",
+      "type": "snapshot",
+      "released": "2025-01-29"
+    },
+    {
+      "id": "25w04a",
+      "type": "snapshot",
+      "released": "2025-01-22"
+    },
+    {
+      "id": "25w03a",
+      "type": "snapshot",
+      "released": "2025-01-15"
+    },
+    {
+      "id": "25w02a",
+      "type": "snapshot",
+      "released": "2025-01-08"
+    },
+    {
+      "id": "1.21.4",
+      "type": "release",
+      "released": "2024-12-03"
+    },
+    {
+      "id": "1.21.4-rc3",
+      "type": "snapshot",
+      "released": "2024-11-29"
+    },
+    {
+      "id": "1.21.4-rc2",
+      "type": "snapshot",
+      "released": "2024-11-29"
+    },
+    {
+      "id": "1.21.4-rc1",
+      "type": "snapshot",
+      "released": "2024-11-28"
+    },
+    {
+      "id": "1.21.4-pre3",
+      "type": "snapshot",
+      "released": "2024-11-26"
+    },
+    {
+      "id": "1.21.4-pre2",
+      "type": "snapshot",
+      "released": "2024-11-25"
+    },
+    {
+      "id": "1.21.4-pre1",
+      "type": "snapshot",
+      "released": "2024-11-20"
+    },
+    {
+      "id": "24w46a",
+      "type": "snapshot",
+      "released": "2024-11-13"
+    },
+    {
+      "id": "24w45a",
+      "type": "snapshot",
+      "released": "2024-11-06"
+    },
+    {
+      "id": "24w44a",
+      "type": "snapshot",
+      "released": "2024-10-30"
+    },
+    {
+      "id": "1.21.3",
+      "type": "release",
+      "released": "2024-10-23"
+    },
+    {
+      "id": "1.21.2",
+      "type": "release",
+      "released": "2024-10-22"
+    },
+    {
+      "id": "1.21.2-rc2",
+      "type": "snapshot",
+      "released": "2024-10-21"
+    },
+    {
+      "id": "1.21.2-rc1",
+      "type": "snapshot",
+      "released": "2024-10-17"
+    },
+    {
+      "id": "1.21.2-pre5",
+      "type": "snapshot",
+      "released": "2024-10-16"
+    },
+    {
+      "id": "1.21.2-pre4",
+      "type": "snapshot",
+      "released": "2024-10-15"
+    },
+    {
+      "id": "1.21.2-pre3",
+      "type": "snapshot",
+      "released": "2024-10-11"
+    },
+    {
+      "id": "1.21.2-pre2",
+      "type": "snapshot",
+      "released": "2024-10-10"
+    },
+    {
+      "id": "1.21.2-pre1",
+      "type": "snapshot",
+      "released": "2024-10-08"
+    },
+    {
+      "id": "24w40a",
+      "type": "snapshot",
+      "released": "2024-10-02"
+    },
+    {
+      "id": "24w39a",
+      "type": "snapshot",
+      "released": "2024-09-25"
+    },
+    {
+      "id": "24w38a",
+      "type": "snapshot",
+      "released": "2024-09-18"
+    },
+    {
+      "id": "24w37a",
+      "type": "snapshot",
+      "released": "2024-09-11"
+    },
+    {
+      "id": "24w36a",
+      "type": "snapshot",
+      "released": "2024-09-04"
+    },
+    {
+      "id": "24w35a",
+      "type": "snapshot",
+      "released": "2024-08-28"
+    },
+    {
+      "id": "24w34a",
+      "type": "snapshot",
+      "released": "2024-08-21"
+    },
+    {
+      "id": "24w33a",
+      "type": "snapshot",
+      "released": "2024-08-15"
+    },
+    {
+      "id": "1.21.1",
+      "type": "release",
+      "released": "2024-08-08"
+    },
+    {
+      "id": "1.21.1-rc1",
+      "type": "snapshot",
+      "released": "2024-08-07"
+    },
+    {
+      "id": "1.21",
+      "type": "release",
+      "released": "2024-06-13"
+    },
+    {
+      "id": "1.21-rc1",
+      "type": "snapshot",
+      "released": "2024-06-10"
+    },
+    {
+      "id": "1.21-pre4",
+      "type": "snapshot",
+      "released": "2024-06-07"
+    },
+    {
+      "id": "1.21-pre3",
+      "type": "snapshot",
+      "released": "2024-06-05"
+    },
+    {
+      "id": "1.21-pre2",
+      "type": "snapshot",
+      "released": "2024-05-31"
+    },
+    {
+      "id": "1.21-pre1",
+      "type": "snapshot",
+      "released": "2024-05-29"
+    },
+    {
+      "id": "24w21b",
+      "type": "snapshot",
+      "released": "2024-05-22"
+    },
+    {
+      "id": "24w21a",
+      "type": "snapshot",
+      "released": "2024-05-22"
+    },
+    {
+      "id": "24w20a",
+      "type": "snapshot",
+      "released": "2024-05-15"
+    },
+    {
+      "id": "24w19b",
+      "type": "snapshot",
+      "released": "2024-05-10"
+    },
+    {
+      "id": "24w19a",
+      "type": "snapshot",
+      "released": "2024-05-10"
+    },
+    {
+      "id": "24w18a",
+      "type": "snapshot",
+      "released": "2024-05-03"
+    },
+    {
+      "id": "1.20.6",
+      "type": "release",
+      "released": "2024-04-29"
+    },
+    {
+      "id": "1.20.6-rc1",
+      "type": "snapshot",
+      "released": "2024-04-26"
+    },
+    {
+      "id": "1.20.5",
+      "type": "release",
+      "released": "2024-04-23"
+    },
+    {
+      "id": "1.20.5-rc3",
+      "type": "snapshot",
+      "released": "2024-04-22"
+    },
+    {
+      "id": "1.20.5-rc2",
+      "type": "snapshot",
+      "released": "2024-04-19"
+    },
+    {
+      "id": "1.20.5-rc1",
+      "type": "snapshot",
+      "released": "2024-04-18"
+    },
+    {
+      "id": "1.20.5-pre4",
+      "type": "snapshot",
+      "released": "2024-04-17"
+    },
+    {
+      "id": "1.20.5-pre3",
+      "type": "snapshot",
+      "released": "2024-04-16"
+    },
+    {
+      "id": "1.20.5-pre2",
+      "type": "snapshot",
+      "released": "2024-04-15"
+    },
+    {
+      "id": "1.20.5-pre1",
+      "type": "snapshot",
+      "released": "2024-04-10"
+    },
+    {
+      "id": "24w14a",
+      "type": "snapshot",
+      "released": "2024-04-03"
+    },
+    {
+      "id": "24w14potato",
+      "type": "snapshot",
+      "released": "2024-04-01"
+    },
+    {
+      "id": "24w13a",
+      "type": "snapshot",
+      "released": "2024-03-27"
+    },
+    {
+      "id": "24w12a",
+      "type": "snapshot",
+      "released": "2024-03-20"
+    },
+    {
+      "id": "24w11a",
+      "type": "snapshot",
+      "released": "2024-03-14"
+    },
+    {
+      "id": "24w10a",
+      "type": "snapshot",
+      "released": "2024-03-06"
+    },
+    {
+      "id": "24w09a",
+      "type": "snapshot",
+      "released": "2024-02-28"
+    },
+    {
+      "id": "24w07a",
+      "type": "snapshot",
+      "released": "2024-02-14"
+    },
+    {
+      "id": "24w06a",
+      "type": "snapshot",
+      "released": "2024-02-07"
+    },
+    {
+      "id": "24w05b",
+      "type": "snapshot",
+      "released": "2024-02-01"
+    },
+    {
+      "id": "24w05a",
+      "type": "snapshot",
+      "released": "2024-01-31"
+    },
+    {
+      "id": "24w04a",
+      "type": "snapshot",
+      "released": "2024-01-24"
+    },
+    {
+      "id": "24w03b",
+      "type": "snapshot",
+      "released": "2024-01-18"
+    },
+    {
+      "id": "24w03a",
+      "type": "snapshot",
+      "released": "2024-01-17"
+    },
+    {
+      "id": "23w51b",
+      "type": "snapshot",
+      "released": "2023-12-18"
+    },
+    {
+      "id": "23w51a",
+      "type": "snapshot",
+      "released": "2023-12-18"
+    },
+    {
+      "id": "1.20.4",
+      "type": "release",
+      "released": "2023-12-07"
+    },
+    {
+      "id": "1.20.4-rc1",
+      "type": "snapshot",
+      "released": "2023-12-06"
+    },
+    {
+      "id": "1.20.3",
+      "type": "release",
+      "released": "2023-12-04"
+    },
+    {
+      "id": "1.20.3-rc1",
+      "type": "snapshot",
+      "released": "2023-11-30"
+    },
+    {
+      "id": "1.20.3-pre4",
+      "type": "snapshot",
+      "released": "2023-11-28"
+    },
+    {
+      "id": "1.20.3-pre3",
+      "type": "snapshot",
+      "released": "2023-11-27"
+    },
+    {
+      "id": "1.20.3-pre2",
+      "type": "snapshot",
+      "released": "2023-11-22"
+    },
+    {
+      "id": "1.20.3-pre1",
+      "type": "snapshot",
+      "released": "2023-11-20"
+    },
+    {
+      "id": "23w46a",
+      "type": "snapshot",
+      "released": "2023-11-16"
+    },
+    {
+      "id": "23w45a",
+      "type": "snapshot",
+      "released": "2023-11-08"
+    },
+    {
+      "id": "23w44a",
+      "type": "snapshot",
+      "released": "2023-11-01"
+    },
+    {
+      "id": "23w43b",
+      "type": "snapshot",
+      "released": "2023-10-26"
+    },
+    {
+      "id": "23w43a",
+      "type": "snapshot",
+      "released": "2023-10-25"
+    },
+    {
+      "id": "23w42a",
+      "type": "snapshot",
+      "released": "2023-10-18"
+    },
+    {
+      "id": "23w41a",
+      "type": "snapshot",
+      "released": "2023-10-11"
+    },
+    {
+      "id": "23w40a",
+      "type": "snapshot",
+      "released": "2023-10-04"
+    },
+    {
+      "id": "1.20.2",
+      "type": "release",
+      "released": "2023-09-20"
+    },
+    {
+      "id": "1.20.2-rc2",
+      "type": "snapshot",
+      "released": "2023-09-18"
+    },
+    {
+      "id": "1.20.2-rc1",
+      "type": "snapshot",
+      "released": "2023-09-15"
+    },
+    {
+      "id": "1.20.2-pre4",
+      "type": "snapshot",
+      "released": "2023-09-13"
+    },
+    {
+      "id": "1.20.2-pre3",
+      "type": "snapshot",
+      "released": "2023-09-12"
+    },
+    {
+      "id": "1.20.2-pre2",
+      "type": "snapshot",
+      "released": "2023-09-07"
+    },
+    {
+      "id": "1.20.2-pre1",
+      "type": "snapshot",
+      "released": "2023-09-05"
+    },
+    {
+      "id": "23w35a",
+      "type": "snapshot",
+      "released": "2023-08-30"
+    },
+    {
+      "id": "23w33a",
+      "type": "snapshot",
+      "released": "2023-08-17"
+    },
+    {
+      "id": "23w32a",
+      "type": "snapshot",
+      "released": "2023-08-09"
+    },
+    {
+      "id": "23w31a",
+      "type": "snapshot",
+      "released": "2023-08-01"
+    },
+    {
+      "id": "1.20.1",
+      "type": "release",
+      "released": "2023-06-12"
+    },
+    {
+      "id": "1.20.1-rc1",
+      "type": "snapshot",
+      "released": "2023-06-09"
+    },
+    {
+      "id": "1.20",
+      "type": "release",
+      "released": "2023-06-02"
+    },
+    {
+      "id": "1.20-rc1",
+      "type": "snapshot",
+      "released": "2023-05-31"
+    },
+    {
+      "id": "1.20-pre7",
+      "type": "snapshot",
+      "released": "2023-05-29"
+    },
+    {
+      "id": "1.20-pre6",
+      "type": "snapshot",
+      "released": "2023-05-25"
+    },
+    {
+      "id": "1.20-pre5",
+      "type": "snapshot",
+      "released": "2023-05-23"
+    },
+    {
+      "id": "1.20-pre4",
+      "type": "snapshot",
+      "released": "2023-05-19"
+    },
+    {
+      "id": "1.20-pre3",
+      "type": "snapshot",
+      "released": "2023-05-19"
+    },
+    {
+      "id": "1.20-pre2",
+      "type": "snapshot",
+      "released": "2023-05-16"
+    },
+    {
+      "id": "1.20-pre1",
+      "type": "snapshot",
+      "released": "2023-05-10"
+    },
+    {
+      "id": "23w18a",
+      "type": "snapshot",
+      "released": "2023-05-03"
+    },
+    {
+      "id": "23w17a",
+      "type": "snapshot",
+      "released": "2023-04-26"
+    },
+    {
+      "id": "23w16a",
+      "type": "snapshot",
+      "released": "2023-04-20"
+    },
+    {
+      "id": "23w14a",
+      "type": "snapshot",
+      "released": "2023-04-05"
+    },
+    {
+      "id": "23w13a_or_b",
+      "type": "snapshot",
+      "released": "2023-04-01"
+    },
+    {
+      "id": "23w13a",
+      "type": "snapshot",
+      "released": "2023-03-29"
+    },
+    {
+      "id": "23w12a",
+      "type": "snapshot",
+      "released": "2023-03-22"
+    },
+    {
+      "id": "1.19.4",
+      "type": "release",
+      "released": "2023-03-14"
+    },
+    {
+      "id": "1.19.4-rc3",
+      "type": "snapshot",
+      "released": "2023-03-13"
+    },
+    {
+      "id": "1.19.4-rc2",
+      "type": "snapshot",
+      "released": "2023-03-10"
+    },
+    {
+      "id": "1.19.4-rc1",
+      "type": "snapshot",
+      "released": "2023-03-09"
+    },
+    {
+      "id": "1.19.4-pre4",
+      "type": "snapshot",
+      "released": "2023-03-08"
+    },
+    {
+      "id": "1.19.4-pre3",
+      "type": "snapshot",
+      "released": "2023-03-01"
+    },
+    {
+      "id": "1.19.4-pre2",
+      "type": "snapshot",
+      "released": "2023-02-27"
+    },
+    {
+      "id": "1.19.4-pre1",
+      "type": "snapshot",
+      "released": "2023-02-22"
+    },
+    {
+      "id": "23w07a",
+      "type": "snapshot",
+      "released": "2023-02-15"
+    },
+    {
+      "id": "23w06a",
+      "type": "snapshot",
+      "released": "2023-02-08"
+    },
+    {
+      "id": "23w05a",
+      "type": "snapshot",
+      "released": "2023-02-01"
+    },
+    {
+      "id": "23w04a",
+      "type": "snapshot",
+      "released": "2023-01-24"
+    },
+    {
+      "id": "23w03a",
+      "type": "snapshot",
+      "released": "2023-01-18"
+    },
+    {
+      "id": "1.19.3",
+      "type": "release",
+      "released": "2022-12-07"
+    },
+    {
+      "id": "1.19.3-rc3",
+      "type": "snapshot",
+      "released": "2022-12-06"
+    },
+    {
+      "id": "1.19.3-rc2",
+      "type": "snapshot",
+      "released": "2022-12-05"
+    },
+    {
+      "id": "1.19.3-rc1",
+      "type": "snapshot",
+      "released": "2022-12-01"
+    },
+    {
+      "id": "1.19.3-pre3",
+      "type": "snapshot",
+      "released": "2022-11-29"
+    },
+    {
+      "id": "1.19.3-pre2",
+      "type": "snapshot",
+      "released": "2022-11-23"
+    },
+    {
+      "id": "1.19.3-pre1",
+      "type": "snapshot",
+      "released": "2022-11-22"
+    },
+    {
+      "id": "22w46a",
+      "type": "snapshot",
+      "released": "2022-11-16"
+    },
+    {
+      "id": "22w45a",
+      "type": "snapshot",
+      "released": "2022-11-09"
+    },
+    {
+      "id": "22w44a",
+      "type": "snapshot",
+      "released": "2022-11-02"
+    },
+    {
+      "id": "22w43a",
+      "type": "snapshot",
+      "released": "2022-10-26"
+    },
+    {
+      "id": "22w42a",
+      "type": "snapshot",
+      "released": "2022-10-19"
+    },
+    {
+      "id": "1.19.2",
+      "type": "release",
+      "released": "2022-08-05"
+    },
+    {
+      "id": "1.19.2-rc2",
+      "type": "snapshot",
+      "released": "2022-08-04"
+    },
+    {
+      "id": "1.19.2-rc1",
+      "type": "snapshot",
+      "released": "2022-08-04"
+    },
+    {
+      "id": "1.19.1",
+      "type": "release",
+      "released": "2022-07-27"
+    },
+    {
+      "id": "1.19.1-rc3",
+      "type": "snapshot",
+      "released": "2022-07-26"
+    },
+    {
+      "id": "1.19.1-rc2",
+      "type": "snapshot",
+      "released": "2022-07-21"
+    },
+    {
+      "id": "1.19.1-pre6",
+      "type": "snapshot",
+      "released": "2022-07-20"
+    },
+    {
+      "id": "1.19.1-pre5",
+      "type": "snapshot",
+      "released": "2022-07-15"
+    },
+    {
+      "id": "1.19.1-pre4",
+      "type": "snapshot",
+      "released": "2022-07-08"
+    },
+    {
+      "id": "1.19.1-pre3",
+      "type": "snapshot",
+      "released": "2022-07-06"
+    },
+    {
+      "id": "1.19.1-pre2",
+      "type": "snapshot",
+      "released": "2022-06-30"
+    },
+    {
+      "id": "1.19.1-rc1",
+      "type": "snapshot",
+      "released": "2022-06-23"
+    },
+    {
+      "id": "1.19.1-pre1",
+      "type": "snapshot",
+      "released": "2022-06-21"
+    },
+    {
+      "id": "22w24a",
+      "type": "snapshot",
+      "released": "2022-06-15"
+    },
+    {
+      "id": "1.19",
+      "type": "release",
+      "released": "2022-06-07"
+    },
+    {
+      "id": "1.19-rc2",
+      "type": "snapshot",
+      "released": "2022-06-03"
+    },
+    {
+      "id": "1.19-rc1",
+      "type": "snapshot",
+      "released": "2022-06-02"
+    },
+    {
+      "id": "1.19-pre5",
+      "type": "snapshot",
+      "released": "2022-06-01"
+    },
+    {
+      "id": "1.19-pre4",
+      "type": "snapshot",
+      "released": "2022-05-30"
+    },
+    {
+      "id": "1.19-pre3",
+      "type": "snapshot",
+      "released": "2022-05-25"
+    },
+    {
+      "id": "1.19-pre2",
+      "type": "snapshot",
+      "released": "2022-05-23"
+    },
+    {
+      "id": "1.19-pre1",
+      "type": "snapshot",
+      "released": "2022-05-18"
+    },
+    {
+      "id": "22w19a",
+      "type": "snapshot",
+      "released": "2022-05-12"
+    },
+    {
+      "id": "22w18a",
+      "type": "snapshot",
+      "released": "2022-05-04"
+    },
+    {
+      "id": "22w17a",
+      "type": "snapshot",
+      "released": "2022-04-27"
+    },
+    {
+      "id": "22w16b",
+      "type": "snapshot",
+      "released": "2022-04-20"
+    },
+    {
+      "id": "22w16a",
+      "type": "snapshot",
+      "released": "2022-04-20"
+    },
+    {
+      "id": "22w15a",
+      "type": "snapshot",
+      "released": "2022-04-13"
+    },
+    {
+      "id": "22w14a",
+      "type": "snapshot",
+      "released": "2022-04-06"
+    },
+    {
+      "id": "22w13oneblockatatime",
+      "type": "snapshot",
+      "released": "2022-04-01"
+    },
+    {
+      "id": "22w13a",
+      "type": "snapshot",
+      "released": "2022-03-31"
+    },
+    {
+      "id": "22w12a",
+      "type": "snapshot",
+      "released": "2022-03-24"
+    },
+    {
+      "id": "22w11a",
+      "type": "snapshot",
+      "released": "2022-03-16"
+    },
+    {
+      "id": "1.18.2",
+      "type": "release",
+      "released": "2022-02-28"
+    },
+    {
+      "id": "1.18.2-rc1",
+      "type": "snapshot",
+      "released": "2022-02-25"
+    },
+    {
+      "id": "1.18.2-pre3",
+      "type": "snapshot",
+      "released": "2022-02-23"
+    },
+    {
+      "id": "1.18.2-pre2",
+      "type": "snapshot",
+      "released": "2022-02-21"
+    },
+    {
+      "id": "1.18.2-pre1",
+      "type": "snapshot",
+      "released": "2022-02-18"
+    },
+    {
+      "id": "22w07a",
+      "type": "snapshot",
+      "released": "2022-02-16"
+    },
+    {
+      "id": "22w06a",
+      "type": "snapshot",
+      "released": "2022-02-09"
+    },
+    {
+      "id": "22w05a",
+      "type": "snapshot",
+      "released": "2022-02-02"
+    },
+    {
+      "id": "22w03a",
+      "type": "snapshot",
+      "released": "2022-01-19"
+    },
+    {
+      "id": "1.18.1",
+      "type": "release",
+      "released": "2021-12-10"
+    },
+    {
+      "id": "1.18.1-rc3",
+      "type": "snapshot",
+      "released": "2021-12-10"
+    },
+    {
+      "id": "1.18.1-rc2",
+      "type": "snapshot",
+      "released": "2021-12-08"
+    },
+    {
+      "id": "1.18.1-rc1",
+      "type": "snapshot",
+      "released": "2021-12-07"
+    },
+    {
+      "id": "1.18.1-pre1",
+      "type": "snapshot",
+      "released": "2021-12-03"
+    },
+    {
+      "id": "1.18",
+      "type": "release",
+      "released": "2021-11-30"
+    },
+    {
+      "id": "1.18-rc4",
+      "type": "snapshot",
+      "released": "2021-11-29"
+    },
+    {
+      "id": "1.18-rc3",
+      "type": "snapshot",
+      "released": "2021-11-26"
+    },
+    {
+      "id": "1.18-rc2",
+      "type": "snapshot",
+      "released": "2021-11-26"
+    },
+    {
+      "id": "1.18-rc1",
+      "type": "snapshot",
+      "released": "2021-11-25"
+    },
+    {
+      "id": "1.18-pre8",
+      "type": "snapshot",
+      "released": "2021-11-24"
+    },
+    {
+      "id": "1.18-pre7",
+      "type": "snapshot",
+      "released": "2021-11-23"
+    },
+    {
+      "id": "1.18-pre6",
+      "type": "snapshot",
+      "released": "2021-11-22"
+    },
+    {
+      "id": "1.18-pre5",
+      "type": "snapshot",
+      "released": "2021-11-19"
+    },
+    {
+      "id": "1.18-pre4",
+      "type": "snapshot",
+      "released": "2021-11-17"
+    },
+    {
+      "id": "1.18-pre3",
+      "type": "snapshot",
+      "released": "2021-11-17"
+    },
+    {
+      "id": "1.18-pre2",
+      "type": "snapshot",
+      "released": "2021-11-16"
+    },
+    {
+      "id": "1.18-pre1",
+      "type": "snapshot",
+      "released": "2021-11-11"
+    },
+    {
+      "id": "21w44a",
+      "type": "snapshot",
+      "released": "2021-11-03"
+    },
+    {
+      "id": "21w43a",
+      "type": "snapshot",
+      "released": "2021-10-27"
+    },
+    {
+      "id": "21w42a",
+      "type": "snapshot",
+      "released": "2021-10-20"
+    },
+    {
+      "id": "21w41a",
+      "type": "snapshot",
+      "released": "2021-10-13"
+    },
+    {
+      "id": "21w40a",
+      "type": "snapshot",
+      "released": "2021-10-07"
+    },
+    {
+      "id": "21w39a",
+      "type": "snapshot",
+      "released": "2021-09-29"
+    },
+    {
+      "id": "21w38a",
+      "type": "snapshot",
+      "released": "2021-09-23"
+    },
+    {
+      "id": "21w37a",
+      "type": "snapshot",
+      "released": "2021-09-15"
+    },
+    {
+      "id": "1.17.1",
+      "type": "release",
+      "released": "2021-07-06"
+    },
+    {
+      "id": "1.17.1-rc2",
+      "type": "snapshot",
+      "released": "2021-07-05"
+    },
+    {
+      "id": "1.17.1-rc1",
+      "type": "snapshot",
+      "released": "2021-07-01"
+    },
+    {
+      "id": "1.17.1-pre3",
+      "type": "snapshot",
+      "released": "2021-06-30"
+    },
+    {
+      "id": "1.17.1-pre2",
+      "type": "snapshot",
+      "released": "2021-06-29"
+    },
+    {
+      "id": "1.17.1-pre1",
+      "type": "snapshot",
+      "released": "2021-06-18"
+    },
+    {
+      "id": "1.17",
+      "type": "release",
+      "released": "2021-06-08"
+    },
+    {
+      "id": "1.17-rc2",
+      "type": "snapshot",
+      "released": "2021-06-07"
+    },
+    {
+      "id": "1.17-rc1",
+      "type": "snapshot",
+      "released": "2021-06-04"
+    },
+    {
+      "id": "1.17-pre5",
+      "type": "snapshot",
+      "released": "2021-06-03"
+    },
+    {
+      "id": "1.17-pre4",
+      "type": "snapshot",
+      "released": "2021-06-02"
+    },
+    {
+      "id": "1.17-pre3",
+      "type": "snapshot",
+      "released": "2021-06-01"
+    },
+    {
+      "id": "1.17-pre2",
+      "type": "snapshot",
+      "released": "2021-05-31"
+    },
+    {
+      "id": "1.17-pre1",
+      "type": "snapshot",
+      "released": "2021-05-27"
+    },
+    {
+      "id": "21w20a",
+      "type": "snapshot",
+      "released": "2021-05-19"
+    },
+    {
+      "id": "21w19a",
+      "type": "snapshot",
+      "released": "2021-05-12"
+    },
+    {
+      "id": "21w18a",
+      "type": "snapshot",
+      "released": "2021-05-05"
+    },
+    {
+      "id": "21w17a",
+      "type": "snapshot",
+      "released": "2021-04-28"
+    },
+    {
+      "id": "21w16a",
+      "type": "snapshot",
+      "released": "2021-04-21"
+    },
+    {
+      "id": "21w15a",
+      "type": "snapshot",
+      "released": "2021-04-14"
+    },
+    {
+      "id": "21w14a",
+      "type": "snapshot",
+      "released": "2021-04-07"
+    },
+    {
+      "id": "21w13a",
+      "type": "snapshot",
+      "released": "2021-03-31"
+    },
+    {
+      "id": "21w11a",
+      "type": "snapshot",
+      "released": "2021-03-17"
+    },
+    {
+      "id": "21w10a",
+      "type": "snapshot",
+      "released": "2021-03-10"
+    },
+    {
+      "id": "21w08b",
+      "type": "snapshot",
+      "released": "2021-02-25"
+    },
+    {
+      "id": "21w08a",
+      "type": "snapshot",
+      "released": "2021-02-24"
+    },
+    {
+      "id": "21w07a",
+      "type": "snapshot",
+      "released": "2021-02-17"
+    },
+    {
+      "id": "21w06a",
+      "type": "snapshot",
+      "released": "2021-02-10"
+    },
+    {
+      "id": "21w05b",
+      "type": "snapshot",
+      "released": "2021-02-04"
+    },
+    {
+      "id": "21w05a",
+      "type": "snapshot",
+      "released": "2021-02-03"
+    },
+    {
+      "id": "21w03a",
+      "type": "snapshot",
+      "released": "2021-01-20"
+    },
+    {
+      "id": "1.16.5",
+      "type": "release",
+      "released": "2021-01-14"
+    },
+    {
+      "id": "1.16.5-rc1",
+      "type": "snapshot",
+      "released": "2021-01-13"
+    },
+    {
+      "id": "20w51a",
+      "type": "snapshot",
+      "released": "2020-12-16"
+    },
+    {
+      "id": "20w49a",
+      "type": "snapshot",
+      "released": "2020-12-02"
+    },
+    {
+      "id": "20w48a",
+      "type": "snapshot",
+      "released": "2020-11-25"
+    },
+    {
+      "id": "20w46a",
+      "type": "snapshot",
+      "released": "2020-11-11"
+    },
+    {
+      "id": "20w45a",
+      "type": "snapshot",
+      "released": "2020-11-04"
+    },
+    {
+      "id": "1.16.4",
+      "type": "release",
+      "released": "2020-10-29"
+    },
+    {
+      "id": "1.16.4-rc1",
+      "type": "snapshot",
+      "released": "2020-10-27"
+    },
+    {
+      "id": "1.16.4-pre2",
+      "type": "snapshot",
+      "released": "2020-10-22"
+    },
+    {
+      "id": "1.16.4-pre1",
+      "type": "snapshot",
+      "released": "2020-10-13"
+    },
+    {
+      "id": "1.16.3",
+      "type": "release",
+      "released": "2020-09-10"
+    },
+    {
+      "id": "1.16.3-rc1",
+      "type": "snapshot",
+      "released": "2020-09-07"
+    },
+    {
+      "id": "1.16.2",
+      "type": "release",
+      "released": "2020-08-11"
+    },
+    {
+      "id": "1.16.2-rc2",
+      "type": "snapshot",
+      "released": "2020-08-10"
+    },
+    {
+      "id": "1.16.2-rc1",
+      "type": "snapshot",
+      "released": "2020-08-07"
+    },
+    {
+      "id": "1.16.2-pre3",
+      "type": "snapshot",
+      "released": "2020-08-06"
+    },
+    {
+      "id": "1.16.2-pre2",
+      "type": "snapshot",
+      "released": "2020-08-05"
+    },
+    {
+      "id": "1.16.2-pre1",
+      "type": "snapshot",
+      "released": "2020-07-29"
+    },
+    {
+      "id": "20w30a",
+      "type": "snapshot",
+      "released": "2020-07-22"
+    },
+    {
+      "id": "20w29a",
+      "type": "snapshot",
+      "released": "2020-07-15"
+    },
+    {
+      "id": "20w28a",
+      "type": "snapshot",
+      "released": "2020-07-08"
+    },
+    {
+      "id": "20w27a",
+      "type": "snapshot",
+      "released": "2020-07-01"
+    },
+    {
+      "id": "1.16.1",
+      "type": "release",
+      "released": "2020-06-24"
+    },
+    {
+      "id": "1.16",
+      "type": "release",
+      "released": "2020-06-23"
+    },
+    {
+      "id": "1.16-rc1",
+      "type": "snapshot",
+      "released": "2020-06-18"
+    },
+    {
+      "id": "1.16-pre8",
+      "type": "snapshot",
+      "released": "2020-06-17"
+    },
+    {
+      "id": "1.16-pre7",
+      "type": "snapshot",
+      "released": "2020-06-16"
+    },
+    {
+      "id": "1.16-pre6",
+      "type": "snapshot",
+      "released": "2020-06-15"
+    },
+    {
+      "id": "1.16-pre5",
+      "type": "snapshot",
+      "released": "2020-06-12"
+    },
+    {
+      "id": "1.16-pre4",
+      "type": "snapshot",
+      "released": "2020-06-11"
+    },
+    {
+      "id": "1.16-pre3",
+      "type": "snapshot",
+      "released": "2020-06-10"
+    },
+    {
+      "id": "1.16-pre2",
+      "type": "snapshot",
+      "released": "2020-06-05"
+    },
+    {
+      "id": "1.16-pre1",
+      "type": "snapshot",
+      "released": "2020-06-04"
+    },
+    {
+      "id": "20w22a",
+      "type": "snapshot",
+      "released": "2020-05-29"
+    },
+    {
+      "id": "20w21a",
+      "type": "snapshot",
+      "released": "2020-05-20"
+    },
+    {
+      "id": "20w20b",
+      "type": "snapshot",
+      "released": "2020-05-14"
+    },
+    {
+      "id": "20w20a",
+      "type": "snapshot",
+      "released": "2020-05-13"
+    },
+    {
+      "id": "20w19a",
+      "type": "snapshot",
+      "released": "2020-05-06"
+    },
+    {
+      "id": "20w18a",
+      "type": "snapshot",
+      "released": "2020-04-29"
+    },
+    {
+      "id": "20w17a",
+      "type": "snapshot",
+      "released": "2020-04-22"
+    },
+    {
+      "id": "20w16a",
+      "type": "snapshot",
+      "released": "2020-04-15"
+    },
+    {
+      "id": "20w15a",
+      "type": "snapshot",
+      "released": "2020-04-08"
+    },
+    {
+      "id": "20w14a",
+      "type": "snapshot",
+      "released": "2020-04-02"
+    },
+    {
+      "id": "20w14infinite",
+      "type": "snapshot",
+      "released": "2020-04-01"
+    },
+    {
+      "id": "20w13b",
+      "type": "snapshot",
+      "released": "2020-03-26"
+    },
+    {
+      "id": "20w13a",
+      "type": "snapshot",
+      "released": "2020-03-25"
+    },
+    {
+      "id": "20w12a",
+      "type": "snapshot",
+      "released": "2020-03-18"
+    },
+    {
+      "id": "20w11a",
+      "type": "snapshot",
+      "released": "2020-03-11"
+    },
+    {
+      "id": "20w10a",
+      "type": "snapshot",
+      "released": "2020-03-04"
+    },
+    {
+      "id": "20w09a",
+      "type": "snapshot",
+      "released": "2020-02-26"
+    },
+    {
+      "id": "20w08a",
+      "type": "snapshot",
+      "released": "2020-02-19"
+    },
+    {
+      "id": "20w07a",
+      "type": "snapshot",
+      "released": "2020-02-14"
+    },
+    {
+      "id": "20w06a",
+      "type": "snapshot",
+      "released": "2020-02-05"
+    },
+    {
+      "id": "1.15.2",
+      "type": "release",
+      "released": "2020-01-17"
+    },
+    {
+      "id": "1.15.2-pre2",
+      "type": "snapshot",
+      "released": "2020-01-16"
+    },
+    {
+      "id": "1.15.2-pre1",
+      "type": "snapshot",
+      "released": "2020-01-14"
+    },
+    {
+      "id": "1.15.1",
+      "type": "release",
+      "released": "2019-12-16"
+    },
+    {
+      "id": "1.15.1-pre1",
+      "type": "snapshot",
+      "released": "2019-12-12"
+    },
+    {
+      "id": "1.15",
+      "type": "release",
+      "released": "2019-12-09"
+    },
+    {
+      "id": "1.15-pre7",
+      "type": "snapshot",
+      "released": "2019-12-09"
+    },
+    {
+      "id": "1.15-pre6",
+      "type": "snapshot",
+      "released": "2019-12-06"
+    },
+    {
+      "id": "1.15-pre5",
+      "type": "snapshot",
+      "released": "2019-12-05"
+    },
+    {
+      "id": "1.15-pre4",
+      "type": "snapshot",
+      "released": "2019-12-03"
+    },
+    {
+      "id": "1.15-pre3",
+      "type": "snapshot",
+      "released": "2019-11-28"
+    },
+    {
+      "id": "1.15-pre2",
+      "type": "snapshot",
+      "released": "2019-11-25"
+    },
+    {
+      "id": "1.15-pre1",
+      "type": "snapshot",
+      "released": "2019-11-21"
+    },
+    {
+      "id": "19w46b",
+      "type": "snapshot",
+      "released": "2019-11-14"
+    },
+    {
+      "id": "19w46a",
+      "type": "snapshot",
+      "released": "2019-11-13"
+    },
+    {
+      "id": "19w45b",
+      "type": "snapshot",
+      "released": "2019-11-08"
+    },
+    {
+      "id": "19w45a",
+      "type": "snapshot",
+      "released": "2019-11-07"
+    },
+    {
+      "id": "19w44a",
+      "type": "snapshot",
+      "released": "2019-10-30"
+    },
+    {
+      "id": "19w42a",
+      "type": "snapshot",
+      "released": "2019-10-16"
+    },
+    {
+      "id": "19w41a",
+      "type": "snapshot",
+      "released": "2019-10-09"
+    },
+    {
+      "id": "19w40a",
+      "type": "snapshot",
+      "released": "2019-10-02"
+    },
+    {
+      "id": "19w39a",
+      "type": "snapshot",
+      "released": "2019-09-27"
+    },
+    {
+      "id": "19w38b",
+      "type": "snapshot",
+      "released": "2019-09-18"
+    },
+    {
+      "id": "19w38a",
+      "type": "snapshot",
+      "released": "2019-09-18"
+    },
+    {
+      "id": "19w37a",
+      "type": "snapshot",
+      "released": "2019-09-11"
+    },
+    {
+      "id": "19w36a",
+      "type": "snapshot",
+      "released": "2019-09-04"
+    },
+    {
+      "id": "19w35a",
+      "type": "snapshot",
+      "released": "2019-08-28"
+    },
+    {
+      "id": "19w34a",
+      "type": "snapshot",
+      "released": "2019-08-22"
+    },
+    {
+      "id": "1.14.4",
+      "type": "release",
+      "released": "2019-07-19"
+    },
+    {
+      "id": "1.14.4-pre7",
+      "type": "snapshot",
+      "released": "2019-07-18"
+    },
+    {
+      "id": "1.14.4-pre6",
+      "type": "snapshot",
+      "released": "2019-07-15"
+    },
+    {
+      "id": "1.14.4-pre5",
+      "type": "snapshot",
+      "released": "2019-07-11"
+    },
+    {
+      "id": "1.14.4-pre4",
+      "type": "snapshot",
+      "released": "2019-07-10"
+    },
+    {
+      "id": "1.14.4-pre3",
+      "type": "snapshot",
+      "released": "2019-07-08"
+    },
+    {
+      "id": "1.14.4-pre2",
+      "type": "snapshot",
+      "released": "2019-07-04"
+    },
+    {
+      "id": "1.14.4-pre1",
+      "type": "snapshot",
+      "released": "2019-07-03"
+    },
+    {
+      "id": "1.14.3",
+      "type": "release",
+      "released": "2019-06-24"
+    },
+    {
+      "id": "1.14.3-pre4",
+      "type": "snapshot",
+      "released": "2019-06-19"
+    },
+    {
+      "id": "1.14.3-pre3",
+      "type": "snapshot",
+      "released": "2019-06-14"
+    },
+    {
+      "id": "1.14.3-pre2",
+      "type": "snapshot",
+      "released": "2019-06-07"
+    },
+    {
+      "id": "1.14.3-pre1",
+      "type": "snapshot",
+      "released": "2019-06-03"
+    },
+    {
+      "id": "1.14.2",
+      "type": "release",
+      "released": "2019-05-27"
+    },
+    {
+      "id": "1.14.2 Pre-Release 4",
+      "type": "snapshot",
+      "released": "2019-05-27"
+    },
+    {
+      "id": "1.14.2 Pre-Release 3",
+      "type": "snapshot",
+      "released": "2019-05-22"
+    },
+    {
+      "id": "1.14.2 Pre-Release 2",
+      "type": "snapshot",
+      "released": "2019-05-17"
+    },
+    {
+      "id": "1.14.2 Pre-Release 1",
+      "type": "snapshot",
+      "released": "2019-05-16"
+    },
+    {
+      "id": "1.14.1",
+      "type": "release",
+      "released": "2019-05-13"
+    },
+    {
+      "id": "1.14.1 Pre-Release 2",
+      "type": "snapshot",
+      "released": "2019-05-09"
+    },
+    {
+      "id": "1.14.1 Pre-Release 1",
+      "type": "snapshot",
+      "released": "2019-05-07"
+    },
+    {
+      "id": "1.14",
+      "type": "release",
+      "released": "2019-04-23"
+    },
+    {
+      "id": "1.14 Pre-Release 5",
+      "type": "snapshot",
+      "released": "2019-04-18"
+    },
+    {
+      "id": "1.14 Pre-Release 4",
+      "type": "snapshot",
+      "released": "2019-04-17"
+    },
+    {
+      "id": "1.14 Pre-Release 3",
+      "type": "snapshot",
+      "released": "2019-04-16"
+    },
+    {
+      "id": "1.14 Pre-Release 2",
+      "type": "snapshot",
+      "released": "2019-04-12"
+    },
+    {
+      "id": "1.14 Pre-Release 1",
+      "type": "snapshot",
+      "released": "2019-04-10"
+    },
+    {
+      "id": "19w14b",
+      "type": "snapshot",
+      "released": "2019-04-05"
+    },
+    {
+      "id": "19w14a",
+      "type": "snapshot",
+      "released": "2019-04-03"
+    },
+    {
+      "id": "3D Shareware v1.34",
+      "type": "snapshot",
+      "released": "2019-04-01"
+    },
+    {
+      "id": "19w13b",
+      "type": "snapshot",
+      "released": "2019-03-29"
+    },
+    {
+      "id": "19w13a",
+      "type": "snapshot",
+      "released": "2019-03-27"
+    },
+    {
+      "id": "19w12b",
+      "type": "snapshot",
+      "released": "2019-03-21"
+    },
+    {
+      "id": "19w12a",
+      "type": "snapshot",
+      "released": "2019-03-20"
+    },
+    {
+      "id": "19w11b",
+      "type": "snapshot",
+      "released": "2019-03-14"
+    },
+    {
+      "id": "19w11a",
+      "type": "snapshot",
+      "released": "2019-03-13"
+    },
+    {
+      "id": "19w09a",
+      "type": "snapshot",
+      "released": "2019-02-27"
+    },
+    {
+      "id": "19w08b",
+      "type": "snapshot",
+      "released": "2019-02-21"
+    },
+    {
+      "id": "19w08a",
+      "type": "snapshot",
+      "released": "2019-02-20"
+    },
+    {
+      "id": "19w07a",
+      "type": "snapshot",
+      "released": "2019-02-13"
+    },
+    {
+      "id": "19w06a",
+      "type": "snapshot",
+      "released": "2019-02-06"
+    },
+    {
+      "id": "19w05a",
+      "type": "snapshot",
+      "released": "2019-01-30"
+    },
+    {
+      "id": "19w04b",
+      "type": "snapshot",
+      "released": "2019-01-25"
+    },
+    {
+      "id": "19w04a",
+      "type": "snapshot",
+      "released": "2019-01-24"
+    },
+    {
+      "id": "19w03c",
+      "type": "snapshot",
+      "released": "2019-01-18"
+    },
+    {
+      "id": "19w03b",
+      "type": "snapshot",
+      "released": "2019-01-17"
+    },
+    {
+      "id": "19w03a",
+      "type": "snapshot",
+      "released": "2019-01-16"
+    },
+    {
+      "id": "19w02a",
+      "type": "snapshot",
+      "released": "2019-01-09"
+    },
+    {
+      "id": "18w50a",
+      "type": "snapshot",
+      "released": "2018-12-12"
+    },
+    {
+      "id": "18w49a",
+      "type": "snapshot",
+      "released": "2018-12-05"
+    },
+    {
+      "id": "18w48b",
+      "type": "snapshot",
+      "released": "2018-11-30"
+    },
+    {
+      "id": "18w48a",
+      "type": "snapshot",
+      "released": "2018-11-29"
+    },
+    {
+      "id": "18w47b",
+      "type": "snapshot",
+      "released": "2018-11-23"
+    },
+    {
+      "id": "18w47a",
+      "type": "snapshot",
+      "released": "2018-11-21"
+    },
+    {
+      "id": "18w46a",
+      "type": "snapshot",
+      "released": "2018-11-15"
+    },
+    {
+      "id": "18w45a",
+      "type": "snapshot",
+      "released": "2018-11-07"
+    },
+    {
+      "id": "18w44a",
+      "type": "snapshot",
+      "released": "2018-10-31"
+    },
+    {
+      "id": "18w43c",
+      "type": "snapshot",
+      "released": "2018-10-26"
+    },
+    {
+      "id": "18w43b",
+      "type": "snapshot",
+      "released": "2018-10-24"
+    },
+    {
+      "id": "18w43a",
+      "type": "snapshot",
+      "released": "2018-10-24"
+    },
+    {
+      "id": "1.13.2",
+      "type": "release",
+      "released": "2018-10-22"
+    },
+    {
+      "id": "1.13.2-pre2",
+      "type": "snapshot",
+      "released": "2018-10-18"
+    },
+    {
+      "id": "1.13.2-pre1",
+      "type": "snapshot",
+      "released": "2018-10-16"
+    },
+    {
+      "id": "1.13.1",
+      "type": "release",
+      "released": "2018-08-22"
+    },
+    {
+      "id": "1.13.1-pre2",
+      "type": "snapshot",
+      "released": "2018-08-20"
+    },
+    {
+      "id": "1.13.1-pre1",
+      "type": "snapshot",
+      "released": "2018-08-16"
+    },
+    {
+      "id": "18w33a",
+      "type": "snapshot",
+      "released": "2018-08-15"
+    },
+    {
+      "id": "18w32a",
+      "type": "snapshot",
+      "released": "2018-08-08"
+    },
+    {
+      "id": "18w31a",
+      "type": "snapshot",
+      "released": "2018-08-01"
+    },
+    {
+      "id": "18w30b",
+      "type": "snapshot",
+      "released": "2018-07-26"
+    },
+    {
+      "id": "18w30a",
+      "type": "snapshot",
+      "released": "2018-07-25"
+    },
+    {
+      "id": "1.13",
+      "type": "release",
+      "released": "2018-07-18"
+    },
+    {
+      "id": "1.13-pre10",
+      "type": "snapshot",
+      "released": "2018-07-17"
+    },
+    {
+      "id": "1.13-pre9",
+      "type": "snapshot",
+      "released": "2018-07-16"
+    },
+    {
+      "id": "1.13-pre8",
+      "type": "snapshot",
+      "released": "2018-07-13"
+    },
+    {
+      "id": "1.13-pre7",
+      "type": "snapshot",
+      "released": "2018-07-10"
+    },
+    {
+      "id": "1.13-pre6",
+      "type": "snapshot",
+      "released": "2018-07-04"
+    },
+    {
+      "id": "1.13-pre5",
+      "type": "snapshot",
+      "released": "2018-06-28"
+    },
+    {
+      "id": "1.13-pre4",
+      "type": "snapshot",
+      "released": "2018-06-26"
+    },
+    {
+      "id": "1.13-pre3",
+      "type": "snapshot",
+      "released": "2018-06-21"
+    },
+    {
+      "id": "1.13-pre2",
+      "type": "snapshot",
+      "released": "2018-06-15"
+    },
+    {
+      "id": "1.13-pre1",
+      "type": "snapshot",
+      "released": "2018-06-04"
+    },
+    {
+      "id": "18w22c",
+      "type": "snapshot",
+      "released": "2018-05-31"
+    },
+    {
+      "id": "18w22b",
+      "type": "snapshot",
+      "released": "2018-05-30"
+    },
+    {
+      "id": "18w22a",
+      "type": "snapshot",
+      "released": "2018-05-29"
+    },
+    {
+      "id": "18w21b",
+      "type": "snapshot",
+      "released": "2018-05-25"
+    },
+    {
+      "id": "18w21a",
+      "type": "snapshot",
+      "released": "2018-05-23"
+    },
+    {
+      "id": "18w20c",
+      "type": "snapshot",
+      "released": "2018-05-17"
+    },
+    {
+      "id": "18w20b",
+      "type": "snapshot",
+      "released": "2018-05-16"
+    },
+    {
+      "id": "18w20a",
+      "type": "snapshot",
+      "released": "2018-05-15"
+    },
+    {
+      "id": "18w19b",
+      "type": "snapshot",
+      "released": "2018-05-09"
+    },
+    {
+      "id": "18w19a",
+      "type": "snapshot",
+      "released": "2018-05-08"
+    },
+    {
+      "id": "18w16a",
+      "type": "snapshot",
+      "released": "2018-04-19"
+    },
+    {
+      "id": "18w15a",
+      "type": "snapshot",
+      "released": "2018-04-11"
+    },
+    {
+      "id": "18w14b",
+      "type": "snapshot",
+      "released": "2018-04-05"
+    },
+    {
+      "id": "18w14a",
+      "type": "snapshot",
+      "released": "2018-04-04"
+    },
+    {
+      "id": "18w11a",
+      "type": "snapshot",
+      "released": "2018-03-13"
+    },
+    {
+      "id": "18w10d",
+      "type": "snapshot",
+      "released": "2018-03-09"
+    },
+    {
+      "id": "18w10c",
+      "type": "snapshot",
+      "released": "2018-03-08"
+    },
+    {
+      "id": "18w10b",
+      "type": "snapshot",
+      "released": "2018-03-07"
+    },
+    {
+      "id": "18w10a",
+      "type": "snapshot",
+      "released": "2018-03-06"
+    },
+    {
+      "id": "18w09a",
+      "type": "snapshot",
+      "released": "2018-03-01"
+    },
+    {
+      "id": "18w08b",
+      "type": "snapshot",
+      "released": "2018-02-22"
+    },
+    {
+      "id": "18w08a",
+      "type": "snapshot",
+      "released": "2018-02-21"
+    },
+    {
+      "id": "18w07c",
+      "type": "snapshot",
+      "released": "2018-02-16"
+    },
+    {
+      "id": "18w07b",
+      "type": "snapshot",
+      "released": "2018-02-15"
+    },
+    {
+      "id": "18w07a",
+      "type": "snapshot",
+      "released": "2018-02-14"
+    },
+    {
+      "id": "18w06a",
+      "type": "snapshot",
+      "released": "2018-02-09"
+    },
+    {
+      "id": "18w05a",
+      "type": "snapshot",
+      "released": "2018-01-31"
+    },
+    {
+      "id": "18w03b",
+      "type": "snapshot",
+      "released": "2018-01-17"
+    },
+    {
+      "id": "18w03a",
+      "type": "snapshot",
+      "released": "2018-01-17"
+    },
+    {
+      "id": "18w02a",
+      "type": "snapshot",
+      "released": "2018-01-10"
+    },
+    {
+      "id": "18w01a",
+      "type": "snapshot",
+      "released": "2018-01-03"
+    },
+    {
+      "id": "17w50a",
+      "type": "snapshot",
+      "released": "2017-12-11"
+    },
+    {
+      "id": "17w49b",
+      "type": "snapshot",
+      "released": "2017-12-07"
+    },
+    {
+      "id": "17w49a",
+      "type": "snapshot",
+      "released": "2017-12-06"
+    },
+    {
+      "id": "17w48a",
+      "type": "snapshot",
+      "released": "2017-11-27"
+    },
+    {
+      "id": "17w47b",
+      "type": "snapshot",
+      "released": "2017-11-23"
+    },
+    {
+      "id": "17w47a",
+      "type": "snapshot",
+      "released": "2017-11-22"
+    },
+    {
+      "id": "17w46a",
+      "type": "snapshot",
+      "released": "2017-11-15"
+    },
+    {
+      "id": "17w45b",
+      "type": "snapshot",
+      "released": "2017-11-10"
+    },
+    {
+      "id": "17w45a",
+      "type": "snapshot",
+      "released": "2017-11-08"
+    },
+    {
+      "id": "17w43b",
+      "type": "snapshot",
+      "released": "2017-10-26"
+    },
+    {
+      "id": "17w43a",
+      "type": "snapshot",
+      "released": "2017-10-25"
+    },
+    {
+      "id": "1.12.2",
+      "type": "release",
+      "released": "2017-09-18"
+    },
+    {
+      "id": "1.12.2-pre2",
+      "type": "snapshot",
+      "released": "2017-09-15"
+    },
+    {
+      "id": "1.12.2-pre1",
+      "type": "snapshot",
+      "released": "2017-09-13"
+    },
+    {
+      "id": "1.12.1",
+      "type": "release",
+      "released": "2017-08-03"
+    },
+    {
+      "id": "1.12.1-pre1",
+      "type": "snapshot",
+      "released": "2017-08-02"
+    },
+    {
+      "id": "17w31a",
+      "type": "snapshot",
+      "released": "2017-08-01"
+    },
+    {
+      "id": "1.12",
+      "type": "release",
+      "released": "2017-06-02"
+    },
+    {
+      "id": "1.12-pre7",
+      "type": "snapshot",
+      "released": "2017-05-31"
+    },
+    {
+      "id": "1.12-pre6",
+      "type": "snapshot",
+      "released": "2017-05-29"
+    },
+    {
+      "id": "1.12-pre5",
+      "type": "snapshot",
+      "released": "2017-05-19"
+    },
+    {
+      "id": "1.12-pre4",
+      "type": "snapshot",
+      "released": "2017-05-18"
+    },
+    {
+      "id": "1.12-pre3",
+      "type": "snapshot",
+      "released": "2017-05-17"
+    },
+    {
+      "id": "1.12-pre2",
+      "type": "snapshot",
+      "released": "2017-05-11"
+    },
+    {
+      "id": "1.12-pre1",
+      "type": "snapshot",
+      "released": "2017-05-10"
+    },
+    {
+      "id": "17w18b",
+      "type": "snapshot",
+      "released": "2017-05-04"
+    },
+    {
+      "id": "17w18a",
+      "type": "snapshot",
+      "released": "2017-05-03"
+    },
+    {
+      "id": "17w17b",
+      "type": "snapshot",
+      "released": "2017-04-27"
+    },
+    {
+      "id": "17w17a",
+      "type": "snapshot",
+      "released": "2017-04-26"
+    },
+    {
+      "id": "17w16b",
+      "type": "snapshot",
+      "released": "2017-04-21"
+    },
+    {
+      "id": "17w16a",
+      "type": "snapshot",
+      "released": "2017-04-20"
+    },
+    {
+      "id": "17w15a",
+      "type": "snapshot",
+      "released": "2017-04-12"
+    },
+    {
+      "id": "17w14a",
+      "type": "snapshot",
+      "released": "2017-04-05"
+    },
+    {
+      "id": "17w13b",
+      "type": "snapshot",
+      "released": "2017-03-31"
+    },
+    {
+      "id": "17w13a",
+      "type": "snapshot",
+      "released": "2017-03-30"
+    },
+    {
+      "id": "17w06a",
+      "type": "snapshot",
+      "released": "2017-02-08"
+    },
+    {
+      "id": "1.11.2",
+      "type": "release",
+      "released": "2016-12-21"
+    },
+    {
+      "id": "1.11.1",
+      "type": "release",
+      "released": "2016-12-20"
+    },
+    {
+      "id": "16w50a",
+      "type": "snapshot",
+      "released": "2016-12-15"
+    },
+    {
+      "id": "1.11",
+      "type": "release",
+      "released": "2016-11-14"
+    },
+    {
+      "id": "1.11-pre1",
+      "type": "snapshot",
+      "released": "2016-11-08"
+    },
+    {
+      "id": "16w44a",
+      "type": "snapshot",
+      "released": "2016-11-03"
+    },
+    {
+      "id": "16w43a",
+      "type": "snapshot",
+      "released": "2016-10-27"
+    },
+    {
+      "id": "16w42a",
+      "type": "snapshot",
+      "released": "2016-10-19"
+    },
+    {
+      "id": "16w41a",
+      "type": "snapshot",
+      "released": "2016-10-13"
+    },
+    {
+      "id": "16w40a",
+      "type": "snapshot",
+      "released": "2016-10-06"
+    },
+    {
+      "id": "16w39c",
+      "type": "snapshot",
+      "released": "2016-09-30"
+    },
+    {
+      "id": "16w39b",
+      "type": "snapshot",
+      "released": "2016-09-29"
+    },
+    {
+      "id": "16w39a",
+      "type": "snapshot",
+      "released": "2016-09-28"
+    },
+    {
+      "id": "16w38a",
+      "type": "snapshot",
+      "released": "2016-09-20"
+    },
+    {
+      "id": "16w36a",
+      "type": "snapshot",
+      "released": "2016-09-08"
+    },
+    {
+      "id": "16w35a",
+      "type": "snapshot",
+      "released": "2016-09-01"
+    },
+    {
+      "id": "16w33a",
+      "type": "snapshot",
+      "released": "2016-08-17"
+    },
+    {
+      "id": "16w32b",
+      "type": "snapshot",
+      "released": "2016-08-11"
+    },
+    {
+      "id": "16w32a",
+      "type": "snapshot",
+      "released": "2016-08-10"
+    },
+    {
+      "id": "1.10.2",
+      "type": "release",
+      "released": "2016-06-23"
+    },
+    {
+      "id": "1.10.1",
+      "type": "release",
+      "released": "2016-06-22"
+    },
+    {
+      "id": "1.10",
+      "type": "release",
+      "released": "2016-06-08"
+    },
+    {
+      "id": "1.10-pre2",
+      "type": "snapshot",
+      "released": "2016-06-07"
+    },
+    {
+      "id": "1.10-pre1",
+      "type": "snapshot",
+      "released": "2016-06-02"
+    },
+    {
+      "id": "16w21b",
+      "type": "snapshot",
+      "released": "2016-05-26"
+    },
+    {
+      "id": "16w21a",
+      "type": "snapshot",
+      "released": "2016-05-25"
+    },
+    {
+      "id": "16w20a",
+      "type": "snapshot",
+      "released": "2016-05-18"
+    },
+    {
+      "id": "1.9.4",
+      "type": "release",
+      "released": "2016-05-10"
+    },
+    {
+      "id": "1.9.3",
+      "type": "release",
+      "released": "2016-05-10"
+    },
+    {
+      "id": "1.9.3-pre3",
+      "type": "snapshot",
+      "released": "2016-05-03"
+    },
+    {
+      "id": "1.9.3-pre2",
+      "type": "snapshot",
+      "released": "2016-04-27"
+    },
+    {
+      "id": "1.9.3-pre1",
+      "type": "snapshot",
+      "released": "2016-04-21"
+    },
+    {
+      "id": "16w15b",
+      "type": "snapshot",
+      "released": "2016-04-13"
+    },
+    {
+      "id": "16w15a",
+      "type": "snapshot",
+      "released": "2016-04-11"
+    },
+    {
+      "id": "16w14a",
+      "type": "snapshot",
+      "released": "2016-04-07"
+    },
+    {
+      "id": "1.RV-Pre1",
+      "type": "snapshot",
+      "released": "2016-03-31"
+    },
+    {
+      "id": "1.9.2",
+      "type": "release",
+      "released": "2016-03-30"
+    },
+    {
+      "id": "1.9.1",
+      "type": "release",
+      "released": "2016-03-30"
+    },
+    {
+      "id": "1.9.1-pre3",
+      "type": "snapshot",
+      "released": "2016-03-11"
+    },
+    {
+      "id": "1.9.1-pre2",
+      "type": "snapshot",
+      "released": "2016-03-10"
+    },
+    {
+      "id": "1.9.1-pre1",
+      "type": "snapshot",
+      "released": "2016-03-09"
+    },
+    {
+      "id": "1.9",
+      "type": "release",
+      "released": "2016-02-29"
+    },
+    {
+      "id": "1.9-pre4",
+      "type": "snapshot",
+      "released": "2016-02-26"
+    },
+    {
+      "id": "1.9-pre3",
+      "type": "snapshot",
+      "released": "2016-02-24"
+    },
+    {
+      "id": "1.9-pre2",
+      "type": "snapshot",
+      "released": "2016-02-18"
+    },
+    {
+      "id": "1.9-pre1",
+      "type": "snapshot",
+      "released": "2016-02-17"
+    },
+    {
+      "id": "16w07b",
+      "type": "snapshot",
+      "released": "2016-02-16"
+    },
+    {
+      "id": "16w07a",
+      "type": "snapshot",
+      "released": "2016-02-15"
+    },
+    {
+      "id": "16w06a",
+      "type": "snapshot",
+      "released": "2016-02-10"
+    },
+    {
+      "id": "16w05b",
+      "type": "snapshot",
+      "released": "2016-02-04"
+    },
+    {
+      "id": "16w05a",
+      "type": "snapshot",
+      "released": "2016-02-03"
+    },
+    {
+      "id": "16w04a",
+      "type": "snapshot",
+      "released": "2016-01-28"
+    },
+    {
+      "id": "16w03a",
+      "type": "snapshot",
+      "released": "2016-01-20"
+    },
+    {
+      "id": "16w02a",
+      "type": "snapshot",
+      "released": "2016-01-13"
+    },
+    {
+      "id": "15w51b",
+      "type": "snapshot",
+      "released": "2015-12-17"
+    },
+    {
+      "id": "15w51a",
+      "type": "snapshot",
+      "released": "2015-12-17"
+    },
+    {
+      "id": "15w50a",
+      "type": "snapshot",
+      "released": "2015-12-09"
+    },
+    {
+      "id": "15w49b",
+      "type": "snapshot",
+      "released": "2015-12-03"
+    },
+    {
+      "id": "1.8.9",
+      "type": "release",
+      "released": "2015-12-03"
+    },
+    {
+      "id": "15w49a",
+      "type": "snapshot",
+      "released": "2015-12-02"
+    },
+    {
+      "id": "15w47c",
+      "type": "snapshot",
+      "released": "2015-11-20"
+    },
+    {
+      "id": "15w47b",
+      "type": "snapshot",
+      "released": "2015-11-19"
+    },
+    {
+      "id": "15w47a",
+      "type": "snapshot",
+      "released": "2015-11-18"
+    },
+    {
+      "id": "15w46a",
+      "type": "snapshot",
+      "released": "2015-11-12"
+    },
+    {
+      "id": "15w45a",
+      "type": "snapshot",
+      "released": "2015-11-05"
+    },
+    {
+      "id": "15w44b",
+      "type": "snapshot",
+      "released": "2015-10-30"
+    },
+    {
+      "id": "15w44a",
+      "type": "snapshot",
+      "released": "2015-10-28"
+    },
+    {
+      "id": "15w43c",
+      "type": "snapshot",
+      "released": "2015-10-23"
+    },
+    {
+      "id": "15w43b",
+      "type": "snapshot",
+      "released": "2015-10-22"
+    },
+    {
+      "id": "15w43a",
+      "type": "snapshot",
+      "released": "2015-10-21"
+    },
+    {
+      "id": "15w42a",
+      "type": "snapshot",
+      "released": "2015-10-14"
+    },
+    {
+      "id": "15w41b",
+      "type": "snapshot",
+      "released": "2015-10-07"
+    },
+    {
+      "id": "15w41a",
+      "type": "snapshot",
+      "released": "2015-10-07"
+    },
+    {
+      "id": "15w40b",
+      "type": "snapshot",
+      "released": "2015-09-30"
+    },
+    {
+      "id": "15w40a",
+      "type": "snapshot",
+      "released": "2015-09-30"
+    },
+    {
+      "id": "15w39c",
+      "type": "snapshot",
+      "released": "2015-09-23"
+    },
+    {
+      "id": "15w39b",
+      "type": "snapshot",
+      "released": "2015-09-21"
+    },
+    {
+      "id": "15w39a",
+      "type": "snapshot",
+      "released": "2015-09-21"
+    },
+    {
+      "id": "15w38b",
+      "type": "snapshot",
+      "released": "2015-09-17"
+    },
+    {
+      "id": "15w38a",
+      "type": "snapshot",
+      "released": "2015-09-16"
+    },
+    {
+      "id": "15w37a",
+      "type": "snapshot",
+      "released": "2015-09-10"
+    },
+    {
+      "id": "15w36d",
+      "type": "snapshot",
+      "released": "2015-09-04"
+    },
+    {
+      "id": "15w36c",
+      "type": "snapshot",
+      "released": "2015-09-02"
+    },
+    {
+      "id": "15w36b",
+      "type": "snapshot",
+      "released": "2015-09-02"
+    },
+    {
+      "id": "15w36a",
+      "type": "snapshot",
+      "released": "2015-09-02"
+    },
+    {
+      "id": "15w35e",
+      "type": "snapshot",
+      "released": "2015-08-28"
+    },
+    {
+      "id": "15w35d",
+      "type": "snapshot",
+      "released": "2015-08-28"
+    },
+    {
+      "id": "15w35c",
+      "type": "snapshot",
+      "released": "2015-08-28"
+    },
+    {
+      "id": "15w35b",
+      "type": "snapshot",
+      "released": "2015-08-24"
+    },
+    {
+      "id": "15w35a",
+      "type": "snapshot",
+      "released": "2015-08-24"
+    },
+    {
+      "id": "15w34d",
+      "type": "snapshot",
+      "released": "2015-08-21"
+    },
+    {
+      "id": "15w34c",
+      "type": "snapshot",
+      "released": "2015-08-21"
+    },
+    {
+      "id": "15w34b",
+      "type": "snapshot",
+      "released": "2015-08-20"
+    },
+    {
+      "id": "15w34a",
+      "type": "snapshot",
+      "released": "2015-08-19"
+    },
+    {
+      "id": "15w33c",
+      "type": "snapshot",
+      "released": "2015-08-14"
+    },
+    {
+      "id": "15w33b",
+      "type": "snapshot",
+      "released": "2015-08-12"
+    },
+    {
+      "id": "15w33a",
+      "type": "snapshot",
+      "released": "2015-08-12"
+    },
+    {
+      "id": "15w32c",
+      "type": "snapshot",
+      "released": "2015-08-07"
+    },
+    {
+      "id": "15w32b",
+      "type": "snapshot",
+      "released": "2015-08-06"
+    },
+    {
+      "id": "15w32a",
+      "type": "snapshot",
+      "released": "2015-08-05"
+    },
+    {
+      "id": "15w31c",
+      "type": "snapshot",
+      "released": "2015-07-31"
+    },
+    {
+      "id": "15w31b",
+      "type": "snapshot",
+      "released": "2015-07-30"
+    },
+    {
+      "id": "15w31a",
+      "type": "snapshot",
+      "released": "2015-07-29"
+    },
+    {
+      "id": "1.8.8",
+      "type": "release",
+      "released": "2015-07-27"
+    },
+    {
+      "id": "1.8.7",
+      "type": "release",
+      "released": "2015-06-05"
+    },
+    {
+      "id": "1.8.6",
+      "type": "release",
+      "released": "2015-05-25"
+    },
+    {
+      "id": "1.8.5",
+      "type": "release",
+      "released": "2015-05-22"
+    },
+    {
+      "id": "1.8.4",
+      "type": "release",
+      "released": "2015-04-17"
+    },
+    {
+      "id": "15w14a",
+      "type": "snapshot",
+      "released": "2015-04-01"
+    },
+    {
+      "id": "1.8.3",
+      "type": "release",
+      "released": "2015-02-20"
+    },
+    {
+      "id": "1.8.2",
+      "type": "release",
+      "released": "2015-02-19"
+    },
+    {
+      "id": "1.8.2-pre7",
+      "type": "snapshot",
+      "released": "2015-02-16"
+    },
+    {
+      "id": "1.8.2-pre6",
+      "type": "snapshot",
+      "released": "2015-01-30"
+    },
+    {
+      "id": "1.8.2-pre5",
+      "type": "snapshot",
+      "released": "2015-01-26"
+    },
+    {
+      "id": "1.8.2-pre4",
+      "type": "snapshot",
+      "released": "2015-01-16"
+    },
+    {
+      "id": "1.8.2-pre3",
+      "type": "snapshot",
+      "released": "2015-01-15"
+    },
+    {
+      "id": "1.8.2-pre2",
+      "type": "snapshot",
+      "released": "2015-01-15"
+    },
+    {
+      "id": "1.8.2-pre1",
+      "type": "snapshot",
+      "released": "2014-12-18"
+    },
+    {
+      "id": "1.8.1",
+      "type": "release",
+      "released": "2014-11-24"
+    },
+    {
+      "id": "1.8.1-pre5",
+      "type": "snapshot",
+      "released": "2014-11-19"
+    },
+    {
+      "id": "1.8.1-pre4",
+      "type": "snapshot",
+      "released": "2014-11-06"
+    },
+    {
+      "id": "1.8.1-pre3",
+      "type": "snapshot",
+      "released": "2014-10-23"
+    },
+    {
+      "id": "1.8.1-pre2",
+      "type": "snapshot",
+      "released": "2014-10-16"
+    },
+    {
+      "id": "1.8.1-pre1",
+      "type": "snapshot",
+      "released": "2014-10-15"
+    },
+    {
+      "id": "1.8",
+      "type": "release",
+      "released": "2014-09-02"
+    },
+    {
+      "id": "1.8-pre3",
+      "type": "snapshot",
+      "released": "2014-08-28"
+    },
+    {
+      "id": "1.8-pre2",
+      "type": "snapshot",
+      "released": "2014-08-25"
+    },
+    {
+      "id": "1.8-pre1",
+      "type": "snapshot",
+      "released": "2014-08-21"
+    },
+    {
+      "id": "14w34d",
+      "type": "snapshot",
+      "released": "2014-08-20"
+    },
+    {
+      "id": "14w34c",
+      "type": "snapshot",
+      "released": "2014-08-19"
+    },
+    {
+      "id": "14w34b",
+      "type": "snapshot",
+      "released": "2014-08-18"
+    },
+    {
+      "id": "14w34a",
+      "type": "snapshot",
+      "released": "2014-08-18"
+    },
+    {
+      "id": "14w33c",
+      "type": "snapshot",
+      "released": "2014-08-15"
+    },
+    {
+      "id": "14w33b",
+      "type": "snapshot",
+      "released": "2014-08-15"
+    },
+    {
+      "id": "14w33a",
+      "type": "snapshot",
+      "released": "2014-08-13"
+    },
+    {
+      "id": "14w32d",
+      "type": "snapshot",
+      "released": "2014-08-08"
+    },
+    {
+      "id": "14w32c",
+      "type": "snapshot",
+      "released": "2014-08-08"
+    },
+    {
+      "id": "14w32b",
+      "type": "snapshot",
+      "released": "2014-08-07"
+    },
+    {
+      "id": "14w32a",
+      "type": "snapshot",
+      "released": "2014-08-06"
+    },
+    {
+      "id": "14w31a",
+      "type": "snapshot",
+      "released": "2014-07-30"
+    },
+    {
+      "id": "14w30c",
+      "type": "snapshot",
+      "released": "2014-07-24"
+    },
+    {
+      "id": "14w30b",
+      "type": "snapshot",
+      "released": "2014-07-23"
+    },
+    {
+      "id": "14w30a",
+      "type": "snapshot",
+      "released": "2014-07-23"
+    },
+    {
+      "id": "14w29b",
+      "type": "snapshot",
+      "released": "2014-07-16"
+    },
+    {
+      "id": "14w29a",
+      "type": "snapshot",
+      "released": "2014-07-16"
+    },
+    {
+      "id": "14w28b",
+      "type": "snapshot",
+      "released": "2014-07-10"
+    },
+    {
+      "id": "14w28a",
+      "type": "snapshot",
+      "released": "2014-07-09"
+    },
+    {
+      "id": "14w27b",
+      "type": "snapshot",
+      "released": "2014-07-02"
+    },
+    {
+      "id": "14w27a",
+      "type": "snapshot",
+      "released": "2014-07-02"
+    },
+    {
+      "id": "14w26c",
+      "type": "snapshot",
+      "released": "2014-06-26"
+    },
+    {
+      "id": "14w26b",
+      "type": "snapshot",
+      "released": "2014-06-25"
+    },
+    {
+      "id": "14w26a",
+      "type": "snapshot",
+      "released": "2014-06-25"
+    },
+    {
+      "id": "14w25b",
+      "type": "snapshot",
+      "released": "2014-06-19"
+    },
+    {
+      "id": "14w25a",
+      "type": "snapshot",
+      "released": "2014-06-18"
+    },
+    {
+      "id": "14w21b",
+      "type": "snapshot",
+      "released": "2014-05-22"
+    },
+    {
+      "id": "14w21a",
+      "type": "snapshot",
+      "released": "2014-05-22"
+    },
+    {
+      "id": "14w20b",
+      "type": "snapshot",
+      "released": "2014-05-15"
+    },
+    {
+      "id": "14w20a",
+      "type": "snapshot",
+      "released": "2014-05-15"
+    },
+    {
+      "id": "1.7.10",
+      "type": "release",
+      "released": "2014-05-14"
+    },
+    {
+      "id": "1.7.10-pre4",
+      "type": "snapshot",
+      "released": "2014-05-14"
+    },
+    {
+      "id": "1.7.10-pre3",
+      "type": "snapshot",
+      "released": "2014-05-14"
+    },
+    {
+      "id": "1.7.10-pre2",
+      "type": "snapshot",
+      "released": "2014-05-14"
+    },
+    {
+      "id": "1.7.10-pre1",
+      "type": "snapshot",
+      "released": "2014-05-14"
+    },
+    {
+      "id": "14w19a",
+      "type": "snapshot",
+      "released": "2014-05-08"
+    },
+    {
+      "id": "14w18b",
+      "type": "snapshot",
+      "released": "2014-05-02"
+    },
+    {
+      "id": "14w18a",
+      "type": "snapshot",
+      "released": "2014-04-30"
+    },
+    {
+      "id": "14w17a",
+      "type": "snapshot",
+      "released": "2014-04-24"
+    },
+    {
+      "id": "14w11b",
+      "type": "snapshot",
+      "released": "2014-04-14"
+    },
+    {
+      "id": "1.7.9",
+      "type": "release",
+      "released": "2014-04-14"
+    },
+    {
+      "id": "1.7.8",
+      "type": "release",
+      "released": "2014-04-09"
+    },
+    {
+      "id": "1.7.7",
+      "type": "release",
+      "released": "2014-04-09"
+    },
+    {
+      "id": "1.7.6",
+      "type": "release",
+      "released": "2014-04-09"
+    },
+    {
+      "id": "14w11a",
+      "type": "snapshot",
+      "released": "2014-03-13"
+    },
+    {
+      "id": "1.7.6-pre2",
+      "type": "snapshot",
+      "released": "2014-03-08"
+    },
+    {
+      "id": "1.7.6-pre1",
+      "type": "snapshot",
+      "released": "2014-03-08"
+    },
+    {
+      "id": "14w10c",
+      "type": "snapshot",
+      "released": "2014-03-07"
+    },
+    {
+      "id": "14w10b",
+      "type": "snapshot",
+      "released": "2014-03-06"
+    },
+    {
+      "id": "14w10a",
+      "type": "snapshot",
+      "released": "2014-03-06"
+    },
+    {
+      "id": "14w08a",
+      "type": "snapshot",
+      "released": "2014-02-26"
+    },
+    {
+      "id": "1.7.5",
+      "type": "release",
+      "released": "2014-02-26"
+    },
+    {
+      "id": "14w07a",
+      "type": "snapshot",
+      "released": "2014-02-14"
+    },
+    {
+      "id": "14w06b",
+      "type": "snapshot",
+      "released": "2014-02-06"
+    },
+    {
+      "id": "14w06a",
+      "type": "snapshot",
+      "released": "2014-02-06"
+    },
+    {
+      "id": "14w05b",
+      "type": "snapshot",
+      "released": "2014-01-31"
+    },
+    {
+      "id": "14w05a",
+      "type": "snapshot",
+      "released": "2014-01-30"
+    },
+    {
+      "id": "14w04b",
+      "type": "snapshot",
+      "released": "2014-01-24"
+    },
+    {
+      "id": "14w04a",
+      "type": "snapshot",
+      "released": "2014-01-23"
+    },
+    {
+      "id": "14w03b",
+      "type": "snapshot",
+      "released": "2014-01-16"
+    },
+    {
+      "id": "14w03a",
+      "type": "snapshot",
+      "released": "2014-01-16"
+    },
+    {
+      "id": "14w02c",
+      "type": "snapshot",
+      "released": "2014-01-10"
+    },
+    {
+      "id": "14w02b",
+      "type": "snapshot",
+      "released": "2014-01-09"
+    },
+    {
+      "id": "14w02a",
+      "type": "snapshot",
+      "released": "2014-01-09"
+    },
+    {
+      "id": "1.7.4",
+      "type": "release",
+      "released": "2013-12-09"
+    },
+    {
+      "id": "1.7.3",
+      "type": "release",
+      "released": "2013-12-06"
+    },
+    {
+      "id": "13w49a",
+      "type": "snapshot",
+      "released": "2013-12-05"
+    },
+    {
+      "id": "13w48b",
+      "type": "snapshot",
+      "released": "2013-11-26"
+    },
+    {
+      "id": "13w48a",
+      "type": "snapshot",
+      "released": "2013-11-25"
+    },
+    {
+      "id": "13w47e",
+      "type": "snapshot",
+      "released": "2013-11-22"
+    },
+    {
+      "id": "13w47d",
+      "type": "snapshot",
+      "released": "2013-11-22"
+    },
+    {
+      "id": "13w47c",
+      "type": "snapshot",
+      "released": "2013-11-21"
+    },
+    {
+      "id": "13w47b",
+      "type": "snapshot",
+      "released": "2013-11-21"
+    },
+    {
+      "id": "13w47a",
+      "type": "snapshot",
+      "released": "2013-11-21"
+    },
+    {
+      "id": "1.7.2",
+      "type": "release",
+      "released": "2013-10-25"
+    },
+    {
+      "id": "1.7.1",
+      "type": "snapshot",
+      "released": "2013-10-23"
+    },
+    {
+      "id": "1.7",
+      "type": "snapshot",
+      "released": "2013-10-22"
+    },
+    {
+      "id": "13w43a",
+      "type": "snapshot",
+      "released": "2013-10-21"
+    },
+    {
+      "id": "13w42b",
+      "type": "snapshot",
+      "released": "2013-10-18"
+    },
+    {
+      "id": "13w42a",
+      "type": "snapshot",
+      "released": "2013-10-17"
+    },
+    {
+      "id": "13w41b",
+      "type": "snapshot",
+      "released": "2013-10-11"
+    },
+    {
+      "id": "13w41a",
+      "type": "snapshot",
+      "released": "2013-10-10"
+    },
+    {
+      "id": "13w39b",
+      "type": "snapshot",
+      "released": "2013-09-27"
+    },
+    {
+      "id": "13w39a",
+      "type": "snapshot",
+      "released": "2013-09-26"
+    },
+    {
+      "id": "13w38c",
+      "type": "snapshot",
+      "released": "2013-09-20"
+    },
+    {
+      "id": "13w38b",
+      "type": "snapshot",
+      "released": "2013-09-20"
+    },
+    {
+      "id": "13w38a",
+      "type": "snapshot",
+      "released": "2013-09-19"
+    },
+    {
+      "id": "1.6.4",
+      "type": "release",
+      "released": "2013-09-19"
+    },
+    {
+      "id": "1.6.3",
+      "type": "snapshot",
+      "released": "2013-09-13"
+    },
+    {
+      "id": "13w37b",
+      "type": "snapshot",
+      "released": "2013-09-13"
+    },
+    {
+      "id": "13w37a",
+      "type": "snapshot",
+      "released": "2013-09-12"
+    },
+    {
+      "id": "13w36b",
+      "type": "snapshot",
+      "released": "2013-09-06"
+    },
+    {
+      "id": "13w36a",
+      "type": "snapshot",
+      "released": "2013-09-05"
+    },
+    {
+      "id": "1.6.2",
+      "type": "release",
+      "released": "2013-07-05"
+    },
+    {
+      "id": "1.6.1",
+      "type": "release",
+      "released": "2013-06-28"
+    },
+    {
+      "id": "1.6",
+      "type": "snapshot",
+      "released": "2013-06-25"
+    },
+    {
+      "id": "13w26a",
+      "type": "snapshot",
+      "released": "2013-06-24"
+    },
+    {
+      "id": "13w25c",
+      "type": "snapshot",
+      "released": "2013-06-20"
+    },
+    {
+      "id": "13w25b",
+      "type": "snapshot",
+      "released": "2013-06-18"
+    },
+    {
+      "id": "13w25a",
+      "type": "snapshot",
+      "released": "2013-06-17"
+    },
+    {
+      "id": "13w24b",
+      "type": "snapshot",
+      "released": "2013-06-14"
+    },
+    {
+      "id": "13w24a",
+      "type": "snapshot",
+      "released": "2013-06-13"
+    },
+    {
+      "id": "13w23b",
+      "type": "snapshot",
+      "released": "2013-06-08"
+    },
+    {
+      "id": "13w23a",
+      "type": "snapshot",
+      "released": "2013-06-07"
+    },
+    {
+      "id": "13w22a",
+      "type": "snapshot",
+      "released": "2013-05-30"
+    },
+    {
+      "id": "13w21b",
+      "type": "snapshot",
+      "released": "2013-05-27"
+    },
+    {
+      "id": "13w21a",
+      "type": "snapshot",
+      "released": "2013-05-23"
+    },
+    {
+      "id": "13w19a",
+      "type": "snapshot",
+      "released": "2013-05-10"
+    },
+    {
+      "id": "13w18c",
+      "type": "snapshot",
+      "released": "2013-05-03"
+    },
+    {
+      "id": "13w18b",
+      "type": "snapshot",
+      "released": "2013-05-02"
+    },
+    {
+      "id": "13w18a",
+      "type": "snapshot",
+      "released": "2013-05-02"
+    },
+    {
+      "id": "13w17a",
+      "type": "snapshot",
+      "released": "2013-04-25"
+    },
+    {
+      "id": "1.5.2",
+      "type": "release",
+      "released": "2013-04-25"
+    },
+    {
+      "id": "13w16b",
+      "type": "snapshot",
+      "released": "2013-04-23"
+    },
+    {
+      "id": "13w16a",
+      "type": "snapshot",
+      "released": "2013-04-21"
+    },
+    {
+      "id": "1.5.1",
+      "type": "release",
+      "released": "2013-03-20"
+    },
+    {
+      "id": "1.5",
+      "type": "snapshot",
+      "released": "2013-03-06"
+    },
+    {
+      "id": "1.4.7",
+      "type": "release",
+      "released": "2012-12-27"
+    },
+    {
+      "id": "1.4.6",
+      "type": "release",
+      "released": "2012-12-19"
+    },
+    {
+      "id": "1.4.5",
+      "type": "release",
+      "released": "2012-12-19"
+    },
+    {
+      "id": "1.4.4",
+      "type": "release",
+      "released": "2012-12-13"
+    },
+    {
+      "id": "1.4.3",
+      "type": "snapshot",
+      "released": "2012-11-30"
+    },
+    {
+      "id": "1.4.2",
+      "type": "release",
+      "released": "2012-11-24"
+    },
+    {
+      "id": "1.4.1",
+      "type": "snapshot",
+      "released": "2012-11-22"
+    },
+    {
+      "id": "1.4",
+      "type": "snapshot",
+      "released": "2012-11-18"
+    },
+    {
+      "id": "1.3.2",
+      "type": "release",
+      "released": "2012-08-15"
+    },
+    {
+      "id": "1.3.1",
+      "type": "release",
+      "released": "2012-07-31"
+    },
+    {
+      "id": "1.3",
+      "type": "snapshot",
+      "released": "2012-07-25"
+    },
+    {
+      "id": "1.2.5",
+      "type": "release",
+      "released": "2012-03-29"
+    },
+    {
+      "id": "1.2.4",
+      "type": "release",
+      "released": "2012-03-21"
+    },
+    {
+      "id": "1.2.3",
+      "type": "release",
+      "released": "2012-03-01"
+    },
+    {
+      "id": "1.2.2",
+      "type": "release",
+      "released": "2012-02-29"
+    },
+    {
+      "id": "1.2.1",
+      "type": "release",
+      "released": "2012-02-29"
+    },
+    {
+      "id": "1.1",
+      "type": "release",
+      "released": "2012-01-11"
+    },
+    {
+      "id": "1.0",
+      "type": "release",
+      "released": "2011-11-17"
+    },
+    {
+      "id": "b1.8.1",
+      "type": "old_beta",
+      "released": "2011-09-18"
+    },
+    {
+      "id": "b1.8",
+      "type": "old_beta",
+      "released": "2011-09-14"
+    },
+    {
+      "id": "b1.7.3",
+      "type": "old_beta",
+      "released": "2011-07-07"
+    },
+    {
+      "id": "b1.7.2",
+      "type": "old_beta",
+      "released": "2011-06-30"
+    },
+    {
+      "id": "b1.7",
+      "type": "old_beta",
+      "released": "2011-06-29"
+    },
+    {
+      "id": "b1.6.6",
+      "type": "old_beta",
+      "released": "2011-05-30"
+    },
+    {
+      "id": "b1.6.5",
+      "type": "old_beta",
+      "released": "2011-05-27"
+    },
+    {
+      "id": "b1.6.4",
+      "type": "old_beta",
+      "released": "2011-05-25"
+    },
+    {
+      "id": "b1.6.3",
+      "type": "old_beta",
+      "released": "2011-05-25"
+    },
+    {
+      "id": "b1.6.2",
+      "type": "old_beta",
+      "released": "2011-05-25"
+    },
+    {
+      "id": "b1.6.1",
+      "type": "old_beta",
+      "released": "2011-05-25"
+    },
+    {
+      "id": "b1.6",
+      "type": "old_beta",
+      "released": "2011-05-25"
+    },
+    {
+      "id": "b1.5_01",
+      "type": "old_beta",
+      "released": "2011-04-19"
+    },
+    {
+      "id": "b1.5",
+      "type": "old_beta",
+      "released": "2011-04-18"
+    },
+    {
+      "id": "b1.4_01",
+      "type": "old_beta",
+      "released": "2011-04-04"
+    },
+    {
+      "id": "b1.4",
+      "type": "old_beta",
+      "released": "2011-03-30"
+    },
+    {
+      "id": "b1.3_01",
+      "type": "old_beta",
+      "released": "2011-02-22"
+    },
+    {
+      "id": "b1.3b",
+      "type": "old_beta",
+      "released": "2011-02-21"
+    },
+    {
+      "id": "b1.2_02",
+      "type": "old_beta",
+      "released": "2011-01-20"
+    },
+    {
+      "id": "b1.2_01",
+      "type": "old_beta",
+      "released": "2011-01-13"
+    },
+    {
+      "id": "b1.2",
+      "type": "old_beta",
+      "released": "2011-01-12"
+    },
+    {
+      "id": "b1.1_02",
+      "type": "old_beta",
+      "released": "2010-12-21"
+    },
+    {
+      "id": "b1.1_01",
+      "type": "old_beta",
+      "released": "2010-12-21"
+    },
+    {
+      "id": "b1.0.2",
+      "type": "old_beta",
+      "released": "2010-12-20"
+    },
+    {
+      "id": "b1.0_01",
+      "type": "old_beta",
+      "released": "2010-12-19"
+    },
+    {
+      "id": "b1.0",
+      "type": "old_beta",
+      "released": "2010-12-19"
+    },
+    {
+      "id": "a1.2.6",
+      "type": "old_alpha",
+      "released": "2010-12-02"
+    },
+    {
+      "id": "a1.2.5",
+      "type": "old_alpha",
+      "released": "2010-11-30"
+    },
+    {
+      "id": "a1.2.4_01",
+      "type": "old_alpha",
+      "released": "2010-11-29"
+    },
+    {
+      "id": "a1.2.3_04",
+      "type": "old_alpha",
+      "released": "2010-11-25"
+    },
+    {
+      "id": "a1.2.3_02",
+      "type": "old_alpha",
+      "released": "2010-11-24"
+    },
+    {
+      "id": "a1.2.3_01",
+      "type": "old_alpha",
+      "released": "2010-11-23"
+    },
+    {
+      "id": "a1.2.3",
+      "type": "old_alpha",
+      "released": "2010-11-23"
+    },
+    {
+      "id": "a1.2.2b",
+      "type": "old_alpha",
+      "released": "2010-11-09"
+    },
+    {
+      "id": "a1.2.2a",
+      "type": "old_alpha",
+      "released": "2010-11-09"
+    },
+    {
+      "id": "a1.2.1_01",
+      "type": "old_alpha",
+      "released": "2010-11-04"
+    },
+    {
+      "id": "a1.2.1",
+      "type": "old_alpha",
+      "released": "2010-11-04"
+    },
+    {
+      "id": "a1.2.0_02",
+      "type": "old_alpha",
+      "released": "2010-11-03"
+    },
+    {
+      "id": "a1.2.0_01",
+      "type": "old_alpha",
+      "released": "2010-10-30"
+    },
+    {
+      "id": "a1.2.0",
+      "type": "old_alpha",
+      "released": "2010-10-29"
+    },
+    {
+      "id": "a1.1.2_01",
+      "type": "old_alpha",
+      "released": "2010-09-22"
+    },
+    {
+      "id": "a1.1.2",
+      "type": "old_alpha",
+      "released": "2010-09-19"
+    },
+    {
+      "id": "a1.1.0",
+      "type": "old_alpha",
+      "released": "2010-09-12"
+    },
+    {
+      "id": "a1.0.17_04",
+      "type": "old_alpha",
+      "released": "2010-08-22"
+    },
+    {
+      "id": "a1.0.17_02",
+      "type": "old_alpha",
+      "released": "2010-08-19"
+    },
+    {
+      "id": "a1.0.16",
+      "type": "old_alpha",
+      "released": "2010-08-11"
+    },
+    {
+      "id": "a1.0.15",
+      "type": "old_alpha",
+      "released": "2010-08-03"
+    },
+    {
+      "id": "a1.0.14",
+      "type": "old_alpha",
+      "released": "2010-07-29"
+    },
+    {
+      "id": "a1.0.11",
+      "type": "old_alpha",
+      "released": "2010-07-22"
+    },
+    {
+      "id": "a1.0.5_01",
+      "type": "old_alpha",
+      "released": "2010-07-12"
+    },
+    {
+      "id": "a1.0.4",
+      "type": "old_alpha",
+      "released": "2010-07-08"
+    },
+    {
+      "id": "inf-20100618",
+      "type": "old_alpha",
+      "released": "2010-06-15"
+    },
+    {
+      "id": "c0.30_01c",
+      "type": "old_alpha",
+      "released": "2009-12-21"
+    },
+    {
+      "id": "c0.0.13a",
+      "type": "old_alpha",
+      "released": "2009-05-30"
+    },
+    {
+      "id": "c0.0.13a_03",
+      "type": "old_alpha",
+      "released": "2009-05-21"
+    },
+    {
+      "id": "c0.0.11a",
+      "type": "old_alpha",
+      "released": "2009-05-16"
+    },
+    {
+      "id": "rd-161348",
+      "type": "old_alpha",
+      "released": "2009-05-16"
+    },
+    {
+      "id": "rd-160052",
+      "type": "old_alpha",
+      "released": "2009-05-15"
+    },
+    {
+      "id": "rd-20090515",
+      "type": "old_alpha",
+      "released": "2009-05-14"
+    },
+    {
+      "id": "rd-132328",
+      "type": "old_alpha",
+      "released": "2009-05-13"
+    },
+    {
+      "id": "rd-132211",
+      "type": "old_alpha",
+      "released": "2009-05-13"
+    }
+  ]
+}
