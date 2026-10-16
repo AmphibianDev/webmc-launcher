@@ -1,0 +1,69 @@
+name: Deploy the launcher to Pages
+
+# Publishes this directory to GitHub Pages. It builds nothing, runs nothing and
+# serves nothing: it takes the files that are on the branch and makes them the
+# site.
+#
+# GitHub Actions may be used for "the production, testing, deployment, or
+# publication of the software project" (Additional Product Terms, Actions). This
+# file is the "deployment / publication" half of that sentence and nothing else.
+# There is no job here that runs a game, opens a route in from outside, or hands
+# anybody a session — `webmc-port/COMPLIANCE.md` and `STREAMING.md` are where that
+# line is drawn, and the lint in `webmc-port/tools/workflow_lint.py` fails a
+# workflow that crosses it.
+#
+# Pages is served from this workflow rather than from the branch, so the two cannot
+# drift: what is on `main` is what is live, and a deploy that fails leaves the
+# previous site up instead of a half-published one.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    name: Publish to Pages
+    runs-on: ubuntu-24.04
+    # A static upload; this is a ceiling on something stuck, not a budget.
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Stage the site
+        # Everything except the repository metadata and this workflow: the page,
+        # the catalogue, the scan and tools/ are the site; .git is not.
+        run: |
+          set -euo pipefail
+          mkdir -p _site
+          rsync -a --exclude '.git' --exclude '.github' --exclude '_site' ./ _site/
+          test -f _site/index.html
+          echo "staged $(find _site -type f | wc -l | tr -d ' ') files, $(du -sh _site | cut -f1)"
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload the site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+      - name: Deploy
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Say where it landed
+        run: echo "live at ${{ steps.deployment.outputs.page_url }}"
