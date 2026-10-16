@@ -1,1146 +1,434 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>WebMC — Minecraft: Java Edition</title>
+<title>WebMC — Minecraft in the browser</title>
+<meta name="description" content="Minecraft Java Edition, compiled to run in a browser tab. Nine hundred versions, no install, mods baked in at build time." />
 <style>
-  /* The Minecraft Launcher's Java Edition page, in its own visual language: flat near-
-     monochrome dark greys, one saturated green for PLAY, a hero banner over the play
-     button, an installation picker as a wide two-line button, news rows with a thumbnail,
-     the player at the foot of the rail, the launcher version under it.
-     All of it is our own CSS; no Mojang artwork, font file or stylesheet is used. */
   :root {
-    color-scheme: dark;
-    --rail: #141414;
-    --rail-lit: #262626;
-    --bg: #1a1a1a;
-    --panel: #262626;
-    --panel-2: #313131;
-    --panel-3: #3d3d3d;
-    --line: #3a3a3a;
-    --line-soft: #2e2e2e;
-    --text: #f5f5f5;
-    --dim: #a3a3a3;
-    --faint: #767676;
-    --green: #3c8527;
-    --green-lit: #46962c;
-    --green-dark: #24501a;
-    --gold: #ffd479;
-    --blue: #8fc7ff;
-    --red: #d4665c;
-    --r: 6px;
-    --r-sm: 4px;
-    --mc: "Minecraft", "Minecraft Five", "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+    /* The palette is the cover art's: a dark page, lava for the thing to press, grass for what works. */
+    --ink: #0b0b0c;
+    --panel: #131316;
+    --raised: #1a1a1e;
+    --line: #2a2a30;
+    --text: #ececec;
+    --muted: #9a9aa2;
+    --lava: #d2591f;
+    --lava-soft: #7a3413;
+    --grass: #2f9e6b;
+    --amber: #e0b04a;
+    --radius: 10px;
+    --mono: ui-monospace, "SF Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+    font-synthesis: none;
   }
   * { box-sizing: border-box; }
-  html, body { height: 100%; }
-  body { margin: 0; background: var(--bg); color: var(--text); overflow: hidden;
-    font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    -webkit-font-smoothing: antialiased; }
-  a { color: var(--blue); text-decoration: none; }
-  a:hover { text-decoration: underline; }
-  .mono, code, pre { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
-  ::-webkit-scrollbar { width: 10px; height: 10px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #3d3d3d; border: 2px solid var(--bg); border-radius: 6px; }
-  ::-webkit-scrollbar-thumb:hover { background: #4a4a4a; }
-  :focus-visible { outline: 2px solid var(--green-lit); outline-offset: 2px; border-radius: 3px; }
+  html, body { margin: 0; background: var(--ink); color: var(--text); }
+  body { font: 14px/1.55 var(--mono); -webkit-font-smoothing: antialiased; }
+  a { color: inherit; }
+  button, input, select { font: inherit; color: inherit; }
+  button { cursor: pointer; }
 
-  .app { display: grid; grid-template-columns: 72px 1fr; height: 100vh; }
+  .shell { max-width: 1180px; margin: 0 auto; padding: 0 20px 80px; }
 
-  /* -------------------------------------------------------------------- rail --- */
-  .rail { background: var(--rail); display: flex; flex-direction: column; align-items: center;
-    padding: 10px 0 8px; gap: 6px; border-right: 1px solid #0d0d0d; }
-  .game { width: 48px; height: 48px; border: 0; padding: 0; border-radius: var(--r); cursor: pointer;
-    background: transparent; display: grid; place-items: center; position: relative;
-    transition: background .12s ease; }
-  .game:hover { background: #202020; }
-  .game.on { background: var(--rail-lit); }
-  .game.on::before { content: ""; position: absolute; left: -12px; top: 11px; bottom: 11px; width: 3px;
-    border-radius: 0 2px 2px 0; background: var(--text); }
-  .game.dead { opacity: .38; cursor: default; }
-  .game.dead:hover { background: transparent; }
-  .block { width: 30px; height: 30px; border-radius: 3px;
-    box-shadow: inset 0 0 0 1px rgba(0,0,0,.4), inset 0 -5px 0 rgba(0,0,0,.14); }
-  .block.java { background: linear-gradient(#83c05f 0 28%, #6aa84f 28% 37%, #8a6b45 37% 100%); }
-  .block.win  { background: linear-gradient(#79bcda 0 28%, #5793ad 28% 37%, #3f5f7d 37% 100%); }
-  .block.dung { background: linear-gradient(#a58ce4 0 28%, #7f62c9 28% 37%, #4d3d6e 37% 100%); }
-  .block.leg  { background: linear-gradient(#e6ae57 0 28%, #c99545 28% 37%, #70502f 37% 100%); }
-  .rail-foot { margin-top: auto; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-  .who { display: grid; place-items: center; gap: 5px; padding: 8px 0 2px; width: 100%;
-    border-top: 1px solid #0d0d0d; }
-  .head { width: 30px; height: 30px; border-radius: var(--r-sm);
-    background: linear-gradient(#c9a37c 0 45%, #8a6b45 45% 100%);
-    box-shadow: inset 0 0 0 1px rgba(0,0,0,.45), inset 0 -8px 0 rgba(0,0,0,.1); }
-  .who b { font-size: 10.5px; color: var(--dim); max-width: 62px; overflow: hidden;
-    text-overflow: ellipsis; white-space: nowrap; }
-  .ver { color: var(--faint); font-size: 9.5px; text-align: center; padding: 2px 4px 4px;
-    line-height: 1.3; }
+  /* ---------------------------------------------------------------- header */
+  header.top {
+    position: sticky; top: 0; z-index: 20;
+    backdrop-filter: blur(8px);
+    background: color-mix(in srgb, var(--ink) 82%, transparent);
+    border-bottom: 1px solid var(--line);
+  }
+  header.top .row { max-width: 1180px; margin: 0 auto; padding: 10px 20px; display: flex; align-items: center; gap: 14px; }
+  .mark { display: flex; align-items: center; gap: 9px; font-weight: 700; letter-spacing: .04em; }
+  .mark .cube { width: 16px; height: 16px; background: var(--lava); box-shadow: 4px 4px 0 0 var(--lava-soft); }
+  header.top nav { margin-left: auto; display: flex; gap: 16px; flex-wrap: wrap; }
+  header.top nav a { color: var(--muted); text-decoration: none; }
+  header.top nav a:hover { color: var(--text); }
 
-  /* ------------------------------------------------------------------ content --- */
-  main { display: flex; flex-direction: column; min-width: 0; overflow: hidden; }
-  .head-row { display: flex; align-items: center; gap: 16px; padding: 22px 28px 0; }
-  .head-row h1 { margin: 0; font-family: var(--mc); font-weight: 400; font-size: 24px;
-    letter-spacing: .01em; }
-  .head-row .sub { color: var(--dim); font-size: 12.5px; }
-  .head-row .right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
-  .pill { padding: 4px 11px; border-radius: 999px; font-size: 11.5px; font-weight: 600;
-    background: var(--panel); border: 1px solid var(--line); color: var(--dim);
-    transition: color .15s, border-color .15s; }
-  .pill.s-work { color: var(--gold); border-color: #5c4a22; background: #33291a; }
-  .pill.s-live { color: #b6f0a2; border-color: #3c5c30; background: #22301c; }
-  .pill.s-bad  { color: #ffc4bf; border-color: #5c3030; background: #331f1f; }
+  /* ---------------------------------------------------------------- hero */
+  .hero {
+    position: relative; margin: 22px 0 26px; border: 1px solid var(--line); border-radius: var(--radius);
+    overflow: hidden; min-height: 320px; display: grid; align-items: end;
+    background: #000 url("cover.png") center/cover no-repeat;
+  }
+  .hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(6,6,7,.25) 0%, rgba(6,6,7,.72) 55%, rgba(6,6,7,.95) 100%); }
+  .hero .copy { position: relative; z-index: 1; padding: 26px 26px 22px; }
+  .kicker { color: var(--lava); letter-spacing: .16em; text-transform: uppercase; font-size: 11px; margin: 0 0 6px; }
+  .hero h1 { font-size: clamp(26px, 4.4vw, 44px); line-height: 1.05; margin: 0 0 8px; letter-spacing: -.01em; }
+  .hero p.lede { margin: 0 0 16px; color: #cfcfd4; max-width: 62ch; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .btn {
+    border: 1px solid var(--line); background: var(--raised); color: var(--text);
+    padding: 10px 16px; border-radius: 8px; display: inline-flex; gap: 8px; align-items: center; text-decoration: none;
+  }
+  .btn:hover { border-color: #3d3d46; }
+  .btn.primary { background: var(--lava); border-color: #e97a3f; color: #180a02; font-weight: 700; }
+  .btn.primary:hover { background: #e0662a; }
+  .btn.ghost { background: transparent; }
+  .badge { border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; color: var(--muted); font-size: 12px; }
+  .badge.ok { color: #b7e2cc; border-color: #245c42; }
+  .badge.warn { color: #efd79a; border-color: #6b5420; }
+  .badge.bad { color: #f0b6a2; border-color: #6d2f1f; }
 
-  .tabs { display: flex; gap: 26px; padding: 18px 28px 0; border-bottom: 1px solid var(--line-soft); }
-  .tab { background: none; border: 0; padding: 0 0 12px; margin-bottom: -1px; cursor: pointer;
-    color: var(--dim); font-size: 14.5px; border-bottom: 2px solid transparent;
-    transition: color .12s, border-color .12s; }
-  .tab:hover { color: var(--text); }
-  .tab.on { color: var(--text); border-bottom-color: var(--green-lit); }
-  .tab.dead { opacity: .4; cursor: default; }
-  .tab.dead:hover { color: var(--dim); }
+  /* ---------------------------------------------------------------- layout */
+  .grid { display: grid; grid-template-columns: 1.35fr .95fr; gap: 18px; align-items: start; }
+  @media (max-width: 880px) { .grid { grid-template-columns: 1fr; } }
+  section.card { border: 1px solid var(--line); background: var(--panel); border-radius: var(--radius); padding: 16px; }
+  section.card h2 { margin: 0 0 4px; font-size: 15px; letter-spacing: .01em; }
+  section.card p.sub { margin: 0 0 14px; color: var(--muted); }
+  .hint { color: var(--muted); font-size: 12.5px; }
 
-  .stage { flex: 1; min-height: 0; overflow: auto; padding: 24px 28px 32px; }
-  .pane { display: none; animation: fade .18s ease; }
-  .pane.on { display: block; }
-  @keyframes fade { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; } }
+  /* ---------------------------------------------------------------- version list */
+  .filters { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 12px; }
+  .filters input[type="search"] {
+    flex: 1 1 200px; min-width: 140px; background: #0f0f12; border: 1px solid var(--line);
+    border-radius: 8px; padding: 8px 10px;
+  }
+  .filters select { background: #0f0f12; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
+  .list { max-height: 430px; overflow: auto; border: 1px solid var(--line); border-radius: 8px; }
+  .row {
+    display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center;
+    padding: 8px 11px; border-bottom: 1px solid #1e1e23; cursor: pointer; background: transparent; width: 100%; text-align: left;
+  }
+  .row:last-child { border-bottom: 0; }
+  .row:hover { background: #16161b; }
+  .row[aria-selected="true"] { background: #1d1d23; box-shadow: inset 3px 0 0 0 var(--lava); }
+  .row .id { font-weight: 600; }
+  .row .meta { color: var(--muted); font-size: 12px; }
 
-  h2.sec { margin: 0 0 4px; font-family: var(--mc); font-weight: 400; font-size: 19px; }
-  p.lede { color: var(--dim); font-size: 13.5px; margin: 0 0 18px; max-width: 760px; }
-  .h3 { margin: 0 0 10px; font-family: var(--mc); font-weight: 400; font-size: 15px; }
+  /* ---------------------------------------------------------------- detail */
+  dl.facts { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 12px 0 0; }
+  dl.facts dt { color: var(--muted); }
+  dl.facts dd { margin: 0; }
+  .provenance { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; }
+  .provenance div { display: flex; justify-content: space-between; gap: 10px; padding: 2px 0; color: var(--muted); }
+  .provenance b { color: var(--text); font-weight: 500; }
 
-  /* --------------------------------------------------------------- play pane --- */
-  .playgrid { display: grid; grid-template-columns: minmax(320px, 400px) minmax(280px, 1fr);
-    gap: 32px; align-items: start; }
-  @media (max-width: 960px) { .playgrid { grid-template-columns: 1fr; } }
+  /* ---------------------------------------------------------------- mods */
+  table.mods { width: 100%; border-collapse: collapse; }
+  table.mods th, table.mods td { text-align: left; padding: 6px 8px 6px 0; border-bottom: 1px solid #1e1e23; vertical-align: top; }
+  table.mods th { color: var(--muted); font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
+  .meter { height: 6px; background: #232329; border-radius: 4px; overflow: hidden; min-width: 70px; }
+  .meter > i { display: block; height: 100%; background: var(--grass); }
+  .meter.partial > i { background: var(--amber); }
+  .meter.none > i { background: #6d2f1f; }
+  details.more { margin-top: 10px; }
+  details.more summary { cursor: pointer; color: var(--muted); }
 
-  .hero { position: relative; height: 132px; border-radius: var(--r); overflow: hidden;
-    border: 1px solid var(--line-soft);
-    background: linear-gradient(180deg, #2b3242 0 46%, #35502a 46% 54%, #3f2f20 54% 100%); }
-  .hero::after { content: ""; position: absolute; inset: 0;
-    background: linear-gradient(90deg, rgba(0,0,0,.45), rgba(0,0,0,.05) 60%); }
-  .hero .art { position: absolute; inset: 0;
-    background: repeating-linear-gradient(102deg, rgba(255,255,255,.035) 0 6px, transparent 6px 14px); }
-  .hero .label { position: absolute; left: 16px; bottom: 12px; z-index: 1; }
-  .hero .label small { display: block; color: #d6dbe3; font-size: 11.5px; letter-spacing: .1em;
-    text-transform: uppercase; }
-  .hero .label b { font-family: var(--mc); font-weight: 700; font-size: 30px; letter-spacing: .02em;
-    text-shadow: 0 2px 0 rgba(0,0,0,.5); }
-  .hero.snap { background: linear-gradient(180deg, #3a3626 0 46%, #4a4222 46% 54%, #3a2f1c 54% 100%); }
-  .hero.old { background: linear-gradient(180deg, #2c2c3a 0 46%, #3a3a4c 54%, #26262f 54% 100%); }
+  /* ---------------------------------------------------------------- build form */
+  form.build { display: grid; gap: 8px; margin-top: 6px; }
+  form.build label { color: var(--muted); font-size: 12.5px; }
+  form.build input, form.build select, form.build textarea {
+    background: #0f0f12; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; width: 100%;
+  }
+  form.build textarea { min-height: 62px; resize: vertical; }
+  .job { border: 1px solid var(--line); border-radius: 8px; padding: 10px; margin-top: 10px; background: #0f0f12; }
+  .job ol { margin: 8px 0 0; padding-left: 18px; max-height: 140px; overflow: auto; color: var(--muted); }
+  .job code { color: var(--text); }
 
-  .play-btn { width: 100%; margin-top: 14px; padding: 16px 20px; border: 0; border-radius: var(--r);
-    cursor: pointer; background: var(--green); color: #fff; font-family: var(--mc);
-    font-weight: 700; font-size: 24px; letter-spacing: .12em; text-transform: uppercase;
-    box-shadow: 0 3px 0 var(--green-dark); transition: background .12s, transform .06s; }
-  .play-btn:hover:not(:disabled) { background: var(--green-lit); }
-  .play-btn:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 var(--green-dark); }
-  .play-btn:disabled { background: #3d3d3d; color: #8f8f8f; cursor: default; box-shadow: 0 3px 0 #2a2a2a; }
-
-  .picker { position: relative; margin-top: 10px; }
-  .picker-btn { width: 100%; display: flex; align-items: center; gap: 12px; padding: 11px 13px;
-    background: var(--panel); border: 1px solid var(--line); border-radius: var(--r);
-    color: var(--text); cursor: pointer; text-align: left; transition: background .12s; }
-  .picker-btn:hover { background: var(--panel-2); }
-  .picker-btn[aria-expanded="true"] { border-color: var(--panel-3); background: var(--panel-2); }
-  .swatch { width: 30px; height: 30px; border-radius: 3px; flex: none;
-    background: linear-gradient(#83c05f 0 28%, #6aa84f 28% 37%, #8a6b45 37% 100%);
-    box-shadow: inset 0 0 0 1px rgba(0,0,0,.4); }
-  .picker-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.3; }
-  .picker-text small { color: var(--dim); font-size: 11.5px; }
-  .picker-text b { font-size: 15px; }
-  .chev { margin-left: auto; color: var(--dim); font-size: 10px; }
-
-  .menu { position: absolute; z-index: 40; left: 0; right: 0; top: calc(100% + 6px);
-    background: #202020; border: 1px solid var(--line); border-radius: var(--r); padding: 12px;
-    box-shadow: 0 20px 50px rgba(0,0,0,.6); }
-  .menu[hidden] { display: none; }
-  #versionSearch, .filters input { width: 100%; padding: 10px 12px; border-radius: var(--r-sm);
-    background: #161616; border: 1px solid var(--line); color: var(--text); }
-  #versionSearch::placeholder { color: var(--faint); }
-  .chips { display: flex; gap: 6px; margin: 10px 0 2px; flex-wrap: wrap; align-items: center; }
-  .chips .group { color: var(--faint); font-size: 10.5px; letter-spacing: .1em;
-    text-transform: uppercase; margin-right: 2px; }
-  .chip { padding: 5px 12px; font-size: 12.5px; border-radius: 999px; cursor: pointer;
-    background: var(--panel); border: 1px solid var(--line); color: var(--dim);
-    transition: background .12s, color .12s, border-color .12s; }
-  .chip:hover { background: var(--panel-2); color: var(--text); }
-  .chip.on { background: #2f4227; border-color: #4c6a3a; color: #dcf3cc; }
-  .vlist { list-style: none; margin: 8px 0 0; padding: 0; max-height: 320px; overflow: auto; }
-  .vlist li { display: flex; align-items: center; gap: 10px; padding: 8px 9px; border-radius: var(--r-sm);
-    cursor: pointer; }
-  .vlist li:hover { background: var(--panel-2); }
-  .vlist li.on { background: #2f4227; }
-  .vlist .meta { margin-left: auto; color: var(--faint); font-size: 12px; }
-  .vlist .tag { font-size: 11px; color: var(--dim); border: 1px solid var(--line);
-    border-radius: 999px; padding: 1px 8px; }
-
-  .playgrid .note { color: var(--dim); font-size: 12.5px; margin-top: 12px; min-height: 34px; }
-  .playgrid .note.warn { color: var(--gold); }
-  .fields { display: grid; gap: 10px; margin-top: 20px; padding-top: 18px;
-    border-top: 1px solid var(--line-soft); }
-  .field { display: grid; grid-template-columns: 96px 1fr; align-items: center; gap: 10px; }
-  .field label { color: var(--dim); font-size: 12.5px; }
-  .field select, .field input { width: 100%; padding: 9px 11px; border-radius: var(--r-sm);
-    background: var(--panel); border: 1px solid var(--line); color: var(--text); }
-  .field input[type=number] { max-width: 92px; }
-
-  .panel { background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--r);
-    padding: 16px; }
-  .row-actions { display: flex; gap: 9px; margin-top: 14px; flex-wrap: wrap; }
-  .btn { padding: 9px 15px; border-radius: var(--r-sm); cursor: pointer; color: var(--text);
-    background: var(--panel-2); border: 1px solid var(--line); font-size: 13.5px;
-    transition: background .12s; }
-  .btn:hover { background: var(--panel-3); }
-  .btn.primary { background: var(--green); border-color: var(--green-dark); font-weight: 600; }
-  .btn.primary:hover { background: var(--green-lit); }
-  .btn:disabled { opacity: .45; cursor: default; }
-  .btn:disabled:hover { background: var(--panel-2); }
-
-  .pf { display: grid; gap: 8px; }
-  .pf-item { display: flex; gap: 9px; align-items: baseline; font-size: 12.5px; color: var(--dim); }
-  .pf-item b { color: var(--text); font-weight: 600; }
-  .pf-item .dot { width: 8px; height: 8px; border-radius: 50%; background: #4d4d4d; flex: none;
-    margin-top: 1px; }
-  .pf-item.ok .dot { background: var(--green-lit); }
-  .pf-item.bad .dot { background: #c9a227; }
-  .pf-item .detail { color: var(--faint); }
-  .pf-item .fix { display: block; margin-top: 4px; color: var(--gold); }
-
-  /* news rows, the way the launcher lists news: thumbnail on the left, title beside it */
-  .news { display: grid; gap: 10px; }
-  .news-row { display: flex; gap: 12px; align-items: center; padding: 8px; border-radius: var(--r);
-    background: var(--panel); border: 1px solid var(--line-soft); cursor: pointer; text-align: left;
-    transition: background .12s, border-color .12s; }
-  .news-row:hover { background: var(--panel-2); border-color: var(--line); }
-  .news-row .thumb { width: 56px; height: 56px; border-radius: var(--r-sm); flex: none;
-    box-shadow: inset 0 0 0 1px rgba(0,0,0,.4);
-    background: linear-gradient(#83c05f 0 26%, #6aa84f 26% 34%, #8a6b45 34% 100%); }
-  .news-row .thumb.snap { background: linear-gradient(#d6b463 0 26%, #b99a4b 26% 34%, #6f5a35 34% 100%); }
-  .news-row .thumb.old { background: linear-gradient(#9a9ab8 0 26%, #7e7e9c 26% 34%, #4a4a5c 34% 100%); }
-  .news-row .text { min-width: 0; }
-  .news-row b { display: block; font-family: var(--mc); font-weight: 400; font-size: 15px; }
-  .news-row small { color: var(--dim); font-size: 12px; }
-  .news-row .play { margin-left: auto; }
-
-  .note { color: var(--dim); font-size: 12.5px; }
-  .note.o { color: var(--faint); }
-
-  /* the badge that says whether a version runs here */
-  .play { font-size: 10.5px; padding: 2px 8px; border-radius: 999px; white-space: nowrap;
-    border: 1px solid var(--line); color: var(--dim); }
-  .play.ok { color: #b6f0a2; border-color: #3c5c30; background: #22301c; }
-  .play.ros { color: var(--gold); border-color: #5c4a22; background: #33291a; }
-  .play.no { color: #d0a9a5; border-color: #52332f; background: #2c1f1d; }
-
-  /* tables, sheets and the empty state under them */
-  .sheet { background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--r);
-    overflow: hidden; }
-  table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
-  th, td { text-align: left; padding: 10px 13px; border-bottom: 1px solid var(--line-soft); }
-  th { color: var(--dim); font-weight: 500; font-size: 11.5px; letter-spacing: .06em;
-    text-transform: uppercase; background: #222; }
-  tr:last-child td { border-bottom: 0; }
-  tbody tr:hover td { background: #2b2b2b; }
-  td.empty, .empty { color: var(--faint); text-align: center; padding: 22px 13px; }
-  .filters { display: flex; gap: 10px; align-items: center; margin: 0 0 14px; flex-wrap: wrap; }
-  .filters input { width: auto; min-width: 230px; }
-
-  /* session */
-  .facts { display: grid; gap: 7px; margin: 0 0 14px; font-size: 13px; }
-  .facts div { display: flex; gap: 10px; }
-  .facts span { color: var(--dim); min-width: 78px; }
-  .log { margin: 0; padding: 13px; height: 300px; overflow: auto; font-size: 12px; line-height: 1.55;
-    background: #151515; border: 1px solid var(--line-soft); border-radius: var(--r-sm);
-    color: #d7d7d7; white-space: pre-wrap; word-break: break-word; }
-  .log .l-ok { color: #b7e9a2; } .log .l-warn { color: var(--gold); } .log .l-bad { color: #ffb0aa; }
-  .session[hidden] { display: none; }
-
-  /* stats, on the patch-notes pane */
-  .stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px;
-    margin-bottom: 22px; }
-  .stat { background: var(--panel); border: 1px solid var(--line-soft); border-radius: var(--r);
-    padding: 14px; }
-  .stat b { display: block; font-family: var(--mc); font-weight: 400; font-size: 24px; }
-  .stat span { color: var(--dim); font-size: 12.5px; }
+  footer { margin-top: 34px; color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--line); padding-top: 16px; display: grid; gap: 6px; }
+  footer a { color: #c8c8cf; }
 </style>
 </head>
 <body>
-<div class="app">
-  <aside class="rail">
-    <button class="game on" title="Minecraft: Java Edition — this launcher"><span class="block java"></span></button>
-    <button class="game dead" title="not part of this launcher"><span class="block win"></span></button>
-    <button class="game dead" title="not part of this launcher"><span class="block dung"></span></button>
-    <button class="game dead" title="not part of this launcher"><span class="block leg"></span></button>
-    <div class="rail-foot">
-      <div class="who">
-        <span class="head"></span>
-        <b id="playerName">Player</b>
-      </div>
-      <div class="ver mono" id="buildInfo">WEBMC 0/918</div>
-    </div>
-  </aside>
-
-  <main>
-    <div class="head-row">
-      <div>
-        <h1>Minecraft: Java Edition</h1>
-        <div class="sub">plays on this machine · nothing streamed · no game files in this repository</div>
-      </div>
-      <div class="right">
-        <span id="statePill" class="pill">Idle</span>
-      </div>
-    </div>
-
-    <nav class="tabs">
-      <button class="tab on" data-pane="pane-play">Play</button>
-      <button class="tab" data-pane="pane-installations">Installations</button>
-      <button class="tab dead" disabled title="not part of this launcher">Realms</button>
-      <button class="tab dead" disabled title="not part of this launcher">Skins</button>
-      <button class="tab" data-pane="pane-patch">Patch notes</button>
+<header class="top">
+  <div class="row">
+    <span class="mark"><span class="cube"></span> WEBMC</span>
+    <nav>
+      <a href="#versions">Versions</a>
+      <a href="#mods">Mods</a>
+      <a href="#build">Custom build</a>
+      <a id="repoLink" href="https://github.com/AmphibianDev/webmc-port" rel="noopener">Source</a>
     </nav>
+  </div>
+</header>
 
-    <div class="stage">
-      <!-- --------------------------------------------------------------- Play -->
-      <section class="pane on" id="pane-play">
-        <div class="playgrid">
-          <div>
-            <div class="hero" id="hero">
-              <div class="art"></div>
-              <div class="label">
-                <small id="pickerKind">Latest release</small>
-                <b id="pickerLabel">…</b>
-              </div>
-            </div>
-
-            <button id="playButton" class="play-btn">Play</button>
-
-            <div class="picker">
-              <button id="pickerButton" class="picker-btn" aria-haspopup="listbox" aria-expanded="false">
-                <span class="swatch"></span>
-                <span class="picker-text">
-                  <small>Installation</small>
-                  <b id="pickerInstallation">…</b>
-                </span>
-                <span id="pickerPlay" class="play ok">arm64</span>
-                <span class="chev">▾</span>
-              </button>
-              <div class="menu" id="pickerMenu" hidden>
-                <input id="versionSearch" placeholder="Search 918 versions…" autocomplete="off" />
-                <div class="chips" id="playChips">
-                  <span class="group">runs here</span>
-                  <button class="chip on" data-play="native">arm64</button>
-                  <button class="chip" data-play="rosetta">Rosetta</button>
-                  <button class="chip" data-play="other">can't</button>
-                </div>
-                <div class="chips" id="typeChips">
-                  <span class="group">type</span>
-                  <button class="chip on" data-type="release">Release</button>
-                  <button class="chip" data-type="snapshot">Snapshot</button>
-                  <button class="chip" data-type="old">Old alpha/beta</button>
-                </div>
-                <ul id="versionList" class="vlist" role="listbox"></ul>
-                <div class="note" id="versionNote"></div>
-              </div>
-            </div>
-
-            <div class="note" id="playNote">Pick a version, then Play. The first Play on a version
-              downloads the game and a JDK.</div>
-            <div class="note" id="staticHelp" hidden></div>
-
-            <div class="fields">
-              <div class="field">
-                <label for="loaderSelect">Loader</label>
-                <select id="loaderSelect">
-                  <option value="fabric">Fabric (mods from mods/)</option>
-                  <option value="quilt">Quilt</option>
-                  <option value="vanilla">Vanilla (no mods)</option>
-                </select>
-              </div>
-              <div class="field">
-                <label for="ramInput">Heap (GB)</label>
-                <input id="ramInput" type="number" min="1" max="64" step="1" value="4" />
-              </div>
-              <div class="field">
-                <label for="nameInput">Player name</label>
-                <input id="nameInput" type="text" value="Player" maxlength="16" spellcheck="false" />
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h3 class="h3">Patch notes &amp; releases</h3>
-            <div class="news" id="newsCards"></div>
-            <div class="note" id="playableNote" style="margin-top:14px">reading the playability scan…</div>
-
-            <h3 class="h3" style="margin-top:26px">Before Play</h3>
-            <div class="panel">
-              <div class="note" id="pfHint" style="margin-bottom:10px">checking this machine…</div>
-              <div class="pf" id="pfList"></div>
-              <div class="row-actions" id="pfActions"></div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ------------------------------------------------------ Installations -->
-      <section class="pane" id="pane-installations">
-        <h2 class="sec">Installed here</h2>
-        <p class="lede" id="installHint">What is under ~/.webmc/minecraft on this machine.</p>
-        <div class="sheet" style="margin-bottom:26px">
-          <table>
-            <thead><tr><th>Version</th><th>Size</th><th></th></tr></thead>
-            <tbody id="installRows"><tr><td colspan="3" class="empty">nothing installed yet</td></tr></tbody>
-          </table>
-        </div>
-
-        <h2 class="sec">Every version Mojang lists</h2>
-        <p class="lede">Classified for this machine: <b>arm64</b> runs natively, <b>Rosetta</b> needs
-          the x86_64 JDK under Rosetta, <b>can't</b> is ruled out. Select one to load it into Play.</p>
-        <div class="filters">
-          <input id="allSearch" placeholder="Search every version…" autocomplete="off" />
-          <div class="chips" id="allChips">
-            <button class="chip on" data-type="release">Release</button>
-            <button class="chip on" data-type="snapshot">Snapshot</button>
-            <button class="chip" data-type="old">Old alpha/beta</button>
-          </div>
-          <span class="note o" id="allCount"></span>
-        </div>
-        <div class="sheet">
-          <table>
-            <thead><tr><th>Version</th><th>Type</th><th>Released</th><th>Java</th><th>LWJGL</th>
-              <th>Plays here</th><th></th></tr></thead>
-            <tbody id="allRows"></tbody>
-          </table>
-        </div>
-        <div class="note mono" id="installDir" style="margin-top:12px"></div>
-      </section>
-
-      <!-- ------------------------------------------------------------- Mods -->
-      <section class="pane" id="pane-mods">
-        <h2 class="sec">Mods in mods/</h2>
-        <p class="lede">Read from the jars themselves: the id, the name and the Minecraft version each
-          one asks for. A jar built for another version is left out by name, with the reason, so the
-          game still starts.</p>
-        <div class="sheet">
-          <table>
-            <thead><tr><th>Jar</th><th>Name</th><th>Asks for</th><th>Size</th></tr></thead>
-            <tbody id="modRows"></tbody>
-          </table>
-        </div>
-      </section>
-
-      <!-- ---------------------------------------------------------- Session -->
-      <section class="pane" id="pane-session">
-        <h2 class="sec">Session</h2>
-        <p class="lede" id="sessionHint">nothing running yet</p>
-        <div class="panel session" id="session">
-          <div class="facts">
-            <div><span>Version</span><b id="sessionVersion" class="mono">—</b></div>
-            <div><span>Loader</span><b id="sessionLoader" class="mono">—</b></div>
-            <div><span>Uptime</span><b id="sessionUptime" class="mono">—</b></div>
-            <div><span>Process</span><b id="sessionPid" class="mono">—</b></div>
-          </div>
-          <pre class="log" id="log">the log of the next session appears here
-</pre>
-          <div class="row-actions">
-            <button class="btn" id="stopButton" disabled>Stop</button>
-            <button class="btn" id="clearLog">Clear view</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- ------------------------------------------------------ Patch notes -->
-      <section class="pane" id="pane-patch">
-        <h2 class="sec">This machine, and what it can run</h2>
-        <p class="lede" id="scanNote"></p>
-        <div class="stats" id="statTiles"></div>
-        <h3 class="h3">Recent versions</h3>
-        <p class="lede">Mojang writes the patch notes; this launcher does not reproduce them. What it
-          shows honestly is which versions exist, when each landed, and whether this machine can run
-          it.</p>
-        <div class="news" id="patchCards"></div>
-      </section>
-
-      <!-- ------------------------------------------------------------ About -->
-      <section class="pane" id="pane-about">
-        <h2 class="sec">About</h2>
-        <p class="lede">A launcher page and a small local service. The page is static files;
-          <code>tools/local-ui.py</code> serves it and drives <code>tools/play-local.py</code>, which
-          installs the client into <code>~/.webmc/minecraft</code> and starts it with
-          <code>java</code>. The launcher library goes into <code>~/.webmc/venv</code>, so nothing is
-          added to your own Python.</p>
-        <p class="lede">No game session runs on a CI service, nothing is streamed to a browser, and no
-          game file or other author's mod is redistributed here. Versions marked Rosetta need the
-          x86_64 JDK; the play path fetches the arm64 one today, and the page says so rather than
-          starting a game that cannot load its own graphics libraries.</p>
-        <p class="lede"><b>Where the numbers come from.</b> <code>versions.json</code> is Mojang's own
-          catalogue. <code>playable.json</code> is <code>tools/scan-playable.py</code>: each version's
-          own document where one was already parsed, the LWJGL boundary (3.3.0 added
-          <code>natives-macos-arm64</code>) otherwise, and every row says which.</p>
-      </section>
+<div class="shell">
+  <div class="hero">
+    <div class="copy">
+      <p class="kicker">Minecraft Java Edition · compiled for the browser</p>
+      <h1>Play Minecraft in a tab.<br />No install, no launcher.</h1>
+      <p class="lede" id="lede">Loading the catalogue…</p>
+      <div class="actions">
+        <a class="btn primary" id="playLatest" href="#">▶ Play</a>
+        <a class="btn ghost" href="#mods">What about mods?</a>
+        <span class="badge" id="countBadge">…</span>
+      </div>
     </div>
-  </main>
+  </div>
+
+  <div class="grid">
+    <section class="card" id="versions">
+      <h2 id="versionCount">Versions</h2>
+      <p class="sub">Every version Mojang has released, with what this browser can do with it.</p>
+      <div class="filters">
+        <input type="search" id="search" placeholder="Search a version (26.3, 1.21.11, 1.8.9)…" />
+        <select id="kind">
+          <option value="">All types</option>
+          <option value="release">Releases</option>
+          <option value="snapshot">Snapshots</option>
+          <option value="old_beta">Betas</option>
+          <option value="old_alpha">Alphas</option>
+        </select>
+        <select id="filter">
+          <option value="playable">Playable only</option>
+          <option value="all">Everything</option>
+          <option value="mods">Moddable rows</option>
+        </select>
+      </div>
+      <div class="list" id="list" role="listbox" aria-label="Versions"></div>
+      <p class="hint" id="listHint"></p>
+    </section>
+
+    <section class="card" id="detail">
+      <h2 id="detailTitle">Pick a version</h2>
+      <p class="sub" id="detailSub">What it runs on, and what the browser replaces.</p>
+      <div id="detailBody"></div>
+    </section>
+  </div>
+
+  <section class="card" id="mods" style="margin-top:18px">
+    <h2>Mods</h2>
+    <p class="sub" id="modsSub">Real Fabric mods, merged into the client before it is compiled. Measured, not claimed.</p>
+    <div id="modsBody"></div>
+  </section>
+
+  <section class="card" id="build" style="margin-top:18px">
+    <h2>Custom build</h2>
+    <p class="sub">
+      Baking is a compile — 30–45 minutes on a build machine, cached after the first time — so it cannot happen in this
+      tab. Ask for a client with the mods you want and a build runs for you.
+    </p>
+    <form class="build" id="buildForm">
+      <div>
+        <label for="bVersion">Minecraft version</label>
+        <select id="bVersion"></select>
+      </div>
+      <div>
+        <label for="bMods">Mods — ids from the list above, or one URL per line (Modrinth, GitHub release)</label>
+        <textarea id="bMods" placeholder="meteor-client&#10;fabric-api&#10;https://cdn.modrinth.com/data/…/sodium.jar"></textarea>
+      </div>
+      <div>
+        <label for="bService">Build service</label>
+        <input id="bService" placeholder="http://127.0.0.1:8787" />
+      </div>
+      <div class="actions">
+        <button class="btn primary" type="submit">Ask for a build</button>
+        <span class="hint">A service for this is <code>webmc-mods/tools/build-service.mjs</code>; it drives the build job
+          and serves the finished client.</span>
+      </div>
+    </form>
+    <div id="buildOut"></div>
+  </section>
+
+  <footer>
+    <div>Compiled from the official client at build time. Not an official Minecraft product: not approved by or associated with Mojang or Microsoft.</div>
+    <div id="footCounts"></div>
+    <div>
+      <a href="https://github.com/AmphibianDev/webmc-port" rel="noopener">Source</a> ·
+      <a href="https://github.com/AmphibianDev/webmc-port/blob/main/CREDITS.md" rel="noopener">Credits</a> ·
+      <a href="https://github.com/AmphibianDev/webmc-port/blob/main/COMPLIANCE.md" rel="noopener">Compliance</a> ·
+      <a href="https://github.com/AmphibianDev/webmc-port/blob/main/MIXINS.md" rel="noopener">Mixin contract</a>
+    </div>
+  </footer>
 </div>
 
 <script>
-  "use strict";
-  const el = (id) => document.getElementById(id);
-  const TYPES = {
-    release: { label: "Release", cls: "" },
-    snapshot: { label: "Snapshot", cls: "snap" },
-    old: { label: "Old", cls: "old" }
-  };
-  const typeOf = (version) => version.type === "release" ? "release"
-    : (version.type === "snapshot" ? "snapshot" : "old");
+"use strict";
+const CLIENT_BASE = "https://amphibiandev.github.io/webmc-port/clients/";
+const $ = (id) => document.getElementById(id);
+const state = { versions: [], playable: new Map(), selected: null, mods: null };
 
-  const STATUS = {
-    idle:       { cls: "", text: "Idle" },
-    installing: { cls: "s-work", text: "Installing" },
-    launching:  { cls: "s-work", text: "Launching" },
-    running:    { cls: "s-live", text: "Running" },
-    stopped:    { cls: "", text: "Stopped" },
-    error:      { cls: "s-bad", text: "Problem" }
-  };
+const cache = {};
+async function loadJson(name) {
+  if (cache[name]) return cache[name];
+  const response = await fetch(name + (name.includes("?") ? "" : "?v=" + Date.now()), { cache: "no-cache" });
+  if (!response.ok) throw new Error(name + ": HTTP " + response.status);
+  cache[name] = await response.json();
+  return cache[name];
+}
 
-  const state = {
-    catalogue: { versions: [], latest: {}, count: 0 },
-    playable: { counts: {}, mode: "none", versions: [], evidence: {} },
-    byId: {},
-    mods: [], installed: [],
-    chosen: null,
-    chips: new Set(["release"]),
-    allChips: new Set(["release", "snapshot"]),
-    plays: new Set(["native"]),
-    logFrom: 0,
-    timer: null,
-    static: false
-  };
+const VERDICT_BADGE = {
+  playable: ["ok", "playable"],
+  native: ["warn", "needs LWJGL"],
+  rosetta: ["warn", "needs Rosetta"],
+  blocked: ["bad", "blocked"],
+  unknown: ["", "unchecked"],
+};
 
-  // ------------------------------------------------------------------- helpers
-  async function fetchJson(url, options) {
-    const response = await fetch(url, Object.assign({ cache: "no-store" }, options || {}));
-    if (!response.ok) throw new Error(`${url}: ${response.status}`);
-    return response.json();
+function verdictOf(entry) {
+  if (!entry) return "unknown";
+  if (entry.playable === false) return "blocked";
+  if (entry.verdict === "playable" || entry.playable === true) return "playable";
+  return entry.verdict || "unknown";
+}
+
+function badgeFor(entry) {
+  const kind = verdictOf(entry);
+  const [tone, label] = VERDICT_BADGE[kind] || ["", kind];
+  return `<span class="badge ${tone}">${label}</span>`;
+}
+
+function renderList() {
+  const query = $("search").value.trim().toLowerCase();
+  const kind = $("kind").value;
+  const filter = $("filter").value;
+  const rows = state.versions.filter((version) => {
+    if (query && !version.id.toLowerCase().includes(query)) return false;
+    if (kind && version.type !== kind) return false;
+    const entry = state.playable.get(version.id);
+    if (filter === "playable" && verdictOf(entry) !== "playable") return false;
+    if (filter === "mods" && !(entry && entry.mods)) return false;
+    return true;
+  });
+  const shown = rows.slice(0, 400);
+  $("list").innerHTML = shown.map((version) => {
+    const entry = state.playable.get(version.id) || {};
+    return `<button class="row" role="option" data-id="${version.id}" aria-selected="${state.selected === version.id}">
+      <span><span class="id">${version.id}</span> <span class="meta">${version.type}${version.released ? " · " + version.released : ""}</span></span>
+      <span class="meta">${entry.java ? "Java " + entry.java : ""} ${entry.lwjgl ? "· LWJGL " + entry.lwjgl : ""}</span>
+      <span>${badgeFor(entry)}</span>
+    </button>`;
+  }).join("") || `<p class="hint" style="padding:12px">Nothing matches that.</p>`;
+  for (const row of $("list").querySelectorAll(".row")) {
+    row.onclick = () => select(row.dataset.id);
   }
+  $("listHint").textContent = `${rows.length} version(s) match` + (rows.length > shown.length ? `, showing the first ${shown.length}` : "");
+}
 
-  async function postJson(url, payload) {
-    return fetchJson(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload || {})
+function select(id) {
+  state.selected = id;
+  const version = state.versions.find((item) => item.id === id) || { id, type: "?", released: "" };
+  const entry = state.playable.get(id) || {};
+  const kind = verdictOf(entry);
+  $("detailTitle").textContent = version.id;
+  $("detailSub").innerHTML = `${version.type}${version.released ? " · released " + version.released : ""} · ${badgeFor(entry)}`;
+  const provenance = entry.provenance ? Object.entries(entry.provenance).map(([what, why]) => `<div><span>${what}</span><b>${why}</b></div>`).join("") : "";
+  $("detailBody").innerHTML = `
+    <dl class="facts">
+      <dt>Java</dt><dd>${entry.java || "—"}</dd>
+      <dt>LWJGL</dt><dd>${entry.lwjgl || "—"}</dd>
+      <dt>Mods</dt><dd>${entry.mods ? "baked in at build time" : "not on this row"}</dd>
+      <dt>Loaders</dt><dd>${(entry.loaders || ["—"]).join(", ")}</dd>
+    </dl>
+    ${entry.reason ? `<p class="hint" style="margin-top:10px">${entry.reason}</p>` : ""}
+    ${provenance ? `<div class="provenance">${provenance}</div>` : ""}
+    <div class="actions" style="margin-top:14px">
+      <a class="btn ${kind === "playable" ? "primary" : ""}" href="${CLIENT_BASE}${encodeURIComponent(version.id)}/" rel="noopener">
+        ${kind === "playable" ? "▶ Play in a tab" : "Open (may not run)"}
+      </a>
+      <button class="btn ghost" type="button" id="copyLink">Copy link</button>
+    </div>`;
+  const copy = $("copyLink");
+  if (copy) copy.onclick = () => { navigator.clipboard?.writeText(CLIENT_BASE + encodeURIComponent(version.id) + "/"); copy.textContent = "Copied"; setTimeout(() => (copy.textContent = "Copy link"), 1200); };
+  renderList();
+}
+
+function renderMods(data) {
+  const totals = data.totals || { mods: 0, mixins: 0, appliable: 0 };
+  $("modsSub").innerHTML = `${totals.mods} mods measured · ${totals.appliable} of ${totals.mixins} mixin classes merge today. ` +
+    `Mods are merged into the client before it is compiled — a browser tab has no class loader, so there is nothing to load a jar with afterwards.`;
+  const rows = data.mods.map((mod) => {
+    const ratio = mod.mixins ? mod.appliable / mod.mixins : mod.verdict === "bundle" ? 1 : 0;
+    const tone = mod.verdict === "never" ? "none" : ratio >= 1 ? "" : "partial";
+    const state = mod.verdict === "never" ? "<span class='badge bad'>cannot work</span>"
+      : mod.verdict === "bundle" ? "<span class='badge ok'>container</span>"
+      : ratio >= 1 ? "<span class='badge ok'>supported</span>" : `<span class='badge warn'>${mod.appliable}/${mod.mixins}</span>`;
+    return `<tr>
+      <td><b>${mod.name}</b><br /><span class="hint">${mod.id}${mod.version ? " " + mod.version : ""}</span></td>
+      <td>${state}</td>
+      <td>${mod.mixins ? `<div class="meter ${tone}"><i style="width:${Math.round(ratio * 100)}%"></i></div>` : ""}
+        <span class="hint">${mod.mixins ? mod.appliable + " of " + mod.mixins + " mixins" : mod.kind === "baked" ? "in the build" : "—"}</span></td>
+      <td><span class="hint">${mod.note || (mod.native ? "native libraries" : "")}</span></td>
+    </tr>`;
+  }).join("");
+  $("modsBody").innerHTML = `
+    <table class="mods">
+      <thead><tr><th>Mod</th><th>State</th><th>Mixins merged</th><th>Note</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <details class="more">
+      <summary>How a mod gets in, in three routes</summary>
+      <p class="hint">
+        <b>Baked</b> — the jar is read at build time: its entrypoint is called from the client's own initialiser and its
+        mixins are merged into the client's classes before the compile. That is the route for Java/Fabric mods, and it
+        is the one that needs a build.<br />
+        <b>Runs as it is</b> — the jar carries a browser payload; it is added in the mods panel and loads immediately.<br />
+        <b>Cannot work</b> — native libraries, JNI, Unsafe, or mixins generated at run time. No browser client can do
+        those, and the build says so by name instead of dropping them quietly.
+      </p>
+    </details>`;
+}
+
+function fillVersions() {
+  const picker = $("bVersion");
+  const good = state.versions.filter((version) => state.playable.get(version.id));
+  picker.innerHTML = good.slice(0, 120).map((version) => `<option value="${version.id}">${version.id}</option>`).join("");
+  picker.value = "26.2";
+}
+
+async function askForBuild(event) {
+  event.preventDefault();
+  const out = $("buildOut");
+  const service = ($("bService").value.trim() || "http://127.0.0.1:8787").replace(/\/$/, "");
+  localStorage.setItem("webmc.buildService", service);
+  const version = $("bVersion").value;
+  const lines = $("bMods").value.split("\n").map((line) => line.trim()).filter(Boolean);
+  const mods = lines.map((line) => (/^https?:\/\//i.test(line) ? { url: line } : { id: line }));
+  if (!mods.length) { out.innerHTML = `<p class="hint">Name at least one mod.</p>`; return; }
+  out.innerHTML = `<div class="job"><b>Asking ${service}…</b></div>`;
+  try {
+    const response = await fetch(service + "/api/build", {
+      method: "POST", headers: { "content-type": "application/json" },
+      body: JSON.stringify({ version, mods }),
     });
+    const started = await response.json();
+    if (!response.ok || started.error) throw new Error(started.error || ("HTTP " + response.status));
+    out.innerHTML = `<div class="job">Build <code>${started.id}</code> is queued on the service.
+      <a href="${service}/" rel="noopener">Open the build service</a> to watch it — it takes 30–45 minutes the first
+      time, and is instant afterwards for the same mod set.</div>`;
+  } catch (error) {
+    out.innerHTML = `<div class="job">Could not reach a build service at <code>${service}</code>.
+      <span class="hint">Run it with <code>node webmc-mods/tools/build-service.mjs</code> on a machine with the toolchain
+      (or point this at one that is already running). ${String(error.message || error)}</span></div>`;
   }
+}
 
-  // Served two ways: by tools/local-ui.py, which can play, and as plain files on GitHub Pages,
-  // which cannot start anything on a visitor's machine. Everything shown from data is a file.
-  // The browser-native launcher is the project's other route: there the client runs inside the
-  // page, so a published page can really play, which this one deliberately cannot.
-  const BROWSER_NATIVE = "https://amphibiandev.github.io/webmc-port/";
-  async function fetchData(name) {
-    try {
-      return await fetchJson("api/" + name);
-    } catch (problem) {
-      return fetchJson(name + ".json");
-    }
+async function main() {
+  $("bService").value = localStorage.getItem("webmc.buildService") || "http://127.0.0.1:8787";
+  try {
+    const [versions, playable, mods] = await Promise.all([loadJson("versions.json"), loadJson("playable.json"), loadJson("mods.json")]);
+    state.versions = versions.versions || [];
+    for (const entry of playable.versions || []) state.playable.set(entry.id, entry);
+    state.mods = mods;
+    const playableCount = state.versions.filter((version) => verdictOf(state.playable.get(version.id)) === "playable").length;
+    const latest = versions.latest || {};
+    $("lede").textContent = `${versions.count} versions of Minecraft Java Edition, compiled to run in a tab: `
+      + `${playableCount} of them playable right now, ${state.mods.totals.mods} mods measured for the modded rows. `
+      + `Single-player is included; joining a server needs a gateway, because a page cannot open a TCP socket.`;
+    $("countBadge").textContent = `${versions.count} versions`;
+    const playTarget = latest.release && state.playable.get(latest.release) ? latest.release
+      : (state.versions.find((version) => verdictOf(state.playable.get(version.id)) === "playable") || {}).id;
+    $("playLatest").href = CLIENT_BASE + encodeURIComponent(playTarget || "26.3") + "/";
+    $("playLatest").textContent = "▶ Play " + (playTarget || "26.3");
+    $("versionCount").textContent = `${versions.count} versions`;
+    $("footCounts").textContent = `Latest release ${latest.release || "?"} · latest snapshot ${latest.snapshot || "?"} · `
+      + `catalogue generated ${playable.generated || "?"} on a ${playable.machine || "?"}`;
+    $("repoLink").href = "https://github.com/AmphibianDev/webmc-port";
+    renderMods(state.mods);
+    fillVersions();
+    $("search").oninput = renderList;
+    $("kind").onchange = renderList;
+    $("filter").onchange = renderList;
+    $("buildForm").onsubmit = askForBuild;
+    const preferred = ["26.3", "26.2", "1.21.11"].find((id) => state.playable.has(id)) || state.versions[0].id;
+    select(preferred);
+  } catch (error) {
+    $("lede").textContent = "The catalogue could not be read: " + String(error.message || error);
   }
+}
 
-  const shortDate = (iso) => {
-    if (!iso) return "";
-    const parts = String(iso).split("-");
-    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-    return `${months[Number(parts[1]) - 1] || parts[1]} ${Number(parts[2])}, ${parts[0]}`;
-  };
-
-  const hhmmss = (seconds) => {
-    const s = Math.max(0, Math.floor(seconds || 0));
-    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), r = s % 60;
-    return (h ? `${h}h ` : "") + `${String(m).padStart(2, "0")}m ${String(r).padStart(2, "0")}s`;
-  };
-
-  function playOf(id) {
-    const row = state.byId[id];
-    if (!row) return "other";
-    return row.verdict === "native" || row.verdict === "rosetta" ? row.verdict : "other";
-  }
-
-  function playBadge(id) {
-    const kind = playOf(id);
-    const badge = document.createElement("span");
-    badge.className = "play " + (kind === "native" ? "ok" : kind === "rosetta" ? "ros" : "no");
-    badge.textContent = kind === "native" ? "arm64" : kind === "rosetta" ? "Rosetta" : "can't";
-    const row = state.byId[id];
-    if (row && row.reason) badge.title = row.reason;
-    return badge;
-  }
-
-  function paintPickerBadge(id) {
-    const kind = playOf(id);
-    const row = state.byId[id] || {};
-    const target = el("pickerPlay");
-    target.className = "play " + (kind === "native" ? "ok" : kind === "rosetta" ? "ros" : "no");
-    target.textContent = kind === "native" ? "arm64" : kind === "rosetta" ? "Rosetta" : "can't";
-    target.title = (row.lwjgl ? "LWJGL " + row.lwjgl + " — " : "") + (row.reason || "");
-  }
-
-  function showPane(id) {
-    for (const pane of document.querySelectorAll(".pane")) pane.classList.toggle("on", pane.id === id);
-    for (const button of document.querySelectorAll("[data-pane]")) {
-      if (button.dataset.pane !== id) continue;
-      if (!button.classList.contains("tab")) button.classList.add("on");
-    }
-    for (const button of document.querySelectorAll("[data-pane]")) {
-      if (button.classList.contains("tab")) button.classList.toggle("on", button.dataset.pane === id);
-    }
-    el("statePill").scrollIntoView({ block: "nearest" });
-  }
-
-  // ------------------------------------------------------------- static copy
-  function goStatic(problem) {
-    state.static = true;
-    // Left clickable on purpose: a greyed-out button explains nothing, and the click is worth
-    // answering with the two ways to actually play.
-    el("playButton").disabled = false;
-    el("playButton").setAttribute("aria-disabled", "true");
-    el("stopButton").disabled = true;
-    el("pfHint").textContent = "Published copy: there is no launcher service on this machine, so "
-      + "nothing here can start a game. The catalogue, the playability scan and the mods view work "
-      + "because they are files.";
-    el("pfList").textContent = "";
-    el("pfActions").textContent = "";
-    el("playNote").textContent = "Play on this page needs the launcher service that only runs on "
-      + "your own machine — read the line below for the two ways to play.";
-    const help = el("staticHelp");
-    help.hidden = false;
-    help.textContent = "Want a Play button that works in a web page? ";
-    const link = document.createElement("a");
-    link.href = BROWSER_NATIVE;
-    link.textContent = "Open the browser-native launcher";
-    help.append(link, document.createTextNode(
-      " — there the client runs inside the page, so nothing needs installing. "
-      + "To use this one instead: "));
-    const code = document.createElement("code");
-    code.textContent = "git clone https://github.com/AmphibianDev/webmc-launcher && cd webmc-launcher && python3 tools/local-ui.py";
-    help.append(code, document.createTextNode(" and open 127.0.0.1:8130."));
-    el("sessionHint").textContent = "not running (published copy)";
-    el("log").textContent = "this copy of the page has no launcher behind it.\n\n"
-      + "git clone https://github.com/AmphibianDev/webmc-launcher\ncd webmc-launcher\n"
-      + "python3 tools/local-ui.py\n\nthen open http://127.0.0.1:8130/ — that copy installs Minecraft\n"
-      + "into ~/.webmc/minecraft and runs it natively on this machine. No stream, no runner,\n"
-      + "nothing of the game is kept in the repository.\n";
-    if (problem && problem.message) el("buildInfo").title = String(problem.message);
-  }
-
-  // ------------------------------------------------------------------ readiness
-  async function loadPreflight() {
-    let report;
-    try {
-      report = await fetchJson("api/preflight");
-    } catch (problem) {
-      goStatic(problem);
-      return;
-    }
-    state.mods = report.mods;
-    state.installed = report.installed;
-
-    const list = el("pfList");
-    list.textContent = "";
-    for (const item of report.items) {
-      const row = document.createElement("div");
-      row.className = "pf-item " + (item.ok ? "ok" : "bad");
-      const dot = document.createElement("span");
-      dot.className = "dot";
-      const text = document.createElement("span");
-      const name = document.createElement("b");
-      name.textContent = item.name + ": ";
-      const detail = document.createElement("span");
-      detail.className = "detail";
-      detail.textContent = item.detail;
-      text.append(name, detail);
-      if (!item.ok && item.fix) {
-        const fix = document.createElement("code");
-        fix.className = "fix";
-        fix.textContent = item.fix;
-        text.append(fix);
-      }
-      row.append(dot, text);
-      list.append(row);
-    }
-
-    const actions = el("pfActions");
-    actions.textContent = "";
-    if (!report.ready) {
-      const install = document.createElement("button");
-      install.className = "btn primary";
-      install.textContent = "Install the launcher library";
-      install.addEventListener("click", async () => {
-        install.disabled = true;
-        install.textContent = "Installing…";
-        try {
-          const answer = await postJson("api/install-lib");
-          el("pfHint").textContent = answer.message;
-        } catch (problem) {
-          el("pfHint").textContent = "pip failed: " + problem.message;
-        }
-        install.disabled = false;
-        install.textContent = "Install the launcher library";
-        await loadPreflight();
-      });
-      actions.append(install);
-      el("pfHint").textContent = "One click: the launcher library is installed into ~/.webmc/venv, "
-        + "so your own Python is left alone.";
-    } else {
-      el("pfHint").textContent = report.installed.length
-        ? `${report.installed.length} version(s) already installed; a new one downloads on first Play.`
-        : "Ready — the first Play downloads the JDK and the game.";
-    }
-    renderInstallations(report);
-  }
-
-  function renderInstallations(report) {
-    if (state.static) return;
-    el("installDir").textContent = "game folder: " + report.game_dir
-      + (report.python ? "   ·   launcher python: " + report.python : "");
-    el("installHint").textContent = report.installed.length
-      ? "Play any of these again without downloading anything."
-      : "What is under ~/.webmc/minecraft on this machine — empty until the first Play.";
-
-    const rows = el("installRows");
-    rows.textContent = "";
-    if (!report.installed.length) {
-      const tr = document.createElement("tr");
-      const td = document.createElement("td");
-      td.colSpan = 3;
-      td.className = "empty";
-      td.textContent = "nothing installed yet";
-      tr.append(td);
-      rows.append(tr);
-    }
-    for (const item of report.installed) {
-      const tr = document.createElement("tr");
-      const id = document.createElement("td");
-      id.className = "mono";
-      id.textContent = item.id;
-      const size = document.createElement("td");
-      size.textContent = item.size_mb + " MB";
-      const act = document.createElement("td");
-      const play = document.createElement("button");
-      play.className = "btn";
-      play.textContent = "Play this";
-      play.addEventListener("click", () => {
-        const found = state.catalogue.versions.find((v) => v.id === item.id);
-        if (found) choose(found);
-        showPane("pane-play");
-      });
-      act.append(play);
-      tr.append(id, size, act);
-      rows.append(tr);
-    }
-
-    const modRows = el("modRows");
-    modRows.textContent = "";
-    for (const mod of report.mods) {
-      const tr = document.createElement("tr");
-      const file = document.createElement("td");
-      file.className = "mono";
-      file.textContent = mod.file;
-      const name = document.createElement("td");
-      name.textContent = mod.name;
-      const wants = document.createElement("td");
-      wants.textContent = mod.minecraft || "(any)";
-      const size = document.createElement("td");
-      size.textContent = mod.size_mb + " MB";
-      tr.append(file, name, wants, size);
-      modRows.append(tr);
-    }
-    if (!report.mods.length) {
-      const tr = document.createElement("tr");
-      const td = document.createElement("td");
-      td.colSpan = 4;
-      td.className = "empty";
-      td.textContent = "mods/ is empty — the session will be vanilla plus whatever Fabric API brings";
-      tr.append(td);
-      modRows.append(tr);
-    }
-  }
-
-  // ------------------------------------------------------------------- versions
-  function fillPicker() {
-    const wanted = el("versionSearch").value.trim().toLowerCase();
-    const list = el("versionList");
-    list.textContent = "";
-    const shown = [];
-    let matching = 0, hidden = 0;
-    for (const version of state.catalogue.versions) {
-      if (!state.chips.has(typeOf(version))) continue;
-      if (!state.plays.has(playOf(version.id))) { hidden += 1; continue; }
-      matching += 1;
-      if (wanted && version.id.toLowerCase().indexOf(wanted) === -1) continue;
-      shown.push(version);
-      if (shown.length >= 300) break;
-    }
-    for (const version of shown) {
-      const li = document.createElement("li");
-      li.setAttribute("role", "option");
-      if (state.chosen && state.chosen.id === version.id) li.className = "on";
-      const id = document.createElement("span");
-      id.textContent = version.id;
-      const tag = document.createElement("span");
-      tag.className = "tag";
-      tag.textContent = TYPES[typeOf(version)].label;
-      const meta = document.createElement("span");
-      meta.className = "meta";
-      meta.textContent = shortDate(version.released);
-      li.append(id, playBadge(version.id), tag, meta);
-      li.addEventListener("click", () => { choose(version); closePicker(); });
-      list.append(li);
-    }
-    if (!shown.length) {
-      const li = document.createElement("li");
-      li.className = "note";
-      const row = state.byId[el("versionSearch").value.trim()];
-      li.textContent = row
-        ? `${row.id} is listed by Mojang but ${row.reason || "cannot run here"}`
-        : "no version matches";
-      list.append(li);
-    }
-    const total = state.catalogue.count || state.catalogue.versions.length;
-    el("versionNote").textContent = shown.length
-      ? `showing ${shown.length} of ${matching} matching, ${total} listed`
-        + (hidden ? ` · ${hidden} hidden by the filters above` : "")
-      : (hidden ? `all ${hidden} of them are hidden by the filters above` : "");
-  }
-
-  function choose(version) {
-    state.chosen = version;
-    el("pickerLabel").textContent = version.id;
-    el("pickerInstallation").textContent = version.id === state.catalogue.latest.release
-      ? "Latest release" : TYPES[typeOf(version)].label;
-    paintPickerBadge(version.id);
-    el("pickerKind").textContent = version.id === state.catalogue.latest.release ? "Latest release"
-      : (version.type === "release" ? "Release" : TYPES[typeOf(version)].label);
-    el("hero").className = "hero " + TYPES[typeOf(version)].cls;
-    const row = state.byId[version.id] || {};
-    const kind = playOf(version.id);
-    const modVersions = state.mods.map((m) => m.minecraft).filter(Boolean);
-    const mismatch = modVersions.length && !modVersions.some((v) =>
-      v === version.id || v.split(",").map((p) => p.trim()).includes(version.id));
-    const note = el("playNote");
-    note.classList.remove("warn");
-    if (kind === "rosetta") {
-      note.classList.add("warn");
-      note.textContent = `${version.id} uses ${row.lwjgl || "old LWJGL"}: x86_64 natives only, so it `
-        + "needs the x64 JDK under Rosetta. The play path fetches an arm64 JDK today, so this one "
-        + "will not start yet.";
-    } else if (kind === "other") {
-      note.classList.add("warn");
-      note.textContent = `${version.id} does not run on this Mac: ${row.reason || "the scan ruled it out"}.`;
-    } else if (mismatch) {
-      note.classList.add("warn");
-      note.textContent = `mods/ is built for ${modVersions[0]}; on ${version.id} Fabric may refuse to load them.`;
-    } else {
-      note.textContent = `Ready: ${version.id} with ${el("loaderSelect").value}, runs natively `
-        + `(${row.lwjgl || "its own LWJGL"}).`;
-    }
-    state.logFrom = 0;
-    el("log").textContent = "";
-  }
-
-  function closePicker() {
-    el("pickerMenu").hidden = true;
-    el("pickerButton").setAttribute("aria-expanded", "false");
-  }
-
-  function renderAllVersions() {
-    const wanted = el("allSearch").value.trim().toLowerCase();
-    const rows = el("allRows");
-    rows.textContent = "";
-    let count = 0, shown = 0;
-    for (const version of state.catalogue.versions) {
-      if (!state.allChips.has(typeOf(version))) continue;
-      count += 1;
-      if (wanted && version.id.toLowerCase().indexOf(wanted) === -1) continue;
-      if (shown >= 500) continue;
-      shown += 1;
-      const row = state.byId[version.id] || {};
-      const tr = document.createElement("tr");
-      const id = document.createElement("td");
-      id.className = "mono";
-      id.textContent = version.id;
-      const type = document.createElement("td");
-      type.textContent = TYPES[typeOf(version)].label;
-      const date = document.createElement("td");
-      date.textContent = shortDate(version.released);
-      const java = document.createElement("td");
-      java.textContent = row.java ? String(row.java) : "—";
-      const lwjgl = document.createElement("td");
-      lwjgl.className = "mono";
-      lwjgl.textContent = row.lwjgl || "—";
-      const plays = document.createElement("td");
-      plays.append(playBadge(version.id));
-      const act = document.createElement("td");
-      const pick = document.createElement("button");
-      pick.className = "btn";
-      pick.textContent = "Select";
-      pick.addEventListener("click", () => { choose(version); showPane("pane-play"); });
-      act.append(pick);
-      tr.append(id, type, date, java, lwjgl, plays, act);
-      rows.append(tr);
-    }
-    el("allCount").textContent = `${shown} shown of ${count} matching`;
-  }
-
-  function newsRow(version, action) {
-    const row = document.createElement("button");
-    row.className = "news-row";
-    const thumb = document.createElement("div");
-    thumb.className = "thumb " + TYPES[typeOf(version)].cls;
-    const text = document.createElement("div");
-    text.className = "text";
-    const name = document.createElement("b");
-    name.textContent = version.id;
-    const meta = document.createElement("small");
-    meta.textContent = `${TYPES[typeOf(version)].label} · ${shortDate(version.released)}`;
-    text.append(name, meta);
-    row.append(thumb, text, playBadge(version.id));
-    row.addEventListener("click", action);
-    return row;
-  }
-
-  function renderTiles() {
-    const counts = state.playable.counts || {};
-    const stats = el("statTiles");
-    stats.textContent = "";
-    const rows = [
-      [counts.total || state.catalogue.count || 0, "versions in Mojang's catalogue"],
-      [counts.native || 0, "run natively on this Mac (arm64 natives)"],
-      [counts.rosetta || 0, "playable under Rosetta (x86_64 natives)"],
-      [(state.playable.versions || []).length, `versions in the ${state.playable.mode || "?"} scan`],
-      [state.installed.length, "installed under ~/.webmc"],
-      [state.mods.length, "jars in mods/"]
-    ];
-    for (const [value, label] of rows) {
-      const tile = document.createElement("div");
-      tile.className = "stat";
-      const big = document.createElement("b");
-      big.textContent = String(value);
-      const text = document.createElement("span");
-      text.textContent = label;
-      tile.append(big, text);
-      stats.append(tile);
-    }
-
-    const news = el("newsCards");
-    news.textContent = "";
-    for (const version of state.catalogue.versions.filter((v) => v.type === "release").slice(0, 5)) {
-      news.append(newsRow(version, () => { choose(version); }));
-    }
-
-    const patch = el("patchCards");
-    patch.textContent = "";
-    for (const version of state.catalogue.versions.filter((v) => v.type !== "old_alpha").slice(0, 10)) {
-      patch.append(newsRow(version, () => { choose(version); showPane("pane-play"); }));
-    }
-  }
-
-  // -------------------------------------------------------------------- session
-  function paintStatus(status) {
-    const paint = STATUS[status] || STATUS.idle;
-    el("statePill").className = "pill " + paint.cls;
-    el("statePill").textContent = paint.text;
-  }
-
-  async function tick() {
-    let answer;
-    try {
-      answer = await fetchJson("api/state");
-    } catch (problem) {
-      return;
-    }
-    paintStatus(answer.status);
-    el("sessionHint").textContent = answer.message;
-    el("sessionVersion").textContent = answer.version || "—";
-    el("sessionLoader").textContent = answer.loader || "—";
-    el("sessionUptime").textContent = answer.started || answer.elapsed ? hhmmss(answer.elapsed) : "—";
-    el("sessionPid").textContent = answer.pid ? String(answer.pid) : "—";
-    const live = answer.status === "installing" || answer.status === "launching"
-      || answer.status === "running";
-    el("playButton").disabled = live;
-    el("stopButton").disabled = !live;
-
-    try {
-      const log = await fetchJson("api/log?since=" + state.logFrom);
-      if (log.lines.length) {
-        const pane = el("log");
-        const atBottom = pane.scrollTop + pane.clientHeight >= pane.scrollHeight - 24;
-        for (const line of log.lines) {
-          const span = document.createElement("span");
-          const low = line.toLowerCase();
-          let cls = "";
-          if (low.indexOf("error") !== -1 || low.indexOf("failed") !== -1
-              || low.indexOf("exception") !== -1) cls = "l-bad";
-          else if (low.indexOf("warn") !== -1 || low.indexOf("missing") !== -1) cls = "l-warn";
-          else if (low.indexOf("ready") !== -1 || low.indexOf("starting minecraft") !== -1
-                   || low.indexOf("installed") !== -1) cls = "l-ok";
-          if (cls) span.className = cls;
-          span.textContent = line + "\n";
-          pane.append(span);
-        }
-        state.logFrom = log.index;
-        if (atBottom) pane.scrollTop = pane.scrollHeight;
-      }
-    } catch (problem) { /* the log is best-effort */ }
-
-    schedule(live ? 1200 : 4000);
-  }
-
-  function schedule(ms) {
-    if (state.timer) clearTimeout(state.timer);
-    state.timer = setTimeout(tick, ms);
-  }
-
-  async function play() {
-    if (state.static) {
-      // Not a failure: say where Play does work, and open the detail rather than leaving the
-      // click unanswered.
-      showPane("pane-session");
-      el("playNote").textContent = "This published copy has no launcher behind it. Use the "
-        + "browser-native launcher linked below, or run tools/local-ui.py on your own machine.";
-      return;
-    }
-    if (!state.chosen) return;
-    el("playButton").disabled = true;
-    el("log").textContent = "";
-    state.logFrom = 0;
-    try {
-      const answer = await postJson("api/play", {
-        version: state.chosen.id,
-        loader: el("loaderSelect").value,
-        xmx: Number(el("ramInput").value) || 4,
-        username: el("nameInput").value.trim() || "Player"
-      });
-      el("playerName").textContent = el("nameInput").value.trim() || "Player";
-      if (!answer.ok) {
-        el("playButton").disabled = false;
-        paintStatus("error");
-        el("playNote").classList.add("warn");
-        el("playNote").textContent = answer.message;
-        showPane("pane-session");
-      } else {
-        el("sessionHint").textContent = answer.message;
-        el("log").textContent = answer.message + "\n";
-        el("playNote").classList.remove("warn");
-        el("playNote").textContent = answer.message;
-        showPane("pane-session");
-      }
-    } catch (problem) {
-      el("playNote").textContent = "could not reach the launcher service: " + problem.message;
-      el("playButton").disabled = false;
-      paintStatus("error");
-    }
-    schedule(300);
-  }
-
-  // --------------------------------------------------------------------- wiring
-  for (const button of document.querySelectorAll("[data-pane]")) {
-    button.addEventListener("click", () => showPane(button.dataset.pane));
-  }
-  el("pickerButton").addEventListener("click", () => {
-    const open = el("pickerMenu").hidden;
-    el("pickerMenu").hidden = !open;
-    el("pickerButton").setAttribute("aria-expanded", String(open));
-    if (open) { el("versionSearch").focus(); fillPicker(); }
-  });
-  document.addEventListener("click", (event) => {
-    if (!event.target.closest(".picker")) closePicker();
-  });
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") closePicker();
-  });
-  el("versionSearch").addEventListener("input", fillPicker);
-  el("allSearch").addEventListener("input", renderAllVersions);
-  for (const chip of el("typeChips").querySelectorAll(".chip")) {
-    chip.addEventListener("click", () => {
-      const type = chip.dataset.type;
-      if (state.chips.has(type)) { state.chips.delete(type); chip.classList.remove("on"); }
-      else { state.chips.add(type); chip.classList.add("on"); }
-      fillPicker();
-    });
-  }
-  for (const chip of el("playChips").querySelectorAll(".chip")) {
-    chip.addEventListener("click", () => {
-      const kind = chip.dataset.play;
-      if (state.plays.has(kind)) { state.plays.delete(kind); chip.classList.remove("on"); }
-      else { state.plays.add(kind); chip.classList.add("on"); }
-      fillPicker();
-    });
-  }
-  for (const chip of el("allChips").querySelectorAll(".chip")) {
-    chip.addEventListener("click", () => {
-      const type = chip.dataset.type;
-      if (state.allChips.has(type)) { state.allChips.delete(type); chip.classList.remove("on"); }
-      else { state.allChips.add(type); chip.classList.add("on"); }
-      renderAllVersions();
-    });
-  }
-  el("playButton").addEventListener("click", play);
-  el("stopButton").addEventListener("click", async () => {
-    el("stopButton").disabled = true;
-    try {
-      const answer = await postJson("api/stop");
-      el("sessionHint").textContent = answer.message;
-    } catch (problem) { /* the next tick shows the state anyway */ }
-    schedule(400);
-  });
-  el("clearLog").addEventListener("click", () => { el("log").textContent = ""; });
-  el("loaderSelect").addEventListener("change", () => { if (state.chosen) choose(state.chosen); });
-  el("nameInput").addEventListener("input", (event) => {
-    el("playerName").textContent = event.target.value || "Player";
-  });
-
-  // ----------------------------------------------------------------------- boot
-  (async function boot() {
-    await loadPreflight();
-    try {
-      state.playable = await fetchData("playable");
-    } catch (problem) {
-      state.playable = { counts: {}, mode: "none", versions: [], evidence: {} };
-    }
-    state.byId = {};
-    for (const row of state.playable.versions || []) state.byId[row.id] = row;
-    const counts = state.playable.counts || {};
-    const scanned = (state.playable.versions || []).length;
-    el("playableNote").textContent = scanned
-      ? `${counts.native || 0} of ${counts.total || scanned} versions run on this Mac as they are · `
-        + `${counts.rosetta || 0} under Rosetta · ${state.playable.mode || "?"} scan`
-      : "no playability scan yet — run tools/scan-playable.py";
-    const evidence = state.playable.evidence || {};
-    const notChecked = (evidence.not_checked || []).join("; ");
-    el("scanNote").textContent = scanned
-      ? `Plays here comes from ${evidence.documents || "a scan"}`
-        + (evidence.lwjgl_arm64_from ? `; the arm64 line is LWJGL 3.3.0 (${evidence.lwjgl_arm64_from})` : "")
-        + (notChecked ? `. Not checked offline: ${notChecked}` : "")
-      : "";
-
-    try {
-      state.catalogue = await fetchData("versions");
-    } catch (problem) {
-      if (!state.static) el("playNote").textContent = "the version list could not be read: " + problem.message;
-      return;
-    }
-    const count = state.catalogue.count || state.catalogue.versions.length;
-    el("versionSearch").placeholder = `Search ${count} versions…`;
-    const playableNow = state.catalogue.versions.filter((v) => playOf(v.id) === "native");
-    const latest = state.catalogue.versions.find((v) => v.id === state.catalogue.latest.release);
-    choose((latest && playOf(latest.id) === "native") ? latest
-      : (playableNow[0] || state.catalogue.versions[0]));
-    fillPicker();
-    renderAllVersions();
-    renderTiles();
-    el("buildInfo").textContent = "WEBMC " + playableNow.length + "/" + count + " ARM64";
-    if (state.static) goStatic(null); else tick();
-  })();
+main();
 </script>
 </body>
 </html>
