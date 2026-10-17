@@ -140,14 +140,33 @@
       (<code>AmphibianDev/webmc-port</code>).</li>
     <li><b>Permissions → Repository permissions:</b>
       <ul>
-        <li><b>Contents:</b> Read and write — the mods are committed to a branch of that repository.</li>
-        <li><b>Actions:</b> Read and write — this is what starts the build, and reads its result.</li>
+        <li><b>Contents:</b> the writable option — the mods are committed to a branch of that repository.</li>
+        <li><b>Actions:</b> the writable option — this is what starts the build, and reads its result.</li>
       </ul>
-      Everything else can stay <i>No access</i>.</li>
+      Everything else can stay <i>No access</i>. Depending on when your account was made, the dropdown words
+      this <i>"Read and write"</i> or simply lists the write option next to <i>Read</i> — take the writable
+      one in both cases.</li>
     <li>Generate, copy the token (it begins <code>github_pat_</code>).</li>
     <li>In the launcher: <b>New installation</b> → <b>How should this build run?</b> → <i>GitHub, with my own
       token</i> → paste it → <b>Build</b>.</li>
   </ol>
+  <div class="card ok">
+    <h3>If GitHub says 403</h3>
+    <p>That means the token can read the repository but not write to it — you get it at the first write, which
+      is why it looks like a bug in the launcher. Two ways out, either is fine:</p>
+    <ul>
+      <li><b>Simplest: a classic token.</b>
+        <a href="https://github.com/settings/tokens/new" rel="noopener">Settings → Developer settings → Tokens
+        (classic) → Generate new token (classic)</a>, expiry as short as you like, and tick exactly two boxes:
+        <b>repo</b> and <b>workflow</b>. Paste it in the same field — classic and fine-grained tokens both
+        start with the words "github_" only in the fine-grained case, so do not worry about the prefix.</li>
+      <li><b>Or fix the fine-grained one:</b> open it for editing, and give <b>Contents</b> and <b>Actions</b>
+        the writable option. If the repository belongs to an organization, the organization must also allow
+        fine-grained tokens — a classic token sidesteps that too.</li>
+    </ul>
+    <p>The launcher checks this the moment you paste a token, so it will tell you which case you are in before
+      any build is attempted.</p>
+  </div>
   <p>What the page then does, in order, all of it visible in your browser's network tab:</p>
   <pre><code>GET  /repos/&lt;repo&gt;/git/ref/heads/main                    read the current branch
 POST /repos/&lt;repo&gt;/git/refs                             create build/&lt;key&gt; from it

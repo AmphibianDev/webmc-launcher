@@ -480,10 +480,12 @@ async function whyFailed(response, what) {
     if (body.documentation_url) detail += ` — ${body.documentation_url}`;
   } catch { detail = await response.text().catch(() => ""); }
   const hint = response.status === 401 ? "the token is not valid any more (expired, or revoked)"
-    : response.status === 403 ? "the token is not allowed to do this: it needs this repository with "
-      + "Contents set to Read and write and Actions set to Read and write — a token that can read but not "
-      + "write gets exactly this. If the repository belongs to an organization, the organization also has to "
-      + "allow fine-grained tokens."
+    : response.status === 403 ? "the token can read but not write here. A token that can read gets exactly "
+      + "this at the first write. Fix it one of two ways: a CLASSIC token with the repo and workflow boxes "
+      + "ticked, or a FINE-GRAINED one where Repository permissions shows Contents and Actions as the "
+      + "writable option (the older UI words it 'Read and write', the newer one just lists the write option "
+      + "in the dropdown). If the repository belongs to an organization, the organization must also allow "
+      + "fine-grained tokens - with a classic token that does not apply."
     : response.status === 404 ? "the repository name, or the token's access to it"
     : response.status === 422 ? "the branch or file already exists, or the request was malformed"
     : "see the message above";
@@ -499,8 +501,10 @@ async function checkWriteAccess(token, repo) {
   if (permissions.push !== true) {
     return `${repo} is readable with this token but not writable `
       + `(GitHub says push: ${permissions.push === undefined ? "unknown" : permissions.push}).\n`
-      + `  → edit the token at https://github.com/settings/personal-access-tokens and set `
-      + `Repository permissions → Contents to Read and write (and Actions to Read and write).`;
+      + `  → add write access: a classic token with the repo and workflow boxes ticked works, and so does a `
+      + `fine-grained token whose Repository permissions give Contents and Actions write access. `
+      + `Edit either at https://github.com/settings/tokens (classic) or `
+      + `https://github.com/settings/personal-access-tokens (fine-grained).`;
   }
   return null;
 }
