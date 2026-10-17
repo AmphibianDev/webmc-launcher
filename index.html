@@ -302,7 +302,9 @@
 </dialog>
 
 <script>
-const DEFAULT_SERVICE = "http://127.0.0.1:8787";
+/* The build machine is GitHub Actions, reached through a Cloudflare worker that holds the token; the page
+   never sees one. clients.json carries the address, and a local service is only a development fallback. */
+let DEFAULT_SERVICE = "http://127.0.0.1:8787";
 const state = { doc: null, pick: null, mods: [], job: null };
 
 const el = (id) => document.getElementById(id);
@@ -343,7 +345,7 @@ function renderList() {
       <span class="txt"><b></b><span></span></span>`;
     row.querySelector("b").textContent = entry.id;
     row.querySelector(".txt span").textContent = label(entry)
-      + (entry.kind === "compiled" ? " · mods built in" : " · mods at play time");
+      + (entry.kind === "compiled" ? " · add your own mods, we build" : " · your mods load at play time");
     row.addEventListener("click", () => select(entry.id));
     list.append(row);
   }
@@ -365,10 +367,10 @@ function select(id) {
     b.textContent = text;
     badges.append(b);
   };
-  add(entry.kind === "compiled" ? "compiled client" : "real JVM in the page", "ok");
+  add(entry.kind === "compiled" ? "base build, ready" : "real JVM in the page", "ok");
   if (entry.java) add(`java ${entry.java}`);
   if (entry.lwjgl) add(`lwjgl ${entry.lwjgl}`);
-  add(entry.kind === "compiled" ? "mods baked in" : "mods at play time");
+  add(entry.kind === "compiled" ? "drop in your mods → we bake them" : "your mods load at play time");
 
   const facts = el("facts");
   facts.textContent = "";
@@ -389,10 +391,10 @@ function select(id) {
   el("openBtn").hidden = false;
   el("chooser").value = entry.id;
   el("modsNote").textContent = entry.kind === "compiled"
-    ? "This is a compiled client: the mods it was built with are inside it. To use your own, build a new "
-      + "installation with the mods you want — the bake is done on a build machine, not here."
+    ? "This is the vanilla build of " + entry.id + " — nothing pre-baked into it. Drop your own mods in and it "
+      + "is rebuilt with them on the build machine (GitHub Actions), then this row becomes your client."
     : "This one runs the official jar in a real JVM, so mods load at play time — Fabric and its API come "
-      + "from the page. To bake mods into a compiled client instead, use New installation.";
+      + "from the page. Nothing to build and nothing pre-baked.";
   renderList();
 }
 
@@ -517,8 +519,9 @@ function openBuildDialog(files = []) {
     if (why) option.label = why;
     options.append(option);
   };
-  for (const entry of state.doc.installations.filter((e) => e.kind === "compiled")) add(entry.id, "already built");
-  for (const entry of state.doc.buildable || []) add(entry.id, "can be built");
+  // a compiled version in the list is a *vanilla* build to start from: the mods are still yours to add
+  for (const entry of state.doc.installations.filter((e) => e.kind === "compiled")) add(entry.id, "vanilla build exists");
+  for (const entry of state.doc.buildable || []) add(entry.id, "no build yet — this will start one");
   el("buildDialog").showModal();
 }
 

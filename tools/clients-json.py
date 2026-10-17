@@ -36,6 +36,8 @@ def main(argv=None) -> int:
     parser.add_argument("--port", default=str(PORT_DEFAULT))
     parser.add_argument("--out", default="clients.json")
     parser.add_argument("--base", default=BASE)
+    parser.add_argument("--build-service", default="",
+                        help="the build worker's url (Cloudflare); a local service is only a fallback")
     args = parser.parse_args(argv)
 
     port = pathlib.Path(args.port).expanduser()
@@ -83,6 +85,14 @@ def main(argv=None) -> int:
             "compiled": sum(1 for entry in installations if entry["kind"] == "compiled"),
             "real_java": sum(1 for entry in installations if entry["kind"] == "real-java"),
             "buildable": len(buildable),
+        },
+        # Where a build is asked for. The worker (gateway/build-worker.js in the port) is how a *deployed*
+        # page can start a bake: it holds the GitHub token and dispatches the workflow. A local service is a
+        # development fallback and nothing more.
+        "build": {
+            "service": args.build_service,
+            "fallback": "http://127.0.0.1:8787",
+            "note": "POST a version and mods to <service>/api/build; poll <service>/api/build?id=…",
         },
         "installations": installations,
         "buildable": buildable,
