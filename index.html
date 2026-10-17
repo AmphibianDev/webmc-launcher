@@ -138,6 +138,10 @@
   .chip button:hover { color:#ff9b9b; background:#ffffff10; }
   .actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
   .empty { color:var(--dim); padding:30px 4px; }
+  .field { display:block; font-size:11.5px; letter-spacing:.09em; text-transform:uppercase; color:var(--muted);
+           margin-bottom:14px; }
+  .field input { width:100%; background:var(--bg); border:1px solid var(--edge); border-radius:var(--radius);
+                 padding:10px 11px; margin-top:6px; text-transform:none; letter-spacing:0; font-size:14px; }
 
   /* dialog */
   dialog { background:var(--panel); color:var(--text); border:1px solid var(--edge-2); border-radius:8px;
@@ -156,6 +160,9 @@
   .err { color:#ff9b9b; } .ok { color:#b9e69f; } .warn { color:var(--amber); }
   .progress { height:6px; background:#0e0e10; border-radius:999px; overflow:hidden; }
   .progress i { display:block; height:100%; width:0; background:var(--green); transition:width .45s; }
+  .progress.waiting i { width:38% !important; background:linear-gradient(90deg,#2c5520,#4b9e32,#2c5520);
+                        animation:sweep 1.6s linear infinite; }
+  @keyframes sweep { 0% { transform:translateX(-120%); } 100% { transform:translateX(320%); } }
   .steps { list-style:none; margin:2px 0 0; padding:0; max-height:190px; overflow-y:auto;
            border:1px solid var(--edge); border-radius:var(--radius); background:#0e0e10; }
   .steps li { display:flex; gap:9px; padding:5px 10px; font-size:12.8px; color:var(--muted);
@@ -180,6 +187,7 @@
       <button id="navInstall"><span class="dot"></span>Installations<span class="badge" id="navCount"></span></button>
     </nav>
     <div class="rail-tools">
+      <button id="settingsBtn">Settings…</button>
       <button id="helpBtn">Help &amp; how it works</button>
       <button id="logBtn">Open the selected client with its log</button>
       <button id="sourceBtn">Source code</button>
@@ -187,8 +195,8 @@
     <div class="account">
       <div class="avatar" aria-hidden="true"></div>
       <div class="who">
-        <b>Player</b>
-        <span id="accountNote">no account needed</span>
+        <b id="accountName">Player</b>
+        <span id="accountNote">no account needed — offline name</span>
       </div>
     </div>
   </aside>
@@ -220,6 +228,45 @@
           <p>A newer client has to be compiled with your mods on a build machine; an older one loads them at
             play time and needs no build at all.</p>
           <p class="note">Building runs on GitHub Actions — with your own token, or a build service.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- settings -->
+    <section class="view" id="viewSettings" hidden>
+      <div class="bar">
+        <h2>Settings</h2>
+        <div class="grow"></div>
+        <button class="btn" id="forgetBtn">Clear everything stored</button>
+      </div>
+      <div class="detail" style="max-width:720px">
+        <div class="section">
+          <h3>Player</h3>
+          <label class="field">Name to play under
+            <input id="sName" type="text" maxlength="16" spellcheck="false" placeholder="WebMC" />
+          </label>
+          <p class="note" id="nameNote"></p>
+        </div>
+        <div class="section">
+          <h3>Building</h3>
+          <label class="field">GitHub token
+            <input id="sToken" type="password" spellcheck="false" autocomplete="off" placeholder="github_pat_… or a classic token" />
+          </label>
+          <label class="field">Repository
+            <input id="sRepo" type="text" spellcheck="false" />
+          </label>
+          <label class="field">Build service address (used when a build runs through a service)
+            <input id="sService" type="text" spellcheck="false" placeholder="https://webmc-build.example.workers.dev" />
+          </label>
+          <p class="note" id="buildNote"></p>
+          <div class="actions">
+            <button class="btn" id="testToken">Check the token</button>
+            <button class="btn" id="forgetToken">Forget the token</button>
+          </div>
+        </div>
+        <div class="section">
+          <h3>About this page</h3>
+          <p class="note" id="aboutNote"></p>
         </div>
       </div>
     </section>
@@ -309,6 +356,8 @@ const store = {
   set token(v) { try { localStorage.setItem("webmc.token", v || ""); } catch {} },
   get repo() { try { return localStorage.getItem("webmc.repo") || ""; } catch { return ""; } },
   set repo(v) { try { localStorage.setItem("webmc.repo", v || ""); } catch {} },
+  get name() { try { return localStorage.getItem("webmc.name") || ""; } catch { return ""; } },
+  set name(v) { try { localStorage.setItem("webmc.name", (v || "").replace(/[^A-Za-z0-9_]/g, "").slice(0, 16)); } catch {} },
   get mods() { try { return JSON.parse(localStorage.getItem("webmc.mods") || "[]"); } catch { return []; } },
   set mods(v) { try { localStorage.setItem("webmc.mods", JSON.stringify(v)); } catch {} },
 };
@@ -329,8 +378,29 @@ function show(view) {
   state.view = view;
   el("viewHome").hidden = view !== "home";
   el("viewInstall").hidden = view !== "install";
+  el("viewSettings").hidden = view !== "settings";
   el("navHome").setAttribute("aria-current", view === "home" ? "page" : "false");
   el("navInstall").setAttribute("aria-current", view === "install" ? "page" : "false");
+  if (view === "settings") fillSettings();
+}
+
+/** Everything a player can change lives here, including the token: a setting is a setting. */
+function fillSettings() {
+  el("sName").value = store.name;
+  el("sToken").value = store.token;
+  el("sRepo").value = store.repo || "AmphibianDev/webmc-port";
+  el("sService").value = store.service || (state.doc?.build?.service || "");
+  const compiled = state.doc.installations.filter((entry) => kindOf(entry) !== "real-java").length;
+  el("nameNote").textContent = compiled
+    ? "Used by the versions that run the original game in the page. A compiled client keeps its own profile "
+      + "editor on its title screen, so a name set here is not forced on it."
+    : "Used by the versions that run the original game in the page.";
+  el("buildNote").textContent = "A build is compiled on GitHub Actions. The token is kept in this browser and "
+    + "sent only to api.github.com — it needs this repository, with write access to Contents and Actions. A "
+    + "build service holds a token for everybody instead, so no player needs one.";
+  el("aboutNote").textContent = `clients.json was generated ${state.doc.generated || ""} from the port's own `
+    + `route data: ${state.doc.counts.playable} versions run in a browser (${state.doc.counts.compiled} compiled, `
+    + `${state.doc.counts.real_java} as the original game), ${state.doc.counts.buildable} more can be built.`;
 }
 
 function renderChooser() {
@@ -495,9 +565,13 @@ function chipBox() {
 }
 
 function openClient(entry, withMods) {
-  const url = withMods && entry.kind === "real-java" && state.mods.length
-    ? `${entry.url}${entry.url.includes("?") ? "&" : "?"}mods=`
-    : entry.url;
+  let url = entry.url;
+  // the real-JVM route takes the name as an argument, so it is carried in the URL; a compiled client has its
+  // own profile editor on the title screen and needs nothing from here
+  if (kindOf(entry) === "real-java") {
+    if (store.name) url += `${url.includes("?") ? "&" : "?"}username=${encodeURIComponent(store.name)}`;
+    if (withMods && state.mods.length) url += "&mods=";
+  }
   location.href = url;
 }
 
@@ -540,7 +614,16 @@ function log(line, cls = "") {
 
 function renderSteps(steps, percent, stage) {
   const box = el("bSteps");
-  if (!steps || !steps.length) { box.hidden = true; return; }
+  const bar = el("bProgress");
+  if (!steps || !steps.length) {
+    box.hidden = true;
+    // "the bar does not move" is not an answer: while nothing is known yet the bar sweeps, so it is visible
+    // that the page is waiting rather than stuck, and the line under it says what it is waiting for.
+    bar.classList.add("waiting");
+    if (stage) el("bStage").textContent = stage;
+    return;
+  }
+  bar.classList.remove("waiting");
   box.hidden = false;
   box.textContent = "";
   let running = false;
@@ -558,13 +641,14 @@ function renderSteps(steps, percent, stage) {
     line.append(mark, label);
     box.append(line);
   }
-  if (typeof percent === "number") el("bProgress").firstElementChild.style.width = `${Math.max(4, Math.min(100, percent))}%`;
+  if (typeof percent === "number") bar.querySelector("i").style.width = `${Math.max(4, Math.min(100, percent))}%`;
   el("bStage").textContent = stage || "";
 }
 
 function openBuildDialog(preselect = [], version = "") {
+  el("bProgress").classList.add("waiting");
+  el("bStage").textContent = "not started yet";
   el("bProgress").firstElementChild.style.width = "0";
-  el("bStage").textContent = "";
   el("bSteps").hidden = true;
   el("bLog").hidden = true;
   el("bLog").textContent = "";
@@ -716,7 +800,7 @@ async function startBuildOnGitHub(version, files) {
     if (refusal) { log(refusal, "err"); log("nothing was uploaded; remove that jar and try again", "warn"); return; }
   }
   el("bStart").disabled = true;
-  el("bProgress").firstElementChild.style.width = "4%";
+  renderSteps([], 0, "checking the token…");
   const blocked = await checkWriteAccess(token, repo);
   if (blocked) { log(blocked, "err"); el("bStart").disabled = false; return; }
 
@@ -767,7 +851,11 @@ async function pollGitHub(key, repo, token, version, files) {
     await new Promise((r) => setTimeout(r, attempt < 6 ? 4000 : 15000));
     const { run, problem } = await runsFor(token, repo, key);
     if (problem) continue;
-    if (!run) { renderSteps([], 6, "waiting for the build machine to pick it up"); continue; }
+    if (!run) {
+      renderSteps([], 0, attempt < 2 ? "asking GitHub for the run…"
+        : "queued: the branch is pushed, GitHub has not listed the run yet");
+      continue;
+    }
     const jobs = await github(token, repo, `/actions/runs/${run.id}/jobs`);
     if (jobs.ok) {
       jobList = (await jobs.json()).jobs || [];
@@ -812,7 +900,7 @@ async function startBuildWithService(version, files) {
   const service = (el("bService").value.trim() || DEFAULT_SERVICE).replace(/\/+$/, "");
   store.service = service;
   el("bStart").disabled = true;
-  el("bProgress").firstElementChild.style.width = "4%";
+  renderSteps([], 0, `asking ${service}…`);
   log(`asking ${service} to build ${version} with ${files.length} mod(s)`);
   try {
     const body = new FormData();
@@ -891,6 +979,7 @@ async function main() {
   if (state.doc.build?.service) el("bService").value = state.doc.build.service;
   renderChooser();
   renderRows();
+  el("accountName").textContent = store.name || "Player";
   const wanted = new URLSearchParams(location.search).get("version") || store.pick;
   select(wanted || state.doc.installations[0].id);
   show(new URLSearchParams(location.search).get("view") === "installations" ? "install" : "home");
@@ -905,7 +994,38 @@ async function main() {
     if (entry) openClient(entry, false);
   });
   el("newBtn").addEventListener("click", () => openBuildDialog());
+  el("settingsBtn").addEventListener("click", () => show("settings"));
   el("helpBtn").addEventListener("click", () => window.open("help.html", "_blank"));
+  el("sName").addEventListener("change", () => {
+    store.name = el("sName").value.trim().replace(/[^A-Za-z0-9_]/g, "").slice(0, 16);
+    el("sName").value = store.name;
+  });
+  el("sToken").addEventListener("change", () => {
+    store.token = el("sToken").value.trim();
+    el("buildNote").textContent = store.token ? "token saved in this browser." : "no token saved.";
+  });
+  el("sRepo").addEventListener("change", () => { store.repo = el("sRepo").value.trim(); });
+  el("sService").addEventListener("change", () => { store.service = el("sService").value.trim(); });
+  el("testToken").addEventListener("click", async () => {
+    if (!store.token) { el("buildNote").textContent = "no token to check."; el("buildNote").className = "note"; return; }
+    el("buildNote").textContent = "checking…";
+    const problem = await checkWriteAccess(store.token, store.repo || "AmphibianDev/webmc-port");
+    el("buildNote").textContent = problem || "this token can write to that repository — builds will work.";
+    el("buildNote").className = problem ? "note err" : "note ok";
+  });
+  el("forgetToken").addEventListener("click", () => {
+    store.token = "";
+    el("sToken").value = "";
+    el("buildNote").textContent = "the token was removed from this browser.";
+    el("buildNote").className = "note";
+  });
+  el("forgetBtn").addEventListener("click", () => {
+    for (const key of ["webmc.token", "webmc.repo", "webmc.service", "webmc.name", "webmc.pick", "webmc.mods"]) {
+      try { localStorage.removeItem(key); } catch {}
+    }
+    fillSettings();
+    el("buildNote").textContent = "everything this page stored is gone.";
+  });
   el("sourceBtn").addEventListener("click", () => window.open("https://github.com/AmphibianDev/webmc-port", "_blank"));
   el("logBtn").addEventListener("click", () => {
     const entry = state.doc.installations.find((candidate) => candidate.id === state.pick);
