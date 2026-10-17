@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>WebMC Launcher — Help</title>
+<!--
+  One page of help, because the launcher asks two things of a person that are not obvious: that the mods are
+  theirs to bring, and that a build needs something which can start a GitHub Actions run. Written to be read
+  by whoever opens the launcher, not by whoever wrote it.
+-->
+<style>
+  :root { --bg:#141415; --panel:#1e1e1f; --panel-2:#262628; --edge:#3a3a3d; --text:#e9e9ea;
+          --muted:#9c9ca1; --dim:#6f6f75; --green:#3c8527; --code:#0f0f10; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text);
+         font:16px/1.65 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+  header { background:var(--panel); border-bottom:1px solid #000; padding:18px 0; position:sticky; top:0; z-index:5; }
+  .wrap { max-width:900px; margin:0 auto; padding:0 20px; }
+  header .wrap { display:flex; align-items:center; gap:14px; }
+  header b { font-size:17px; }
+  header a { color:var(--muted); text-decoration:none; font-size:14.5px; margin-left:auto; }
+  header a:hover { color:var(--text); }
+  h1 { font-size:30px; margin:34px 0 6px; }
+  h2 { font-size:21px; margin:38px 0 10px; border-bottom:1px solid var(--edge); padding-bottom:8px; }
+  h3 { font-size:16.5px; margin:24px 0 6px; }
+  p, li { color:#d7d7dc; }
+  .lede { color:var(--muted); font-size:17px; }
+  a { color:#8fc7ff; }
+  code, pre { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:13.5px; }
+  code { background:var(--code); border:1px solid var(--edge); border-radius:3px; padding:1px 5px; }
+  pre { background:var(--code); border:1px solid var(--edge); border-radius:5px; padding:12px 14px; overflow-x:auto; }
+  pre code { border:0; background:none; padding:0; }
+  .card { background:var(--panel-2); border:1px solid var(--edge); border-radius:7px; padding:16px 18px; margin:16px 0; }
+  .card h3 { margin-top:0; }
+  .warn { border-left:3px solid #d8a12a; }
+  .danger { border-left:3px solid #c2554d; }
+  .ok { border-left:3px solid var(--green); }
+  table { border-collapse:collapse; width:100%; margin:14px 0; font-size:14.5px; }
+  th, td { border:1px solid var(--edge); padding:8px 10px; text-align:left; vertical-align:top; }
+  th { background:var(--panel); color:var(--muted); font-weight:600; }
+  .pill { display:inline-block; font-size:11.5px; letter-spacing:.06em; text-transform:uppercase;
+          border:1px solid var(--edge); border-radius:999px; padding:2px 9px; color:var(--muted); }
+  .toc { columns:2; column-gap:28px; font-size:14.5px; }
+  .toc a { display:block; padding:2px 0; }
+  footer { color:var(--dim); font-size:13.5px; border-top:1px solid #000; margin-top:50px; padding:18px 0 40px; background:var(--panel); }
+  @media (max-width:620px) { .toc { columns:1; } h1 { font-size:24px; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <b>WebMC Launcher</b>
+    <a href="./">← back to the launcher</a>
+  </div>
+</header>
+
+<div class="wrap">
+  <h1>Help</h1>
+  <p class="lede">Minecraft in a browser tab: no install, no Java, no launcher download. Pick a version, press
+    PLAY. Bring your own mods and a build machine puts them in.</p>
+
+  <div class="toc">
+    <a href="#play">1. Playing</a>
+    <a href="#kinds">2. The two kinds of installation</a>
+    <a href="#mods">3. Your own mods</a>
+    <a href="#build">4. Building</a>
+    <a href="#token">5. The GitHub token, step by step</a>
+    <a href="#worker">6. Running a build service instead</a>
+    <a href="#unsupported">7. What cannot be baked</a>
+    <a href="#versions">8. Which versions are listed, and why</a>
+    <a href="#trouble">9. When something goes wrong</a>
+    <a href="#privacy">10. Accounts, privacy, legality</a>
+  </div>
+
+  <h2 id="play">1. Playing</h2>
+  <p>Open the launcher, pick an installation on the left, press <b>PLAY</b>. The first load of a version is
+    slow — a client is tens of megabytes and, on the real-JVM route, a Java runtime is downloaded and
+    started — but it is cached afterwards, so the second time is quick.</p>
+  <p>Controls are the game's own: keyboard and mouse are captured once the game window has focus. Click the
+    page first if the keyboard does nothing. Full screen is <code>F11</code> or the game's own option.</p>
+
+  <h2 id="kinds">2. The two kinds of installation</h2>
+  <table>
+    <tr><th></th><th>Compiled</th><th>Real Java</th></tr>
+    <tr><td>What runs</td>
+        <td>a client compiled from the official jar ahead of time</td>
+        <td>the official jar itself, in a Java runtime compiled to WebAssembly</td></tr>
+    <tr><td>Which versions</td><td>26.2, 26.3, 1.21.11 (and more once built)</td><td>1.0 → 1.12.2 and their snapshots</td></tr>
+    <tr><td>Your mods</td><td>baked in by a build machine before you play</td><td>loaded at play time — nothing to build</td></tr>
+    <tr><td>Cost of mods</td><td>one build (30–45 minutes), once per mod set</td><td>none</td></tr>
+  </table>
+  <p>Older versions are the easier and faster path: they run the original game with Fabric at play time.
+    Newer ones have to be compiled because the browser runtime's Java is older than theirs.</p>
+
+  <h2 id="mods">3. Your own mods</h2>
+  <p>There is no list of mods to choose from on purpose — the mods are yours. Drop the <code>.jar</code> files
+    you already use into the launcher (or add them in <b>New installation</b>).</p>
+  <ul>
+    <li><b>Real Java installations:</b> your mods load at play time, exactly as in a normal launcher. Fabric and
+      Fabric API are provided by the page.</li>
+    <li><b>Compiled installations:</b> the client has to be rebuilt with your mods inside it, so a build runs
+      first. When it finishes, the row becomes your client and PLAY opens it.</li>
+  </ul>
+  <p>Mods come from anywhere you got them: CurseForge, Modrinth, GitHub releases. Nothing is uploaded to a
+    server you did not choose — see <a href="#build">Building</a> for exactly where they go.</p>
+
+  <h2 id="build">4. Building</h2>
+  <p>A bake is a real compile: it needs a JVM, a compiler and 30–45 minutes. That cannot happen in the browser,
+    so it happens on GitHub Actions, and the launcher has to be able to <i>start</i> a run. Starting a run
+    needs a token; a web page cannot hold one safely, and this page does not pretend otherwise. You have three
+    options:</p>
+  <table>
+    <tr><th>Option</th><th>What it needs</th><th>Best for</th></tr>
+    <tr><td><b>Your own GitHub token</b></td>
+        <td>a fine-grained token for the repository, kept in your browser</td>
+        <td>builds right now, no server of your own</td></tr>
+    <tr><td><b>A build service</b> (Cloudflare Worker or Deno) </td>
+        <td>one deployment holding the token for everybody</td>
+        <td>a public launcher other people use</td></tr>
+    <tr><td><b>A local service</b></td>
+        <td><code>node tools/build-service.mjs</code> on this computer</td>
+        <td>testing</td></tr>
+  </table>
+
+  <h2 id="token">5. The GitHub token, step by step</h2>
+  <div class="card warn">
+    <h3>Read this first</h3>
+    <p>The token is a password for your GitHub account, limited to one repository. Anyone who has it can
+      change that repository. The launcher stores it in your browser's own storage and sends it nowhere except
+      <code>api.github.com</code> — you can see that in the page's source, and <b>Forget token</b> removes it.
+      Do not paste a token into a page you did not open yourself.</p>
+  </div>
+  <ol>
+    <li>Sign in to GitHub and open <a href="https://github.com/settings/personal-access-tokens/new"
+      rel="noopener">Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new</a>.</li>
+    <li><b>Token name:</b> anything, e.g. <code>webmc build</code>.</li>
+    <li><b>Expiration:</b> 7 or 30 days is plenty. Short is better.</li>
+    <li><b>Repository access:</b> <i>Only select repositories</i> → the WebMC repository
+      (<code>AmphibianDev/webmc-port</code>).</li>
+    <li><b>Permissions → Repository permissions:</b>
+      <ul>
+        <li><b>Contents:</b> Read and write — the mods are committed to a branch of that repository.</li>
+        <li><b>Actions:</b> Read and write — this is what starts the build, and reads its result.</li>
+      </ul>
+      Everything else can stay <i>No access</i>.</li>
+    <li>Generate, copy the token (it begins <code>github_pat_</code>).</li>
+    <li>In the launcher: <b>New installation</b> → <b>How should this build run?</b> → <i>GitHub, with my own
+      token</i> → paste it → <b>Build</b>.</li>
+  </ol>
+  <p>What the page then does, in order, all of it visible in your browser's network tab:</p>
+  <pre><code>GET  /repos/&lt;repo&gt;/git/ref/heads/main                    read the current branch
+POST /repos/&lt;repo&gt;/git/refs                             create build/&lt;key&gt; from it
+PUT  /repos/&lt;repo&gt;/contents/mods/vendor/&lt;mod&gt;.jar       your mods, on that branch only
+PUT  /repos/&lt;repo&gt;/contents/build-info.json              which version this build is for
+POST /repos/&lt;repo&gt;/actions/workflows/…/dispatches        start the bake on that branch
+GET  /repos/&lt;repo&gt;/actions/runs?branch=build/&lt;key&gt;       poll until it is done</code></pre>
+  <p>The branch is named after the <i>content</i> of your mod set, so asking for the same mods twice reuses the
+    first build instead of starting another. Your mods are never committed to <code>main</code>.</p>
+  <p>Watch the build yourself at
+    <a href="https://github.com/AmphibianDev/webmc-port/actions" rel="noopener">the repository's Actions page</a>
+    — the launcher's log is a summary of the same run.</p>
+
+  <h2 id="worker">6. Running a build service instead</h2>
+  <p>If the launcher is for other people, keep the token out of their browser: deploy one small endpoint that
+    does the same calls. <code>gateway/build-worker.js</code> in the repository is exactly that, for Cloudflare
+    Workers:</p>
+  <pre><code>npx wrangler deploy gateway/build-worker.js --name webmc-build --compatibility-date 2026-01-01
+npx wrangler secret put GITHUB_TOKEN      # the same fine-grained permissions as above</code></pre>
+  <p>Then put its address in <code>clients.json</code> as <code>build.service</code> and the launcher's Build
+    machine field will already be filled in. For testing there is also a local one:</p>
+  <pre><code>cd webmc-mods &amp;&amp; node tools/build-service.mjs      # listens on 127.0.0.1:8787</code></pre>
+
+  <h2 id="unsupported">7. What cannot be baked</h2>
+  <div class="card danger">
+    <p><b>Mods with native libraries cannot work in a browser at all.</b> Distant Horizons is the well-known
+      one: it ships Windows, macOS and Linux binaries, and a page has no way to run them. The launcher refuses
+      these in a second, before a build starts, with that reason — rather than leaving you waiting
+      45 minutes for a build that was never going to run.</p>
+  </div>
+  <p>Two more honest limits:</p>
+  <ul>
+    <li>A mod that mixes into <i>another mod's</i> classes needs that other mod in the same build. Put both jars
+      in and they are baked together, which is how such mod sets are meant to be installed.</li>
+    <li>A mod written for a different Minecraft version is skipped by the game's own loader. Nothing is
+      "fixed" silently: if a mod is skipped, the game says so and the log names it.</li>
+  </ul>
+
+  <h2 id="versions">8. Which versions are listed, and why</h2>
+  <p>Only versions that actually run in a browser appear in the list. That is decided from each version's own
+    metadata, not from a hand-written list:</p>
+  <ul>
+    <li><b>LWJGL 2 with Java 8 or older</b> → it runs: the official jar in the page. That is 1.0 through
+      1.12.2, plus the snapshots in that window — 349 of them.</li>
+    <li><b>LWJGL 3</b> → it would need a JavaScript version of LWJGL 3, which is being written but is not
+      finished. Those versions are not offered.</li>
+    <li><b>Java 21 or newer</b> → newer than the Java a browser runtime provides; they are compiled instead
+      (26.2, 26.3, 1.21.11 today).</li>
+    <li><b>Alpha and beta</b> → they need fixed-function OpenGL, which WebGL does not have.</li>
+  </ul>
+  <p>95 further versions can be built on demand; they are listed in the New-installation version box with
+    "no build yet — this will start one".</p>
+
+  <h2 id="trouble">9. When something goes wrong</h2>
+  <h3>The page stays empty, or says the runtime could not load</h3>
+  <p>CheerpJ (the Java runtime in the page) is a script downloaded from <code>cjrtnc.leaningtech.com</code>.
+    An ad-blocker, a strict content-security policy, an offline network or an HTTPS-only extension can stop it.
+    The page says which of those happened; try a normal window with the blocker off.</p>
+  <h3>The build failed</h3>
+  <p>Open the run from the link in the log — that is the real error. Then check, in order: was the version
+    spelled the way the list spells it (<code>26.2</code>, not <code>1.26.2</code>); does the token have
+    <b>Actions: Read and write</b> as well as <b>Contents: Read and write</b>; is the token expired. A
+    <code>403</code> in the log is almost always a permission, a <code>404</code> a repository name.</p>
+  <h3>The build worked, but PLAY opens the old client</h3>
+  <p>The published page is cached by the browser. Add the row again from the build's log link, or reload with
+    cache disabled. The version list's compiled rows always point at the newest published build.</p>
+  <h3>A mod has no effect</h3>
+  <p>Mods that need Fabric API and did not get it will fail on their own terms — the game's log names them.
+    Some mods also require a mod menu or a config screen mod to do anything visible.</p>
+
+  <h2 id="privacy">10. Accounts, privacy, legality</h2>
+  <ul>
+    <li><b>This is not an official Minecraft product.</b> It is not approved by or associated with Mojang or
+      Microsoft. You need to own Minecraft to play it — the client jar is downloaded from Mojang's own servers
+      when you play, and never redistributed here.</li>
+    <li><b>Multiplayer</b> works through a relay when a server is joined from the page; the relay forwards
+      bytes and never holds a key, and it refuses anything that is not a Minecraft session.</li>
+    <li><b>Your token</b> stays in your browser's storage, is sent only to <code>api.github.com</code>, and can
+      be removed with <b>Forget token</b>.</li>
+    <li><b>Your mods</b> are committed to a branch of the build repository (so the build can use them) and are
+      public there, as anything in a public repository is. If that is not acceptable for a private mod, run a
+      build service of your own instead, or play a version whose mods load at play time.</li>
+    <li>No analytics, no accounts, no tracking on these pages.</li>
+  </ul>
+</div>
+
+<footer>
+  <div class="wrap">
+    <a href="./">Launcher</a> ·
+    <a href="https://amphibiandev.github.io/webmc-port/">Clients</a> ·
+    <a href="https://github.com/AmphibianDev/webmc-port">Source</a> ·
+    <a href="https://github.com/AmphibianDev/webmc-port/actions">Builds</a>
+  </div>
+</footer>
+</body>
+</html>

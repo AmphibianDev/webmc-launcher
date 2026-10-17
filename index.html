@@ -222,6 +222,7 @@
 
     <div class="side-foot">
       <button id="newBtn">+ New installation</button>
+      <button id="helpBtn">Help</button>
       <button id="sourceBtn">Source</button>
     </div>
   </aside>
@@ -271,7 +272,7 @@
 
 <dialog id="buildDialog">
   <form method="dialog" class="dlg-head">
-    <h2>New installation</h2>
+    <h2>New installation <a class="link" href="help.html" target="_blank" style="font-size:13px; float:right">Help ↗</a></h2>
     <p>Pick a version, add the mods you want, and let a build machine do the work. Only the mods you choose are
       built in — nothing is pre-baked.</p>
   </form>
@@ -286,11 +287,30 @@
       <input id="bFiles" type="file" multiple accept=".jar,.zip" hidden />
       <div class="chips" id="bChips"></div>
     </div>
-    <label>Build machine
-      <input id="bService" type="text" spellcheck="false"
-             placeholder="https://webmc-build.<you>.workers.dev  —  or http://127.0.0.1:8787 for one on this computer" />
-      <span class="note" id="bServiceNote" style="display:block; margin-top:6px"></span>
+    <label>How should this build run?
+      <select id="bMode">
+        <option value="token">GitHub, with my own token — nothing to set up, the build starts right now</option>
+        <option value="service">A build service (Cloudflare Worker, Deno, or one on this computer)</option>
+      </select>
     </label>
+
+    <div id="tokenPanel">
+      <label>GitHub token
+        <input id="bToken" type="password" spellcheck="false" autocomplete="off" placeholder="github_pat_…" />
+      </label>
+      <label style="display:block; margin-top:10px">Repository
+        <input id="bRepo" type="text" spellcheck="false" value="AmphibianDev/webmc-port" />
+      </label>
+      <p class="note" id="bTokenNote" style="margin-top:8px"></p>
+    </div>
+
+    <div id="servicePanel" hidden>
+      <label>Build machine
+        <input id="bService" type="text" spellcheck="false"
+               placeholder="https://webmc-build.<you>.workers.dev  —  or http://127.0.0.1:8787 for one on this computer" />
+        <span class="note" id="bServiceNote" style="display:block; margin-top:6px"></span>
+      </label>
+    </div>
     <div class="progress" id="bProgress"><i></i></div>
     <div class="log" id="bLog" hidden></div>
     <p class="note" id="bNote">A bake compiles a client, which takes 30–45 minutes on the build machine. The mods
@@ -315,6 +335,12 @@ const store = {
   set service(v) { try { localStorage.setItem("webmc.service", v); } catch {} },
   get pick() { try { return localStorage.getItem("webmc.pick") || ""; } catch { return ""; } },
   set pick(v) { try { localStorage.setItem("webmc.pick", v); } catch {} },
+  /* A token is a password: it lives in this browser's storage, is sent only to api.github.com, and the
+     launcher offers to forget it. Nothing else in this file may read it. */
+  get token() { try { return localStorage.getItem("webmc.token") || ""; } catch { return ""; } },
+  set token(v) { try { localStorage.setItem("webmc.token", v || ""); } catch {} },
+  get repo() { try { return localStorage.getItem("webmc.repo") || ""; } catch { return ""; } },
+  set repo(v) { try { localStorage.setItem("webmc.repo", v || ""); } catch {} },
 };
 
 function bytes(n) {
@@ -427,6 +453,183 @@ function renderChips(into = "chips", list = state.mods) {
   }
 }
 
+/* ------------------------------------------------------------------ GitHub, from the page */
+/* The token never leaves the browser except to api.github.com, which is the only host it is sent to below.
+   Anything added here must keep that true. */
+const GITHUB = "https://api.github.com";
+
+async function github(token, repo, path, init = {}) {
+  return fetch(`${GITHUB}/repos/${repo}${path}`, {
+    ...init,
+    headers: {
+      accept: "application/vnd.github+json",
+      authorization: `Bearer ${token}`,
+      "content-type": "application/json",
+      ...(init.headers || {}),
+    },
+  });
+}
+
+async function base64Of(file) {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  let binary = "";
+  for (let index = 0; index < bytes.length; index += 0x8000) {
+    binary += String.fromCharCode.apply(null, bytes.subarray(index, index + 0x8000));
+  }
+  return btoa(binary);
+}
+
+async function modKey(version, files) {
+  const parts = [`v1\u0000${version}`];
+  for (const file of [...files].sort((a, b) => a.name.localeCompare(b.name))) {
+    const digest = await crypto.subtle.digest("SHA-256", await file.arrayBuffer());
+    parts.push(`${file.name}\u0000${[...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("")}`);
+  }
+  const total = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(parts.join("\u0000")));
+  return [...new Uint8Array(total)].map((b) => b.toString(16).padStart(2, "0")).join("").slice(0, 32);
+}
+
+const modId = (name) => name.replace(/\.(jar|zip)$/i, "").replace(/[^A-Za-z0-9._-]+/g, "-").toLowerCase();
+
+/** A jar with native libraries cannot run in a page: refuse it here, before anything is uploaded. */
+async function refusalFor(file) {
+  const head = new Uint8Array(await file.slice(0, Math.min(file.size, 4 * 1024 * 1024)).arrayBuffer());
+  let text = "";
+  for (let index = 0; index < head.length; index++) text += String.fromCharCode(head[index]);
+  if (/\.(dll|so|dylib)\b/.test(text)) {
+    return `${file.name}: this mod ships native libraries, which a browser client cannot load `
+      + "(Distant Horizons is the well-known one)";
+  }
+  return null;
+}
+
+async function runsFor(token, repo, key) {
+  const response = await github(token, repo, `/actions/runs?branch=${encodeURIComponent(`build/${key}`)}&per_page=1`);
+  if (!response.ok) return { problem: `${response.status} ${response.statusText}` };
+  const list = (await response.json()).workflow_runs || [];
+  return { run: list[0] || null };
+}
+
+async function startBuildOnGitHub(version, files) {
+  const token = el("bToken").value.trim();
+  const repo = el("bRepo").value.trim() || "AmphibianDev/webmc-port";
+  if (!token) { log("a token is needed for this option — the Help page walks through making one", "warn"); return; }
+  store.token = token;
+  store.repo = repo;
+
+  for (const file of files) {
+    const refusal = await refusalFor(file);
+    if (refusal) { log(refusal, "err"); log("nothing was uploaded; remove that jar and try again", "warn"); return; }
+  }
+
+  el("bStart").disabled = true;
+  el("bProgress").firstElementChild.style.width = "5%";
+  const key = await modKey(version, files);
+  log(`mod set key ${key} — the branch is named after it, so the same mods are one build`);
+
+  const existing = await runsFor(token, repo, key);
+  if (existing.problem) {
+    log(`could not read the repository: ${existing.problem}`, "err");
+    log("a 403 or 404 here is almost always the token: it needs this repository, with Contents and Actions "
+      + "set to Read and write", "warn");
+    el("bStart").disabled = false;
+    return;
+  }
+  if (existing.run) {
+    log(`this exact mod set already has a build (${existing.run.status})`, "ok");
+    pollGitHub(key, repo, token, version);
+    return;
+  }
+
+  const head = await github(token, repo, "/git/ref/heads/main");
+  if (!head.ok) { log(`could not read main: ${head.status}`, "err"); el("bStart").disabled = false; return; }
+  const sha = (await head.json()).object.sha;
+
+  const branch = `build/${key}`;
+  const created = await github(token, repo, "/git/refs", {
+    method: "POST", body: JSON.stringify({ ref: `refs/heads/${branch}`, sha }),
+  });
+  if (!created.ok && created.status !== 422) {
+    log(`could not create ${branch}: ${created.status}`, "err");
+    el("bStart").disabled = false;
+    return;
+  }
+  log(`branch ${branch} is ready`, "ok");
+
+  const mods = [];
+  for (const file of files) {
+    const id = modId(file.name);
+    const path = `mods/vendor/${id}${file.name.slice(file.name.lastIndexOf("."))}`;
+    const put = await github(token, repo, `/contents/${path}`, {
+      method: "PUT",
+      body: JSON.stringify({ message: `build ${key}: add ${file.name}`, branch, content: await base64Of(file) }),
+    });
+    if (!put.ok) { log(`${file.name}: ${put.status} ${await put.text()}`, "err"); el("bStart").disabled = false; return; }
+    mods.push({ id, name: file.name, file: path.slice("mods/".length) });
+    log(`committed ${file.name} to ${branch}`);
+  }
+
+  const manifest = { note: `the mod set of build ${key}, from the launcher`,
+    mods: mods.map((mod) => ({ id: mod.id, name: mod.name, version, file: mod.file, game: [version],
+                               loaders: ["fabric", "aot"] })) };
+  for (const [path, body] of [["build-info.json", { version, mods: mods.map((mod) => mod.id), at: new Date().toISOString() }],
+                              ["mods/mods.json", manifest]]) {
+    const put = await github(token, repo, `/contents/${path}`, {
+      method: "PUT",
+      body: JSON.stringify({ message: `build ${key}: ${path === "build-info.json" ? "what this build is for" : "the mod set"}`,
+                             branch, content: await base64Of(new Blob([JSON.stringify(body, null, 2) + "\n"])) }),
+    });
+    if (!put.ok) { log(`${path}: ${put.status}`, "err"); el("bStart").disabled = false; return; }
+  }
+
+  const dispatched = await github(token, repo, "/actions/workflows/build-snapshot.yml/dispatches", {
+    method: "POST",
+    body: JSON.stringify({ ref: branch, inputs: { version, mods: mods.map((mod) => mod.id).join(",") } }),
+  });
+  if (dispatched.status !== 204 && !dispatched.ok) {
+    log(`the build did not start: ${dispatched.status} ${await dispatched.text()}`, "err");
+    el("bStart").disabled = false;
+    return;
+  }
+  log("the build machine is starting — 30 to 45 minutes", "ok");
+  pollGitHub(key, repo, token, version, mods);
+}
+
+async function pollGitHub(key, repo, token, version, mods = []) {
+  const url = `https://github.com/${repo}/actions?query=branch%3A${encodeURIComponent(`build/${key}`)}`;
+  for (let attempt = 0; attempt < 240; attempt++) {
+    await new Promise((r) => setTimeout(r, attempt < 10 ? 5000 : 20000));
+    const { run, problem } = await runsFor(token, repo, key);
+    if (problem) continue;
+    if (!run) { el("bProgress").firstElementChild.style.width = "8%"; continue; }
+    el("bProgress").firstElementChild.style.width = run.status === "in_progress" ? "55%" : "12%";
+    if (run.status === "completed") {
+      if (run.conclusion !== "success") {
+        log(`the build ${run.conclusion}`, "err");
+        log(`the real error is in the run: ${run.html_url}`, "warn");
+        el("bStart").disabled = false;
+        return;
+      }
+      el("bProgress").firstElementChild.style.width = "100%";
+      log("done", "ok");
+      const entry = { id: `${version} + your mods`, kind: "compiled",
+                      url: `https://amphibiandev.github.io/webmc-port/clients/${version}/`,
+                      why: `Built on GitHub Actions with ${mods.length || "your"} mod(s): `
+                         + (mods.map((m) => m.name).join(", ") || "your set"),
+                      mods: "the ones you picked", java: null, lwjgl: null };
+      state.doc.installations.unshift(entry);
+      state.doc.counts.playable++;
+      select(entry.id);
+      el("bStart").disabled = false;
+      log(`run: ${run.html_url}`);
+      return;
+    }
+    log(`${run.status} on the build machine — ${run.html_url}`);
+  }
+  el("bStart").disabled = false;
+  log("still building after 80 minutes; the run continues on GitHub", "warn");
+}
+
 /* ------------------------------------------------------------------ the bake */
 function log(line, cls = "") {
   const box = el("bLog");
@@ -439,10 +642,19 @@ function log(line, cls = "") {
 }
 
 async function startBuild() {
-  const service = el("bService").value.trim().replace(/\/+$/, "") || DEFAULT_SERVICE;
-  store.service = service;
   const version = el("bVersion").value.trim();
   if (!version) { log("a version is needed", "warn"); return; }
+  if (!state.mods.length) {
+    log("add at least one mod: a build is for a mod set of your own", "warn");
+    return;
+  }
+  if (el("bMode").value === "token") {
+    el("bLog").hidden = false;
+    await startBuildOnGitHub(version, state.mods);
+    return;
+  }
+  const service = el("bService").value.trim().replace(/\/+$/, "") || DEFAULT_SERVICE;
+  store.service = service;
   el("bStart").disabled = true;
   el("bProgress").firstElementChild.style.width = "4%";
   log(`asking ${service} to build ${version} with ${state.mods.length} mod(s)`);
@@ -512,13 +724,35 @@ async function poll(job) {
 /* ------------------------------------------------------------------ wiring */
 function openBuildDialog(files = []) {
   if (files.length) addMods(files);
-  el("bService").value = state.doc.build && state.doc.build.service ? store.service : (store.service === DEFAULT_SERVICE ? "" : store.service);
+  if (!el("bService").value) {
+    el("bService").value = state.doc.build && state.doc.build.service
+      ? state.doc.build.service
+      : (store.service === DEFAULT_SERVICE ? "" : store.service);
+  }
   el("bServiceNote").textContent = state.doc.build && state.doc.build.service
-    ? "This page is set up to build on GitHub Actions through " + state.doc.build.service
-    : "No build machine is configured for this page. A bake needs a small endpoint that can start a GitHub "
-      + "Actions run (a Cloudflare Worker, Deno Deploy, or anything that stays up) — a browser cannot do it "
-      + "by itself, because that needs a GitHub token. For testing, run “node tools/build-service.mjs” in "
+    ? "This page is set up to build through " + state.doc.build.service
+    : "No build service is configured for this page. For testing, run “node tools/build-service.mjs” in "
       + "webmc-mods and leave the address below as it is.";
+  el("bToken").value = store.token;
+  if (store.repo) el("bRepo").value = store.repo;
+  el("bTokenNote").innerHTML = "";
+  const help = document.createElement("span");
+  help.textContent = "The token is stored in this browser and sent only to api.github.com. It needs this "
+    + "repository, with Contents and Actions set to Read and write — ";
+  const link = document.createElement("a");
+  link.className = "link";
+  link.href = "help.html#token";
+  link.target = "_blank";
+  link.textContent = "step-by-step instructions";
+  help.append(link);
+  help.append(document.createTextNode("."));
+  el("bTokenNote").append(help);
+  const forget = document.createElement("button");
+  forget.className = "ghost";
+  forget.style.marginTop = "8px";
+  forget.textContent = "Forget the stored token";
+  forget.addEventListener("click", () => { store.token = ""; el("bToken").value = ""; log("token forgotten", "ok"); });
+  el("bTokenNote").append(document.createElement("br"), forget);
   renderChips("bChips", state.mods);
   const options = el("versionOptions");
   options.textContent = "";
@@ -578,6 +812,19 @@ async function main() {
   });
   el("newBtn").addEventListener("click", () => openBuildDialog());
   el("sourceBtn").addEventListener("click", () => window.open("https://github.com/AmphibianDev/webmc-port", "_blank"));
+  el("helpBtn").addEventListener("click", () => window.open("help.html", "_blank"));
+  el("bMode").addEventListener("change", () => {
+    const mode = el("bMode").value;
+    el("tokenPanel").hidden = mode !== "token";
+    el("servicePanel").hidden = mode !== "service";
+    el("buildDialog").querySelector("#bNote").textContent = mode === "token"
+      ? "The build runs on GitHub Actions. Your token starts it; your mods are committed to a branch of the "
+        + "build repository for it, and to main never."
+      : "The build service holds the GitHub token, so this page needs none. Deploy gateway/build-worker.js "
+        + "(Cloudflare) or run tools/build-service.mjs locally.";
+  });
+  el("bToken").addEventListener("change", () => { store.token = el("bToken").value.trim(); });
+  el("bRepo").addEventListener("change", () => { store.repo = el("bRepo").value.trim(); });
   wireDrop(el("drop"), (files) => { addMods(files); openBuildDialog(); });
   wireDrop(el("bDrop"), addMods);
   el("buildBtn").addEventListener("click", () => openBuildDialog());

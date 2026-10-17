@@ -86,3 +86,22 @@ from their own authors.
 
 There is no `LICENSE` file yet, which means all rights reserved by default. The code here is
 this project's own; if you want to reuse it, ask, and it will be licensed properly.
+
+## Help and the build machine
+
+The launcher page is `index.html`; `help.html` is the guide it links to (playing, the two kinds of
+installation, bringing your own mods, building, and the GitHub token step by step).
+
+A bake runs on GitHub Actions, and starting one needs a token. The launcher offers two ways to supply it,
+both in **New installation**:
+
+* **GitHub, with my own token** — paste a fine-grained token (this repository; *Contents: Read and write*,
+  *Actions: Read and write*). The page then creates a `build/<content-key>` branch, commits the mods there,
+  dispatches the bake workflow, and polls the run. The token is kept in the browser's storage, sent only to
+  `api.github.com`, and can be removed with **Forget the stored token**.
+* **A build service** — one endpoint that holds the token for everybody, so no player needs one. That is
+  `webmc-port/gateway/build-worker.js` for Cloudflare Workers, or `webmc-mods/tools/build-service.mjs`
+  locally. Put its address in `clients.json` as `build.service` and the launcher fills the field in.
+
+`clients.json` is generated: `python3 tools/clients-json.py` (only versions that run, plus the ones that can
+be built on demand).
