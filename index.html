@@ -287,7 +287,9 @@
       <div class="chips" id="bChips"></div>
     </div>
     <label>Build machine
-      <input id="bService" type="text" spellcheck="false" />
+      <input id="bService" type="text" spellcheck="false"
+             placeholder="https://webmc-build.<you>.workers.dev  —  or http://127.0.0.1:8787 for one on this computer" />
+      <span class="note" id="bServiceNote" style="display:block; margin-top:6px"></span>
     </label>
     <div class="progress" id="bProgress"><i></i></div>
     <div class="log" id="bLog" hidden></div>
@@ -457,8 +459,9 @@ async function startBuild() {
     el("bStart").disabled = false;
     el("bProgress").firstElementChild.style.width = "0";
     log(String(problem.message || problem), "err");
-    log("the build machine has to be reachable from this page: run it with "
-      + "`node tools/build-service.mjs` in webmc-mods and put its address above.", "warn");
+    log("no build machine answered at that address. Run one with “node tools/build-service.mjs” in "
+      + "webmc-mods for a local build, or deploy gateway/build-worker.js to Cloudflare (free) and put its "
+      + "address in clients.json — see HOW-TO-USE.md.", "warn");
   }
 }
 
@@ -509,7 +512,13 @@ async function poll(job) {
 /* ------------------------------------------------------------------ wiring */
 function openBuildDialog(files = []) {
   if (files.length) addMods(files);
-  el("bService").value = store.service;
+  el("bService").value = state.doc.build && state.doc.build.service ? store.service : (store.service === DEFAULT_SERVICE ? "" : store.service);
+  el("bServiceNote").textContent = state.doc.build && state.doc.build.service
+    ? "This page is set up to build on GitHub Actions through " + state.doc.build.service
+    : "No build machine is configured for this page. A bake needs a small endpoint that can start a GitHub "
+      + "Actions run (a Cloudflare Worker, Deno Deploy, or anything that stays up) — a browser cannot do it "
+      + "by itself, because that needs a GitHub token. For testing, run “node tools/build-service.mjs” in "
+      + "webmc-mods and leave the address below as it is.";
   renderChips("bChips", state.mods);
   const options = el("versionOptions");
   options.textContent = "";
