@@ -470,6 +470,41 @@ async function github(token, repo, path, init = {}) {
   });
 }
 
+/** What GitHub said, in words. A bare 403 is the least useful thing this page could print. */
+async function whyFailed(response, what) {
+  let detail = "";
+  try {
+    const body = await response.json();
+    detail = body.message || "";
+    if (body.errors && body.errors.length) detail += ` (${body.errors.map((e) => e.message || e.code).join("; ")})`;
+    if (body.documentation_url) detail += ` — ${body.documentation_url}`;
+  } catch { detail = await response.text().catch(() => ""); }
+  const hint = response.status === 401 ? "the token is not valid any more (expired, or revoked)"
+    : response.status === 403 ? "the token is not allowed to do this: it needs this repository with "
+      + "Contents set to Read and write and Actions set to Read and write — a token that can read but not "
+      + "write gets exactly this. If the repository belongs to an organization, the organization also has to "
+      + "allow fine-grained tokens."
+    : response.status === 404 ? "the repository name, or the token's access to it"
+    : response.status === 422 ? "the branch or file already exists, or the request was malformed"
+    : "see the message above";
+  return `${what} failed: ${response.status} ${detail || response.statusText}\n  → ${hint}`;
+}
+
+/** Does this token actually have permission to write here? Asking first beats failing at step three. */
+async function checkWriteAccess(token, repo) {
+  const response = await github(token, repo, "");
+  if (!response.ok) return whyFailed(response, `reading ${repo}`);
+  const body = await response.json();
+  const permissions = body.permissions || {};
+  if (permissions.push !== true) {
+    return `${repo} is readable with this token but not writable `
+      + `(GitHub says push: ${permissions.push === undefined ? "unknown" : permissions.push}).\n`
+      + `  → edit the token at https://github.com/settings/personal-access-tokens and set `
+      + `Repository permissions → Contents to Read and write (and Actions to Read and write).`;
+  }
+  return null;
+}
+
 async function base64Of(file) {
   const bytes = new Uint8Array(await file.arrayBuffer());
   let binary = "";
@@ -524,14 +559,19 @@ async function startBuildOnGitHub(version, files) {
 
   el("bStart").disabled = true;
   el("bProgress").firstElementChild.style.width = "5%";
+  const blocked = await checkWriteAccess(token, repo);
+  if (blocked) {
+    log(blocked, "err");
+    el("bStart").disabled = false;
+    return;
+  }
   const key = await modKey(version, files);
   log(`mod set key ${key} — the branch is named after it, so the same mods are one build`);
 
   const existing = await runsFor(token, repo, key);
   if (existing.problem) {
-    log(`could not read the repository: ${existing.problem}`, "err");
-    log("a 403 or 404 here is almost always the token: it needs this repository, with Contents and Actions "
-      + "set to Read and write", "warn");
+    log(`could not read the build runs: ${existing.problem}`, "err");
+    log("reading runs needs Actions: Read on the token; starting one needs Actions: Read and write", "warn");
     el("bStart").disabled = false;
     return;
   }
@@ -542,7 +582,7 @@ async function startBuildOnGitHub(version, files) {
   }
 
   const head = await github(token, repo, "/git/ref/heads/main");
-  if (!head.ok) { log(`could not read main: ${head.status}`, "err"); el("bStart").disabled = false; return; }
+  if (!head.ok) { log(await whyFailed(head, "reading main"), "err"); el("bStart").disabled = false; return; }
   const sha = (await head.json()).object.sha;
 
   const branch = `build/${key}`;
@@ -550,7 +590,7 @@ async function startBuildOnGitHub(version, files) {
     method: "POST", body: JSON.stringify({ ref: `refs/heads/${branch}`, sha }),
   });
   if (!created.ok && created.status !== 422) {
-    log(`could not create ${branch}: ${created.status}`, "err");
+    log(await whyFailed(created, `creating ${branch}`), "err");
     el("bStart").disabled = false;
     return;
   }
@@ -564,7 +604,7 @@ async function startBuildOnGitHub(version, files) {
       method: "PUT",
       body: JSON.stringify({ message: `build ${key}: add ${file.name}`, branch, content: await base64Of(file) }),
     });
-    if (!put.ok) { log(`${file.name}: ${put.status} ${await put.text()}`, "err"); el("bStart").disabled = false; return; }
+    if (!put.ok) { log(await whyFailed(put, `committing ${file.name}`), "err"); el("bStart").disabled = false; return; }
     mods.push({ id, name: file.name, file: path.slice("mods/".length) });
     log(`committed ${file.name} to ${branch}`);
   }
@@ -579,7 +619,7 @@ async function startBuildOnGitHub(version, files) {
       body: JSON.stringify({ message: `build ${key}: ${path === "build-info.json" ? "what this build is for" : "the mod set"}`,
                              branch, content: await base64Of(new Blob([JSON.stringify(body, null, 2) + "\n"])) }),
     });
-    if (!put.ok) { log(`${path}: ${put.status}`, "err"); el("bStart").disabled = false; return; }
+    if (!put.ok) { log(await whyFailed(put, `writing ${path}`), "err"); el("bStart").disabled = false; return; }
   }
 
   const dispatched = await github(token, repo, "/actions/workflows/build-snapshot.yml/dispatches", {
@@ -587,7 +627,7 @@ async function startBuildOnGitHub(version, files) {
     body: JSON.stringify({ ref: branch, inputs: { version, mods: mods.map((mod) => mod.id).join(",") } }),
   });
   if (dispatched.status !== 204 && !dispatched.ok) {
-    log(`the build did not start: ${dispatched.status} ${await dispatched.text()}`, "err");
+    log(await whyFailed(dispatched, "starting the build"), "err");
     el("bStart").disabled = false;
     return;
   }
@@ -823,7 +863,19 @@ async function main() {
       : "The build service holds the GitHub token, so this page needs none. Deploy gateway/build-worker.js "
         + "(Cloudflare) or run tools/build-service.mjs locally.";
   });
-  el("bToken").addEventListener("change", () => { store.token = el("bToken").value.trim(); });
+  el("bToken").addEventListener("change", async () => {
+    store.token = el("bToken").value.trim();
+    const note = el("bTokenNote");
+    if (!store.token) return;
+    const problem = await checkWriteAccess(store.token, el("bRepo").value.trim() || "AmphibianDev/webmc-port");
+    const mark = document.createElement("div");
+    mark.className = problem ? "err" : "ok";
+    mark.style.marginTop = "6px";
+    mark.textContent = problem ? problem : "this token can write to that repository — builds will work";
+    note.querySelectorAll(".check").forEach((node) => node.remove());
+    mark.classList.add("check");
+    note.append(mark);
+  });
   el("bRepo").addEventListener("change", () => { store.repo = el("bRepo").value.trim(); });
   wireDrop(el("drop"), (files) => { addMods(files); openBuildDialog(); });
   wireDrop(el("bDrop"), addMods);
