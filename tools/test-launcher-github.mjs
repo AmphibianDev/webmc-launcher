@@ -104,7 +104,7 @@ console.log("\nwhat the page says when a token cannot write");
   const problem = await page.checkWriteAccess("token", "owner/repo");
   check("a read-only token is caught before a build is attempted", /not writable/.test(problem), String(problem));
   check("and the advice names both kinds of token",
-    /classic token/.test(problem) && /fine-grained/.test(problem), String(problem));
+    /classic token/i.test(problem) && /fine-grained/i.test(problem), String(problem));
 
   fakeGitHub({ permissions: { push: true } });
   check("a token that can write passes", (await page.checkWriteAccess("token", "owner/repo")) === null);
@@ -119,7 +119,7 @@ console.log("\nwhat a 403 from GitHub turns into");
   globalThis.fetch = async () => new Response(JSON.stringify({ message: "Resource not accessible by personal access token" }), { status: 403 });
   const words = await page.whyFailed(new Response(JSON.stringify({ message: "Resource not accessible by personal access token" }), { status: 403 }), "creating build/abc");
   check("the message GitHub gave is kept", /Resource not accessible/.test(words), words);
-  check("the two ways to fix it are named", /classic token/.test(words) && /FINE-GRAINED/.test(words), words);
+  check("the two ways to fix it are named", /classic token/i.test(words) && /fine-grained/i.test(words), words);
 }
 
 console.log(failures ? `\n${failures} check(s) failed` : "\nall launcher GitHub checks passed");

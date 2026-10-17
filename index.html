@@ -5,527 +5,655 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>WebMC Launcher</title>
 <!--
-  The launcher, built like the one people already know: an account in the top left, a list of
-  installations down the side, the selected one filling the panel, and PLAY in the bottom right corner.
+  Laid out like the launcher people already use: account bottom-left, sections down the left, the selected
+  installation filling the middle, and PLAY at the top right of that panel where the eye expects it.
 
-  Two things are deliberately not here. There is no catalogue of mods to pick from, because the mods a
-  player wants are the player's own - they are dropped in, and for a compiled client they are baked on a
-  build machine, which is what the custom-build flow does. And there are no versions that cannot run: the
-  list is generated (clients.json) from the port's own route data, which decides playability from each
-  version's metadata rather than from anyone's opinion.
+  Three rules this page keeps, each of which it got wrong once:
+
+    * nothing happens behind your back. Dropping mod jars adds them to the installation you are looking at and
+      nothing else - it does not open a dialog, it does not start a build. Building is a button.
+    * what a version needs is said before it is used: a compiled client is built with your mods, a real-JVM
+      version loads them at play time, and the two are labelled differently everywhere they appear.
+    * a failure says what the machine said, with the workflow's own error lines and a link to the run.
 -->
 <style>
   :root {
-    --bg: #141415;
-    --panel: #1e1e1f;
-    --panel-2: #262628;
-    --row: #2b2b2d;
-    --row-hover: #343437;
-    --row-on: #3c3c40;
-    --line: #000;
-    --edge: #3a3a3d;
-    --text: #e9e9ea;
-    --muted: #9c9ca1;
-    --dim: #6f6f75;
-    --green: #3c8527;
-    --green-hover: #47a02e;
-    --green-edge: #2a5d1b;
-    --blue: #3b8526;
-    --radius: 4px;
+    --bg:#17171a; --rail:#1d1d20; --panel:#232327; --panel-2:#28282d; --edge:#37373d; --edge-2:#45454c;
+    --text:#ececed; --muted:#a2a2a9; --dim:#74747b; --green:#3c8527; --green-2:#4b9e32; --green-edge:#2f6a1e;
+    --blue:#3a7fd5; --red:#c2554d; --amber:#d8a12a; --radius:5px;
   }
-  * { box-sizing: border-box; }
-  html, body { height: 100%; margin: 0; }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    overflow: hidden;
-  }
-  button, input, select, textarea { font: inherit; color: inherit; }
-  button { cursor: pointer; }
+  * { box-sizing:border-box; }
+  html, body { height:100%; margin:0; }
+  body { background:var(--bg); color:var(--text); overflow:hidden;
+         font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+         -webkit-font-smoothing:antialiased; }
+  button, input, select { font:inherit; color:inherit; }
+  button { cursor:pointer; background:none; border:0; }
+  ::-webkit-scrollbar { width:10px; }
+  ::-webkit-scrollbar-thumb { background:#3d3d44; border-radius:6px; }
+  ::-webkit-scrollbar-track { background:transparent; }
 
-  .app { display: grid; grid-template-columns: 262px 1fr; height: 100vh; }
+  .app { display:grid; grid-template-columns:265px 1fr; height:100vh; }
 
-  /* ------------------------------------------------------------------ sidebar */
-  .side {
-    background: var(--panel);
-    border-right: 1px solid var(--line);
-    display: flex;
-    flex-direction: column;
-    min-height: 0;
+  /* ------------------------------------------------------------------- left rail */
+  .rail { background:var(--rail); border-right:1px solid #000; display:flex; flex-direction:column; min-height:0; }
+  .rail h1 { font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--dim);
+             margin:20px 20px 10px; font-weight:700; }
+  .nav { display:flex; flex-direction:column; gap:2px; padding:0 10px; }
+  .nav button {
+    display:flex; align-items:center; gap:11px; width:100%; text-align:left; color:var(--muted);
+    padding:9px 11px; border-radius:var(--radius); font-size:14.5px; font-weight:500;
   }
-  .account { display: flex; align-items: center; gap: 10px; padding: 14px 16px 12px; }
-  .avatar {
-    width: 32px; height: 32px; border-radius: 3px; flex: none;
-    background: linear-gradient(160deg, #79c05a, #3c8527 60%, #2a5d1b);
-    box-shadow: inset 0 0 0 1px rgba(0,0,0,.35);
-  }
-  .account b { display: block; font-size: 14px; font-weight: 600; }
-  .account span { display: block; font-size: 12px; color: var(--muted); }
+  .nav button:hover { background:var(--panel); color:var(--text); }
+  .nav button[aria-current="page"] { background:var(--panel); color:#fff; }
+  .nav button .dot { width:7px; height:7px; border-radius:50%; background:currentColor; opacity:.75; flex:none; }
+  .nav .badge { margin-left:auto; font-size:11px; color:var(--dim); }
 
-  .side-head {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 6px 16px 8px;
-  }
-  .side-head h2 {
-    font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
-    margin: 0; font-weight: 700;
-  }
-  .side-head .n { font-size: 11px; color: var(--dim); }
+  .rail-tools { margin-top:auto; padding:10px; display:flex; flex-direction:column; gap:2px; }
+  .rail-tools button { color:var(--muted); text-align:left; padding:8px 11px; border-radius:var(--radius); font-size:13.5px; }
+  .rail-tools button:hover { background:var(--panel); color:var(--text); }
+  .account { display:flex; align-items:center; gap:11px; padding:12px 14px; border-top:1px solid #000; background:#191a1d; }
+  .avatar { width:34px; height:34px; border-radius:4px; flex:none;
+            background:linear-gradient(158deg,#7cc55d,#3c8527 62%,#28551a); box-shadow:inset 0 0 0 1px #0006; }
+  .account .who { min-width:0; }
+  .account b { display:block; font-size:14px; font-weight:600; }
+  .account span { display:block; font-size:11.5px; color:var(--dim); }
 
-  .search { padding: 0 12px 10px; }
-  .search input {
-    width: 100%; background: var(--bg); border: 1px solid var(--edge); border-radius: var(--radius);
-    padding: 7px 9px; font-size: 13px;
-  }
-  .search input:focus { outline: 1px solid #5a5a60; }
+  /* ------------------------------------------------------------------- main panel */
+  .main { display:flex; flex-direction:column; min-width:0; background:var(--panel); }
+  .view { flex:1; min-height:0; overflow-y:auto; }
+  .view[hidden] { display:none; }
 
-  .list { overflow-y: auto; flex: 1; padding: 0 8px 8px; min-height: 0; }
-  .row {
-    display: flex; align-items: center; gap: 10px; width: 100%;
-    background: none; border: 0; border-radius: var(--radius);
-    padding: 7px 8px; text-align: left; color: var(--text);
-  }
-  .row:hover { background: var(--row-hover); }
-  .row[aria-selected="true"] { background: var(--row-on); }
-  .row .ico {
-    width: 34px; height: 34px; border-radius: 3px; flex: none;
-    display: grid; place-items: center; font-size: 11px; font-weight: 700; color: #0d0d0e;
-    background: linear-gradient(165deg, #b8b8bd, #85858c);
-    box-shadow: inset 0 0 0 1px rgba(0,0,0,.4);
-  }
-  .row.compiled .ico { background: linear-gradient(165deg, #8fd06c, #3c8527); }
-  .row.real-java .ico { background: linear-gradient(165deg, #9ad0e8, #2f7fa8); }
-  .row .txt { min-width: 0; }
-  .row .txt b { display: block; font-size: 13.5px; font-weight: 600; }
-  .row .txt span { display: block; font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .row.new .ico { background: none; box-shadow: none; color: var(--muted); font-size: 20px; }
-
-  .side-foot { border-top: 1px solid var(--line); padding: 8px; display: flex; gap: 6px; }
-  .side-foot button {
-    flex: 1; background: none; border: 0; color: var(--muted); padding: 8px; border-radius: var(--radius);
-    font-size: 12.5px;
-  }
-  .side-foot button:hover { background: var(--row-hover); color: var(--text); }
-
-  /* ------------------------------------------------------------------ main */
-  .main { display: flex; flex-direction: column; min-width: 0; background: var(--panel); }
-  .top {
-    display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
-    padding: 18px 22px 14px;
-  }
-  .top h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: .2px; }
-  .badges { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
-  .badge {
-    font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
-    border: 1px solid var(--edge); border-radius: 999px; padding: 3px 9px;
-  }
-  .badge.ok { color: #b6e39a; border-color: #3c8527; }
-  .link { color: #8fc7ff; text-decoration: none; font-size: 13px; }
-  .link:hover { text-decoration: underline; }
-
-  .stage { flex: 1; min-height: 0; overflow-y: auto; padding: 0 22px 22px; }
-  .card {
-    background: var(--panel-2); border: 1px solid var(--edge); border-radius: 6px;
-    padding: 14px 16px; margin-bottom: 12px;
-  }
-  .card h3 { margin: 0 0 6px; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
-  .card p { margin: 0; color: #cfcfd4; font-size: 13.5px; }
-  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 12px; }
-  .fact { background: var(--bg); border: 1px solid var(--edge); border-radius: var(--radius); padding: 9px 11px; }
-  .fact b { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--dim); }
-  .fact span { font-size: 13.5px; }
-
-  .drop {
-    border: 2px dashed #4a4a4f; border-radius: 6px; padding: 20px; text-align: center; color: var(--muted);
-    background: rgba(0,0,0,.18); font-size: 13.5px;
-  }
-  .drop.hot { border-color: var(--green); color: #cfe9c2; background: rgba(60,133,39,.14); }
-  .drop b { color: var(--text); }
-
-  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
-  .chip {
-    display: inline-flex; align-items: center; gap: 7px; background: var(--bg); border: 1px solid var(--edge);
-    border-radius: 999px; padding: 4px 10px 4px 12px; font-size: 12.5px;
-  }
-  .chip button { background: none; border: 0; color: var(--muted); font-size: 14px; line-height: 1; padding: 0; }
-  .chip button:hover { color: #ff9b9b; }
-
-  .bar { display: flex; align-items: center; gap: 14px; padding: 14px 22px; border-top: 1px solid var(--line); background: var(--panel); }
-  .bar .spacer { flex: 1; }
-  .bar select {
-    background: var(--bg); border: 1px solid var(--edge); border-radius: var(--radius);
-    padding: 11px 12px; min-width: 190px;
-  }
+  /* home */
+  .hero { position:relative; padding:28px 30px 24px; background:
+          radial-gradient(120% 150% at 85% -20%, #2e4a22 0%, transparent 55%),
+          linear-gradient(180deg,#26262b,#1f1f23); border-bottom:1px solid #000; }
+  .hero h2 { margin:0 0 6px; font-size:26px; letter-spacing:.2px; }
+  .hero p { margin:0; color:var(--muted); max-width:62ch; }
+  .hero .row { display:flex; align-items:center; gap:14px; margin-top:20px; flex-wrap:wrap; }
   .play {
-    background: var(--green); border: 0; border-radius: var(--radius); color: #fff;
-    font-size: 17px; font-weight: 600; letter-spacing: .06em; padding: 12px 46px;
-    box-shadow: inset 0 -3px 0 rgba(0,0,0,.28);
+    background:var(--green); color:#fff; border-radius:var(--radius); font-weight:700; letter-spacing:.08em;
+    padding:15px 54px; font-size:17px; box-shadow:inset 0 -3px 0 #00000040, 0 1px 0 #ffffff12;
   }
-  .play:hover { background: var(--green-hover); }
-  .play:disabled { background: #3a3a3d; color: #8b8b91; box-shadow: none; cursor: not-allowed; }
-  .ghost {
-    background: none; border: 1px solid var(--edge); border-radius: var(--radius); color: var(--text);
-    padding: 11px 16px; font-size: 13.5px;
-  }
-  .ghost:hover { background: var(--row-hover); }
+  .play:hover { background:var(--green-2); }
+  .play:disabled { background:#39393f; color:#8b8b92; box-shadow:none; cursor:not-allowed; }
+  .pick { background:var(--bg); border:1px solid var(--edge); border-radius:var(--radius); padding:13px 14px; min-width:230px; }
+  .cards { display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px; padding:20px 30px 28px; }
+  .card { background:var(--panel-2); border:1px solid var(--edge); border-radius:6px; padding:16px 18px; }
+  .card h3 { margin:0 0 8px; font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--dim); }
+  .card p { margin:0 0 8px; color:#d3d3d8; font-size:14px; }
+  .card p:last-child { margin-bottom:0; }
+  .card ol, .card ul { margin:8px 0 0; padding-left:20px; color:#d3d3d8; font-size:13.5px; }
 
-  /* ------------------------------------------------------------------ dialog */
-  dialog {
-    background: var(--panel); color: var(--text); border: 1px solid var(--edge); border-radius: 6px;
-    padding: 0; width: min(560px, 92vw); box-shadow: 0 24px 70px rgba(0,0,0,.6);
-  }
-  dialog::backdrop { background: rgba(0,0,0,.62); }
-  .dlg-head { padding: 16px 18px 6px; }
-  .dlg-head h2 { margin: 0 0 4px; font-size: 18px; }
-  .dlg-head p { margin: 0; color: var(--muted); font-size: 13px; }
-  .dlg-body { padding: 14px 18px; display: grid; gap: 12px; }
-  .dlg-body label { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
-  .dlg-body input[type="text"], .dlg-body select {
-    width: 100%; background: var(--bg); border: 1px solid var(--edge); border-radius: var(--radius);
-    padding: 10px 11px; margin-top: 5px;
-  }
-  .dlg-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 12px 18px 18px; }
-  .note { color: var(--muted); font-size: 12.5px; }
-  .warn { color: #ffd28a; }
-  .err { color: #ff9b9b; }
-  .ok { color: #b6e39a; }
-  .log {
-    background: #0f0f10; border: 1px solid var(--edge); border-radius: var(--radius);
-    padding: 10px; font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
-    max-height: 170px; overflow-y: auto; white-space: pre-wrap; color: #bdbdc2;
-  }
-  .progress { height: 6px; background: #0f0f10; border-radius: 999px; overflow: hidden; }
-  .progress i { display: block; height: 100%; width: 0; background: var(--green); transition: width .4s; }
-  @media (max-width: 760px) { .app { grid-template-columns: 200px 1fr; } .play { padding: 12px 26px; } }
+  /* installations */
+  .bar { display:flex; align-items:center; gap:10px; padding:16px 22px; border-bottom:1px solid #000; }
+  .bar h2 { margin:0; font-size:19px; }
+  .bar .count { color:var(--dim); font-size:12.5px; }
+  .bar .grow { flex:1; }
+  .bar input[type="search"] { background:var(--bg); border:1px solid var(--edge); border-radius:var(--radius);
+                              padding:8px 11px; width:230px; }
+  .btn { border:1px solid var(--edge-2); border-radius:var(--radius); padding:9px 15px; font-size:13.5px; }
+  .btn:hover { background:var(--panel-2); }
+  .btn.primary { background:var(--green); border-color:var(--green-edge); color:#fff; font-weight:600; }
+  .btn.primary:hover { background:var(--green-2); }
+  .btn:disabled { opacity:.5; cursor:not-allowed; }
+
+  .split { display:grid; grid-template-columns:minmax(260px,340px) 1fr; min-height:0; height:calc(100% - 63px); }
+  .rows { overflow-y:auto; border-right:1px solid #000; padding:10px 8px 40px; }
+  .row { display:flex; align-items:center; gap:11px; width:100%; text-align:left; padding:9px 10px;
+         border-radius:var(--radius); color:var(--text); }
+  .row:hover { background:var(--panel-2); }
+  .row[aria-selected="true"] { background:#33333a; box-shadow:inset 0 0 0 1px var(--edge-2); }
+  .row .ico { width:34px; height:34px; border-radius:4px; flex:none; display:grid; place-items:center;
+              font-size:10.5px; font-weight:700; color:#12120f; box-shadow:inset 0 0 0 1px #0006; }
+  .row.compiled .ico { background:linear-gradient(160deg,#93d873,#3c8527); }
+  .row.real-java .ico { background:linear-gradient(160deg,#a3d6ec,#2f7fa8); }
+  .row.mine .ico { background:linear-gradient(160deg,#ffd479,#d8a12a); }
+  .row .txt { min-width:0; }
+  .row .txt b { display:block; font-size:14px; font-weight:600; }
+  .row .txt span { display:block; font-size:11.5px; color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .row.new { color:var(--muted); }
+  .row.new .ico { background:none; box-shadow:none; font-size:19px; color:var(--muted); }
+
+  .detail { overflow-y:auto; padding:22px 26px 40px; }
+  .detail h2 { margin:0; font-size:22px; }
+  .badges { display:flex; gap:6px; margin:10px 0 0; flex-wrap:wrap; }
+  .badge { font-size:10.5px; letter-spacing:.07em; text-transform:uppercase; border:1px solid var(--edge-2);
+           border-radius:999px; padding:3px 10px; color:var(--muted); }
+  .badge.ok { border-color:var(--green-edge); color:#b9e69f; background:#3c852720; }
+  .badge.mine { border-color:#7a5c14; color:#ffd479; background:#d8a12a1a; }
+  .section { margin-top:22px; }
+  .section h3 { margin:0 0 10px; font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--dim); }
+  .facts { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:10px; }
+  .fact { background:var(--bg); border:1px solid var(--edge); border-radius:var(--radius); padding:10px 12px; }
+  .fact b { display:block; font-size:10.5px; letter-spacing:.09em; text-transform:uppercase; color:var(--dim); }
+  .fact span { font-size:13.5px; }
+  .drop { border:2px dashed var(--edge-2); border-radius:6px; padding:18px; text-align:center; color:var(--muted);
+          background:#00000030; font-size:13.5px; }
+  .drop:hover, .drop.hot { border-color:var(--green); color:#cfe9c2; background:#3c852720; }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+  .chip { display:inline-flex; align-items:center; gap:8px; background:var(--bg); border:1px solid var(--edge);
+          border-radius:999px; padding:4px 6px 4px 12px; font-size:12.5px; }
+  .chip button { color:var(--dim); font-size:15px; line-height:1; padding:0 4px; border-radius:50%; }
+  .chip button:hover { color:#ff9b9b; background:#ffffff10; }
+  .actions { display:flex; gap:10px; flex-wrap:wrap; margin-top:14px; }
+  .empty { color:var(--dim); padding:30px 4px; }
+
+  /* dialog */
+  dialog { background:var(--panel); color:var(--text); border:1px solid var(--edge-2); border-radius:8px;
+           padding:0; width:min(600px,94vw); box-shadow:0 30px 80px #000a; }
+  dialog::backdrop { background:#000000a8; }
+  .dlg-head { padding:18px 20px 4px; }
+  .dlg-head h2 { margin:0; font-size:19px; }
+  .dlg-head p { margin:6px 0 0; color:var(--muted); font-size:13.5px; }
+  .dlg-body { padding:14px 20px; display:grid; gap:14px; }
+  .dlg-body label { display:block; font-size:11.5px; letter-spacing:.09em; text-transform:uppercase; color:var(--muted); }
+  .dlg-body input[type=text], .dlg-body input[type=password], .dlg-body select {
+    width:100%; background:var(--bg); border:1px solid var(--edge); border-radius:var(--radius);
+    padding:10px 11px; margin-top:6px; text-transform:none; letter-spacing:0; font-size:14px; }
+  .dlg-foot { display:flex; gap:10px; justify-content:flex-end; padding:14px 20px 18px; border-top:1px solid #000; }
+  .note { color:var(--muted); font-size:12.5px; }
+  .err { color:#ff9b9b; } .ok { color:#b9e69f; } .warn { color:var(--amber); }
+  .progress { height:6px; background:#0e0e10; border-radius:999px; overflow:hidden; }
+  .progress i { display:block; height:100%; width:0; background:var(--green); transition:width .45s; }
+  .steps { list-style:none; margin:2px 0 0; padding:0; max-height:190px; overflow-y:auto;
+           border:1px solid var(--edge); border-radius:var(--radius); background:#0e0e10; }
+  .steps li { display:flex; gap:9px; padding:5px 10px; font-size:12.8px; color:var(--muted);
+              border-bottom:1px solid #17171a; }
+  .steps li:last-child { border-bottom:0; }
+  .steps li.now { color:#fff; background:#3c85271f; }
+  .steps li.ok { color:#b9e69f; } .steps li.bad { color:#ff9b9b; }
+  .steps .mark { width:12px; flex:none; }
+  .log { background:#0e0e10; border:1px solid var(--edge); border-radius:var(--radius); padding:10px;
+         font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace; max-height:170px; overflow-y:auto;
+         white-space:pre-wrap; color:#c3c3c9; }
+  @media (max-width:820px) { .app { grid-template-columns:210px 1fr; } .split { grid-template-columns:1fr; } .rows { border-right:0; border-bottom:1px solid #000; max-height:40%; } }
 </style>
 </head>
 <body>
 <div class="app">
-  <!-- ------------------------------------------------------------- sidebar -->
-  <aside class="side">
+  <!-- ----------------------------------------------------------------- left rail -->
+  <aside class="rail">
+    <h1>Minecraft&nbsp;· WebMC</h1>
+    <nav class="nav">
+      <button id="navHome"><span class="dot"></span>Home</button>
+      <button id="navInstall"><span class="dot"></span>Installations<span class="badge" id="navCount"></span></button>
+    </nav>
+    <div class="rail-tools">
+      <button id="helpBtn">Help &amp; how it works</button>
+      <button id="logBtn">Open the selected client with its log</button>
+      <button id="sourceBtn">Source code</button>
+    </div>
     <div class="account">
       <div class="avatar" aria-hidden="true"></div>
-      <div>
-        <b id="who">Player</b>
-        <span id="whoSub">playing in the browser</span>
+      <div class="who">
+        <b>Player</b>
+        <span id="accountNote">no account needed</span>
       </div>
-    </div>
-
-    <div class="side-head">
-      <h2>Installations</h2>
-      <span class="n" id="count">…</span>
-    </div>
-    <div class="search"><input id="filter" type="search" placeholder="Search versions…" autocomplete="off" /></div>
-
-    <div class="list" id="list" role="listbox" aria-label="Installations"></div>
-
-    <div class="side-foot">
-      <button id="newBtn">+ New installation</button>
-      <button id="helpBtn">Help</button>
-      <button id="sourceBtn">Source</button>
     </div>
   </aside>
 
-  <!-- ---------------------------------------------------------------- main -->
+  <!-- ------------------------------------------------------------------- main -->
   <main class="main">
-    <div class="top">
-      <div>
-        <h1 id="title">Pick an installation</h1>
-        <div class="badges" id="badges"></div>
-      </div>
-      <a class="link" id="openBtn" href="#" hidden>Open the page directly ↗</a>
-    </div>
-
-    <div class="stage">
-      <div class="card">
-        <h3>What this is</h3>
-        <p id="why">Choose a version on the left. Every version in this list runs in the browser — either the
-          official jar in a page (a real JVM compiled to WebAssembly) or a client compiled from it.</p>
-        <div class="facts" id="facts"></div>
-      </div>
-
-      <div class="card">
-        <h3>Mods</h3>
-        <p class="note" id="modsNote">Mods are yours: there is no list to pick from. Compiled clients are built with
-          the mods you drop in; versions on the real-JVM route take them at play time.</p>
-        <div class="drop" id="drop" style="margin-top:12px">
-          Drop mod jars here, or <b>click to choose</b> — then build.
+    <!-- home -->
+    <section class="view" id="viewHome">
+      <div class="hero">
+        <h2 id="homeTitle">Pick an installation</h2>
+        <p id="homeText">Every version here runs in a browser tab. Choose one, press PLAY.</p>
+        <div class="row">
+          <select class="pick" id="chooser" aria-label="Installation"></select>
+          <button class="play" id="playBtn">PLAY</button>
         </div>
-        <div class="chips" id="chips"></div>
-        <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap">
-          <button class="ghost" id="buildBtn">Build with these mods</button>
-          <button class="ghost" id="clearBtn">Clear</button>
-        </div>
-        <p class="note" id="buildNote" style="margin-top:10px"></p>
       </div>
-    </div>
+      <div class="cards">
+        <div class="card">
+          <h3>Your mods</h3>
+          <p id="homeMods">Nothing is pre-baked: the mods a client is built with are the ones you drop in.</p>
+          <p class="note"><a href="#" id="goInstall">Open Installations to add them →</a></p>
+        </div>
+        <div class="card">
+          <h3>How it runs</h3>
+          <p id="homeHow"></p>
+        </div>
+        <div class="card">
+          <h3>Building</h3>
+          <p>A newer client has to be compiled with your mods on a build machine; an older one loads them at
+            play time and needs no build at all.</p>
+          <p class="note">Building runs on GitHub Actions — with your own token, or a build service.</p>
+        </div>
+      </div>
+    </section>
 
-    <div class="bar">
-      <select id="chooser" aria-label="Selected installation"></select>
-      <div class="spacer"></div>
-      <button class="ghost" id="detailsBtn">Details</button>
-      <button class="play" id="playBtn">PLAY</button>
-    </div>
+    <!-- installations -->
+    <section class="view" id="viewInstall" hidden>
+      <div class="bar">
+        <h2>Installations</h2>
+        <span class="count" id="count"></span>
+        <div class="grow"></div>
+        <input type="search" id="filter" placeholder="Search a version…" autocomplete="off" />
+        <button class="btn primary" id="newBtn">New installation</button>
+      </div>
+      <div class="split">
+        <div class="rows" id="rows" role="listbox" aria-label="Installations"></div>
+        <div class="detail" id="detail"></div>
+      </div>
+    </section>
   </main>
 </div>
 
+<!-- --------------------------------------------------------------------- dialog -->
 <dialog id="buildDialog">
-  <form method="dialog" class="dlg-head">
-    <h2>New installation <a class="link" href="help.html" target="_blank" style="font-size:13px; float:right">Help ↗</a></h2>
-    <p>Pick a version, add the mods you want, and let a build machine do the work. Only the mods you choose are
-      built in — nothing is pre-baked.</p>
-  </form>
+  <div class="dlg-head">
+    <h2 id="dlgTitle">Build this installation</h2>
+    <p id="dlgLead">Your mods are compiled into a client on GitHub Actions. Nothing is pre-baked, and nothing
+      is uploaded until you press Build.</p>
+  </div>
   <div class="dlg-body">
     <label>Version
-      <input id="bVersion" type="text" list="versionOptions" value="26.2" autocomplete="off" />
+      <input id="bVersion" type="text" list="versionOptions" value="26.2" autocomplete="off" spellcheck="false" />
       <datalist id="versionOptions"></datalist>
     </label>
     <div>
-      <label>Mod files</label>
+      <label>Mods to build in</label>
       <div class="drop" id="bDrop" style="margin-top:6px">Drop mod jars here, or click to choose</div>
       <input id="bFiles" type="file" multiple accept=".jar,.zip" hidden />
       <div class="chips" id="bChips"></div>
     </div>
-    <label>How should this build run?
+    <label>Build machine
       <select id="bMode">
-        <option value="token">GitHub, with my own token — nothing to set up, the build starts right now</option>
+        <option value="token">GitHub Actions, with my own token</option>
         <option value="service">A build service (Cloudflare Worker, Deno, or one on this computer)</option>
       </select>
     </label>
-
     <div id="tokenPanel">
       <label>GitHub token
-        <input id="bToken" type="password" spellcheck="false" autocomplete="off" placeholder="github_pat_…" />
+        <input id="bToken" type="password" autocomplete="off" spellcheck="false" placeholder="github_pat_… or a classic token" />
       </label>
-      <label style="display:block; margin-top:10px">Repository
+      <label style="margin-top:10px">Repository
         <input id="bRepo" type="text" spellcheck="false" value="AmphibianDev/webmc-port" />
       </label>
-      <p class="note" id="bTokenNote" style="margin-top:8px"></p>
+      <p class="note" id="bTokenNote" style="margin-top:9px"></p>
     </div>
-
     <div id="servicePanel" hidden>
-      <label>Build machine
-        <input id="bService" type="text" spellcheck="false"
-               placeholder="https://webmc-build.<you>.workers.dev  —  or http://127.0.0.1:8787 for one on this computer" />
-        <span class="note" id="bServiceNote" style="display:block; margin-top:6px"></span>
+      <label>Build service address
+        <input id="bService" type="text" spellcheck="false" placeholder="https://webmc-build.example.workers.dev" />
       </label>
+      <p class="note" id="bServiceNote" style="margin-top:9px"></p>
     </div>
-    <div class="progress" id="bProgress"><i></i></div>
-    <div class="log" id="bLog" hidden></div>
-    <p class="note" id="bNote">A bake compiles a client, which takes 30–45 minutes on the build machine. The mods
-      that cannot be baked (anything with native libraries, such as Distant Horizons) are refused before the
-      build starts, with the reason.</p>
+    <div>
+      <div class="progress" id="bProgress"><i></i></div>
+      <p class="note" id="bStage" style="margin:7px 0 0"></p>
+      <ol class="steps" id="bSteps" hidden></ol>
+      <div class="log" id="bLog" hidden style="margin-top:10px"></div>
+    </div>
+    <p class="note" id="bNote"></p>
   </div>
   <div class="dlg-foot">
-    <button class="ghost" id="bClose">Close</button>
-    <button class="play" id="bStart" style="padding:10px 26px; font-size:15px">Build</button>
+    <button class="btn" id="bClose">Close</button>
+    <button class="btn primary" id="bStart">Build</button>
   </div>
 </dialog>
 
 <script>
-/* The build machine is GitHub Actions, reached through a Cloudflare worker that holds the token; the page
-   never sees one. clients.json carries the address, and a local service is only a development fallback. */
-let DEFAULT_SERVICE = "http://127.0.0.1:8787";
-const state = { doc: null, pick: null, mods: [], job: null };
+"use strict";
+const DEFAULT_SERVICE = "http://127.0.0.1:8787";
+const state = { doc: null, pick: null, mods: [], view: "home", job: null };
 
 const el = (id) => document.getElementById(id);
 const store = {
-  get service() { try { return localStorage.getItem("webmc.service") || DEFAULT_SERVICE; } catch { return DEFAULT_SERVICE; } },
-  set service(v) { try { localStorage.setItem("webmc.service", v); } catch {} },
+  get service() { try { return localStorage.getItem("webmc.service") || ""; } catch { return ""; } },
+  set service(v) { try { localStorage.setItem("webmc.service", v || ""); } catch {} },
   get pick() { try { return localStorage.getItem("webmc.pick") || ""; } catch { return ""; } },
   set pick(v) { try { localStorage.setItem("webmc.pick", v); } catch {} },
-  /* A token is a password: it lives in this browser's storage, is sent only to api.github.com, and the
-     launcher offers to forget it. Nothing else in this file may read it. */
   get token() { try { return localStorage.getItem("webmc.token") || ""; } catch { return ""; } },
   set token(v) { try { localStorage.setItem("webmc.token", v || ""); } catch {} },
   get repo() { try { return localStorage.getItem("webmc.repo") || ""; } catch { return ""; } },
   set repo(v) { try { localStorage.setItem("webmc.repo", v || ""); } catch {} },
+  get mods() { try { return JSON.parse(localStorage.getItem("webmc.mods") || "[]"); } catch { return []; } },
+  set mods(v) { try { localStorage.setItem("webmc.mods", JSON.stringify(v)); } catch {} },
 };
 
-function bytes(n) {
-  if (!n) return "";
+const bytes = (n) => {
+  if (!n && n !== 0) return "";
   const units = ["B", "KB", "MB", "GB"];
-  let i = 0;
-  while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
-  return `${n < 10 && i > 0 ? n.toFixed(1) : Math.round(n)} ${units[i]}`;
+  let value = n, unit = 0;
+  while (value >= 1024 && unit < units.length - 1) { value /= 1024; unit++; }
+  return `${value < 10 && unit > 0 ? value.toFixed(1) : Math.round(value)} ${units[unit]}`;
+};
+const kindOf = (entry) => entry.kind === "compiled" ? "compiled" : entry.kind === "built" ? "built" : "real-java";
+const kindText = (entry) => kindOf(entry) === "compiled" ? "compiled client · add your mods and build"
+  : kindOf(entry) === "built" ? "your build · opens instantly" : "real JVM · your mods load at play time";
+
+/* ------------------------------------------------------------------------ views */
+function show(view) {
+  state.view = view;
+  el("viewHome").hidden = view !== "home";
+  el("viewInstall").hidden = view !== "install";
+  el("navHome").setAttribute("aria-current", view === "home" ? "page" : "false");
+  el("navInstall").setAttribute("aria-current", view === "install" ? "page" : "false");
 }
 
-function label(entry) {
-  return entry.kind === "compiled" ? "Compiled client" : `Real Java ${entry.java ? `· Java ${entry.java}` : ""}`;
-}
-
-/* ------------------------------------------------------------------ the list */
-function renderList() {
-  const filter = el("filter").value.trim().toLowerCase();
-  const rows = state.doc.installations.filter((entry) => {
-    if (!filter) return true;
-    return entry.id.toLowerCase().includes(filter) || entry.kind.includes(filter);
-  });
-  const list = el("list");
-  list.textContent = "";
-  for (const entry of rows.slice(0, 400)) {
-    const row = document.createElement("button");
-    row.className = `row ${entry.kind}`;
-    row.setAttribute("role", "option");
-    row.setAttribute("aria-selected", String(entry.id === state.pick));
-    row.innerHTML = `<span class="ico">${entry.kind === "compiled" ? "AOT" : "JVM"}</span>
-      <span class="txt"><b></b><span></span></span>`;
-    row.querySelector("b").textContent = entry.id;
-    row.querySelector(".txt span").textContent = label(entry)
-      + (entry.kind === "compiled" ? " · add your own mods, we build" : " · your mods load at play time");
-    row.addEventListener("click", () => select(entry.id));
-    list.append(row);
+function renderChooser() {
+  const chooser = el("chooser");
+  chooser.textContent = "";
+  for (const entry of state.doc.installations) {
+    const option = document.createElement("option");
+    option.value = entry.id;
+    option.textContent = `${entry.id} — ${kindOf(entry) === "real-java" ? `real Java ${entry.java || ""}` : kindOf(entry) === "built" ? "your build" : "compiled"}`;
+    chooser.append(option);
   }
-  el("count").textContent = `${state.doc.counts.playable} playable`;
+  chooser.value = state.pick || "";
 }
 
-function select(id) {
-  const entry = state.doc.installations.find((e) => e.id === id) || state.doc.installations[0];
+function select(id, keepView = true) {
+  const entry = state.doc.installations.find((candidate) => candidate.id === id) || state.doc.installations[0];
   if (!entry) return;
   state.pick = entry.id;
   store.pick = entry.id;
-  el("title").textContent = entry.id;
-  el("why").textContent = entry.why || "";
-  const badges = el("badges");
-  badges.textContent = "";
-  const add = (text, cls = "") => {
-    const b = document.createElement("span");
-    b.className = `badge ${cls}`;
-    b.textContent = text;
-    badges.append(b);
-  };
-  add(entry.kind === "compiled" ? "base build, ready" : "real JVM in the page", "ok");
-  if (entry.java) add(`java ${entry.java}`);
-  if (entry.lwjgl) add(`lwjgl ${entry.lwjgl}`);
-  add(entry.kind === "compiled" ? "drop in your mods → we bake them" : "your mods load at play time");
-
-  const facts = el("facts");
-  facts.textContent = "";
-  const fact = (name, value) => {
-    const d = document.createElement("div");
-    d.className = "fact";
-    d.innerHTML = "<b></b><span></span>";
-    d.querySelector("b").textContent = name;
-    d.querySelector("span").textContent = value;
-    facts.append(d);
-  };
-  fact("Route", entry.kind === "compiled" ? "compiled from the official client" : "official jar in the page");
-  fact("Engine", entry.kind === "compiled" ? "a browser compiler (TeaVM)" : "CheerpJ, Apache-2.0");
-  fact("Mods", entry.mods || "—");
-  fact("Runs", "entirely in your browser");
-
-  el("openBtn").href = entry.url;
-  el("openBtn").hidden = false;
   el("chooser").value = entry.id;
-  el("modsNote").textContent = entry.kind === "compiled"
-    ? "This is the vanilla build of " + entry.id + " — nothing pre-baked into it. Drop your own mods in and it "
-      + "is rebuilt with them on the build machine (GitHub Actions), then this row becomes your client."
-    : "This one runs the official jar in a real JVM, so mods load at play time — Fabric and its API come "
-      + "from the page. Nothing to build and nothing pre-baked.";
-  renderList();
+  el("homeTitle").textContent = entry.id;
+  el("homeText").textContent = entry.why || "";
+  el("homeHow").textContent = kindOf(entry) === "real-java"
+    ? "The official jar runs in a Java runtime compiled to WebAssembly, so mods load at play time and there is "
+      + "nothing to build."
+    : kindOf(entry) === "built"
+    ? "A client compiled from the official one, with the mods you chose. It opens straight from the page."
+    : "A base build of this version, compiled ahead of time from the official jar. Add your own mods and it is "
+      + "rebuilt with them.";
+  el("homeMods").textContent = state.mods.length
+    ? `${state.mods.length} mod file(s) queued: ${state.mods.map((file) => file.name).join(", ")}`
+    : "Nothing is pre-baked: the mods a client is built with are the ones you drop in.";
+  renderRows();
+  renderDetail();
 }
 
-/* ------------------------------------------------------------------ mods */
-function addMods(files) {
-  for (const file of files) {
-    if (!/\.(jar|zip)$/i.test(file.name)) continue;
-    if (state.mods.some((m) => m.name === file.name && m.size === file.size)) continue;
-    state.mods.push(file);
-  }
-  renderChips();
-}
-
-function renderChips(into = "chips", list = state.mods) {
-  const box = el(into);
+function renderRows() {
+  const filter = el("filter").value.trim().toLowerCase();
+  const rows = state.doc.installations.filter((entry) => !filter
+    || entry.id.toLowerCase().includes(filter) || kindOf(entry).includes(filter));
+  const box = el("rows");
   box.textContent = "";
-  for (const file of list) {
+  for (const entry of rows.slice(0, 500)) {
+    const row = document.createElement("button");
+    row.className = `row ${kindOf(entry)}`;
+    row.setAttribute("role", "option");
+    row.setAttribute("aria-selected", String(entry.id === state.pick));
+    row.innerHTML = `<span class="ico"></span><span class="txt"><b></b><span></span></span>`;
+    row.querySelector(".ico").textContent = kindOf(entry) === "compiled" ? "AOT" : kindOf(entry) === "built" ? "★" : "JVM";
+    row.querySelector("b").textContent = entry.id;
+    row.querySelector(".txt span").textContent = kindText(entry);
+    row.addEventListener("click", () => select(entry.id));
+    box.append(row);
+  }
+  const add = document.createElement("button");
+  add.className = "row new";
+  add.innerHTML = `<span class="ico">+</span><span class="txt"><b>New installation</b><span>pick a version and your mods</span></span>`;
+  add.addEventListener("click", () => openBuildDialog());
+  box.append(add);
+  el("count").textContent = `${state.doc.counts.playable} run in a browser · ${rows.length} shown`;
+  el("navCount").textContent = String(state.doc.counts.playable);
+}
+
+function renderDetail() {
+  const entry = state.doc.installations.find((candidate) => candidate.id === state.pick);
+  const box = el("detail");
+  box.textContent = "";
+  if (!entry) { box.innerHTML = `<p class="empty">No installation selected.</p>`; return; }
+
+  const title = document.createElement("h2");
+  title.textContent = entry.id;
+  const badges = document.createElement("div");
+  badges.className = "badges";
+  const badge = (text, cls = "") => {
+    const span = document.createElement("span");
+    span.className = `badge ${cls}`;
+    span.textContent = text;
+    badges.append(span);
+  };
+  badge(kindOf(entry) === "compiled" ? "base build, ready" : kindOf(entry) === "built" ? "your build" : "real JVM in the page", "ok");
+  if (entry.java) badge(`java ${entry.java}`);
+  if (entry.lwjgl) badge(`lwjgl ${entry.lwjgl}`);
+  badge(kindOf(entry) === "real-java" ? "mods at play time" : "mods built in", kindOf(entry) === "built" ? "mine" : "");
+  box.append(title, badges);
+
+  const facts = document.createElement("div");
+  facts.className = "section";
+  facts.innerHTML = `<h3>What this is</h3><div class="facts"></div>`;
+  const grid = facts.querySelector(".facts");
+  const fact = (name, value) => {
+    const cell = document.createElement("div");
+    cell.className = "fact";
+    cell.innerHTML = `<b></b><span></span>`;
+    cell.querySelector("b").textContent = name;
+    cell.querySelector("span").textContent = value;
+    grid.append(cell);
+  };
+  fact("Runs on", kindOf(entry) === "real-java" ? "the official jar in the page" : "a compiled client");
+  fact("Mods", kindOf(entry) === "real-java" ? "loaded at play time" : "built in");
+  fact("Cost of a mod set", kindOf(entry) === "real-java" ? "none" : "one build, 30–45 min");
+  fact("Where it runs", "your browser");
+  box.append(facts);
+
+  const mods = document.createElement("div");
+  mods.className = "section";
+  mods.innerHTML = `<h3>Your mods${state.mods.length ? ` · ${state.mods.length}` : ""}</h3>
+    <div class="drop" id="drop">Drop your mod jars here, or click to choose — they stay yours, and nothing is
+      built until you press Build.</div>
+    <div class="chips" id="chips"></div>
+    <div class="actions">
+      <button class="btn primary" id="buildBtn" ${kindOf(entry) === "real-java" ? "disabled" : ""}>
+        ${kindOf(entry) === "real-java" ? "Build a compiled client with these mods" : "Build with these mods"}</button>
+      <button class="btn" id="openBtn">Play this version</button>
+      ${state.mods.length ? `<button class="btn" id="clearBtn">Clear the list</button>` : ""}
+    </div>
+    <p class="note" id="modsNote" style="margin-top:10px"></p>`;
+  box.append(mods);
+  const compiledTwin = state.doc.installations.find((candidate) => kindOf(candidate) === "compiled"
+    && candidate.id.replace(/\D+$/, "") === entry.id.replace(/\D+$/, ""));
+  el("modsNote").textContent = kindOf(entry) === "real-java"
+    ? `This version runs the original game in the page, and that route loads the mods the page itself lists — a `
+      + `jar from your computer cannot be handed to it. To play with your own mods, build them into a compiled `
+      + `client instead${compiledTwin ? ` (${compiledTwin.id} is the compiled one)` : ""}: add them here, then `
+      + `press Build.`
+    : "This client was compiled without your mods: they are baked into a fresh build on a build machine, and "
+      + "then this row opens your own client.";
+  el("chips").replaceWith(chipBox());
+  wireDrop(el("drop"), (files) => addMods(files));
+  if (el("buildBtn")) el("buildBtn").addEventListener("click", () => {
+    if (!state.mods.length) {
+      el("modsNote").textContent = "add your mods first — dropping them above is enough, nothing is built or "
+        + "uploaded until you press Build";
+      return;
+    }
+    // a compiled version of the same client is what the mods can actually be built into
+    const twin = state.doc.installations.find((candidate) => kindOf(candidate) === "compiled"
+      && candidate.id.replace(/\D+$/, "") === entry.id.replace(/\D+$/, ""));
+    openBuildDialog([], kindOf(entry) === "compiled" ? entry.id : (twin ? twin.id : entry.id));
+  });
+  el("openBtn").addEventListener("click", () => openClient(entry, false));
+  if (el("clearBtn")) el("clearBtn").addEventListener("click", () => { state.mods = []; store.mods = []; renderDetail(); });
+}
+
+function chipBox() {
+  const box = document.createElement("div");
+  box.className = "chips";
+  box.id = "chips";
+  for (const file of state.mods) {
     const chip = document.createElement("span");
     chip.className = "chip";
-    chip.innerHTML = "<span></span><button title=\"remove\">×</button>";
+    chip.innerHTML = `<span></span><button title="remove">×</button>`;
     chip.querySelector("span").textContent = `${file.name} · ${bytes(file.size)}`;
     chip.querySelector("button").addEventListener("click", () => {
-      const at = list.indexOf(file);
-      if (at >= 0) list.splice(at, 1);
-      renderChips(into, list);
+      state.mods = state.mods.filter((other) => other !== file);
+      store.mods = state.mods.map(({ name, size }) => ({ name, size }));
+      renderDetail();
+      select(state.pick);
+    });
+    box.append(chip);
+  }
+  return box;
+}
+
+function openClient(entry, withMods) {
+  const url = withMods && entry.kind === "real-java" && state.mods.length
+    ? `${entry.url}${entry.url.includes("?") ? "&" : "?"}mods=`
+    : entry.url;
+  location.href = url;
+}
+
+/* ------------------------------------------------------------------------- mods */
+function addMods(files) {
+  let refused = [];
+  for (const file of files) {
+    if (!/\.(jar|zip)$/i.test(file.name)) { refused.push(file.name); continue; }
+    if (state.mods.some((other) => other.name === file.name && other.size === file.size)) continue;
+    state.mods.push(file);
+  }
+  store.mods = state.mods.map(({ name, size }) => ({ name, size }));
+  renderDetail();
+  select(state.pick);
+  if (refused.length) el("modsNote").textContent = `Only .jar and .zip mod files: ${refused.join(", ")}.`;
+}
+
+function wireDrop(zone, onFiles) {
+  const input = el("bFiles");
+  zone.addEventListener("click", () => input.click());
+  for (const event of ["dragenter", "dragover"]) zone.addEventListener(event, (e) => { e.preventDefault(); zone.classList.add("hot"); });
+  for (const event of ["dragleave", "drop"]) zone.addEventListener(event, () => zone.classList.remove("hot"));
+  zone.addEventListener("drop", (e) => { e.preventDefault(); onFiles([...e.dataTransfer.files]); });
+  if (!input.dataset.wired) {
+    input.dataset.wired = "yes";
+    input.addEventListener("change", () => { onFiles([...input.files]); input.value = ""; });
+  }
+}
+
+/* --------------------------------------------------------------------- the build */
+function log(line, cls = "") {
+  const box = el("bLog");
+  box.hidden = false;
+  const span = document.createElement("div");
+  if (cls) span.className = cls;
+  span.textContent = line;
+  box.append(span);
+  box.scrollTop = box.scrollHeight;
+}
+
+function renderSteps(steps, percent, stage) {
+  const box = el("bSteps");
+  if (!steps || !steps.length) { box.hidden = true; return; }
+  box.hidden = false;
+  box.textContent = "";
+  let running = false;
+  for (const step of steps) {
+    const line = document.createElement("li");
+    const mark = document.createElement("span");
+    mark.className = "mark";
+    mark.textContent = step.conclusion ? (step.conclusion === "success" ? "✔" : step.conclusion === "skipped" ? "–" : "✕")
+                                       : running ? "○" : "▶";
+    if (!step.conclusion && !running) { line.className = "now"; running = true; }
+    if (step.conclusion === "success") line.className = "ok";
+    if (step.conclusion && step.conclusion !== "success" && step.conclusion !== "skipped") line.className = "bad";
+    const label = document.createElement("span");
+    label.textContent = step.name;
+    line.append(mark, label);
+    box.append(line);
+  }
+  if (typeof percent === "number") el("bProgress").firstElementChild.style.width = `${Math.max(4, Math.min(100, percent))}%`;
+  el("bStage").textContent = stage || "";
+}
+
+function openBuildDialog(preselect = [], version = "") {
+  el("bProgress").firstElementChild.style.width = "0";
+  el("bStage").textContent = "";
+  el("bSteps").hidden = true;
+  el("bLog").hidden = true;
+  el("bLog").textContent = "";
+  el("bStart").disabled = false;
+  el("dlgTitle").textContent = "New installation";
+  el("bVersion").value = version || state.pick || "26.2";
+  const options = el("versionOptions");
+  options.textContent = "";
+  const add = (id, why) => {
+    const option = document.createElement("option");
+    option.value = id;
+    if (why) option.label = why;
+    options.append(option);
+  };
+  for (const entry of state.doc.installations.filter((candidate) => kindOf(candidate) !== "real-java")) add(entry.id, "base build exists");
+  for (const entry of state.doc.buildable || []) add(entry.id, "no build yet — this starts one");
+  for (const entry of state.doc.installations.filter((candidate) => kindOf(candidate) === "real-java")) add(entry.id, "runs as it is");
+  if (state.doc.build && state.doc.build.service) el("bService").value = state.doc.build.service;
+  else if (!el("bService").value) el("bService").value = store.service;
+  el("bServiceNote").textContent = state.doc.build && state.doc.build.service
+    ? `This page builds through ${state.doc.build.service}.`
+    : "No build service is configured for this page. For testing, run “node tools/build-service.mjs” in webmc-mods.";
+  el("bToken").value = store.token;
+  if (store.repo) el("bRepo").value = store.repo;
+  el("bTokenNote").textContent = "The token is kept in this browser and sent only to api.github.com. It needs this repository, with write access to Contents and Actions.";
+  el("bNote").textContent = el("bMode").value === "token"
+    ? "The build runs on GitHub Actions. Your mods are committed to a branch of the build repository, never to main."
+    : "The build service holds the token, so this page needs none.";
+  renderBuildChips();
+  el("buildDialog").showModal();
+}
+
+function renderBuildChips() {
+  const box = el("bChips");
+  box.textContent = "";
+  for (const file of state.mods) {
+    const chip = document.createElement("span");
+    chip.className = "chip";
+    chip.innerHTML = `<span></span><button title="remove">×</button>`;
+    chip.querySelector("span").textContent = `${file.name} · ${bytes(file.size)}`;
+    chip.querySelector("button").addEventListener("click", () => {
+      state.mods = state.mods.filter((other) => other !== file);
+      store.mods = state.mods.map(({ name, size }) => ({ name, size }));
+      renderBuildChips();
+      select(state.pick);
     });
     box.append(chip);
   }
 }
 
-/* ------------------------------------------------------------------ GitHub, from the page */
-/* The token never leaves the browser except to api.github.com, which is the only host it is sent to below.
-   Anything added here must keep that true. */
+/* ---------------------------------------------------------------- GitHub build */
 const GITHUB = "https://api.github.com";
 
 async function github(token, repo, path, init = {}) {
   return fetch(`${GITHUB}/repos/${repo}${path}`, {
     ...init,
-    headers: {
-      accept: "application/vnd.github+json",
-      authorization: `Bearer ${token}`,
-      "content-type": "application/json",
-      ...(init.headers || {}),
-    },
+    headers: { accept: "application/vnd.github+json", authorization: `Bearer ${token}`,
+               "content-type": "application/json", ...(init.headers || {}) },
   });
 }
 
-/** What GitHub said, in words. A bare 403 is the least useful thing this page could print. */
 async function whyFailed(response, what) {
   let detail = "";
   try {
     const body = await response.json();
     detail = body.message || "";
-    if (body.errors && body.errors.length) detail += ` (${body.errors.map((e) => e.message || e.code).join("; ")})`;
-    if (body.documentation_url) detail += ` — ${body.documentation_url}`;
-  } catch { detail = await response.text().catch(() => ""); }
+    if (body.errors?.length) detail += ` (${body.errors.map((e) => e.message || e.code).join("; ")})`;
+  } catch { detail = ""; }
   const hint = response.status === 401 ? "the token is not valid any more (expired, or revoked)"
-    : response.status === 403 ? "the token can read but not write here. A token that can read gets exactly "
-      + "this at the first write. Fix it one of two ways: a CLASSIC token with the repo and workflow boxes "
-      + "ticked, or a FINE-GRAINED one where Repository permissions shows Contents and Actions as the "
-      + "writable option (the older UI words it 'Read and write', the newer one just lists the write option "
-      + "in the dropdown). If the repository belongs to an organization, the organization must also allow "
-      + "fine-grained tokens - with a classic token that does not apply."
+    : response.status === 403 ? "the token can read but not write here. Fix it one of two ways: a CLASSIC "
+      + "token with the repo and workflow boxes ticked, or a FINE-GRAINED one whose Repository permissions give "
+      + "Contents and Actions the writable option."
     : response.status === 404 ? "the repository name, or the token's access to it"
-    : response.status === 422 ? "the request was malformed — a file that already exists on the branch has to "
-      + "be written with the sha of the copy that is there"
+    : response.status === 422 ? "the request was malformed — a file that is already on the branch has to be "
+      + "written with the sha of the copy that is there"
     : "see the message above";
   return `${what} failed: ${response.status} ${detail || response.statusText}\n  → ${hint}`;
 }
 
-/** Does this token actually have permission to write here? Asking first beats failing at step three. */
 async function checkWriteAccess(token, repo) {
   const response = await github(token, repo, "");
   if (!response.ok) return whyFailed(response, `reading ${repo}`);
-  const body = await response.json();
-  const permissions = body.permissions || {};
+  const permissions = (await response.json()).permissions || {};
   if (permissions.push !== true) {
-    return `${repo} is readable with this token but not writable `
-      + `(GitHub says push: ${permissions.push === undefined ? "unknown" : permissions.push}).\n`
-      + `  → add write access: a classic token with the repo and workflow boxes ticked works, and so does a `
-      + `fine-grained token whose Repository permissions give Contents and Actions write access. `
-      + `Edit either at https://github.com/settings/tokens (classic) or `
-      + `https://github.com/settings/personal-access-tokens (fine-grained).`;
+    return `${repo} is readable with this token but not writable (GitHub says push: ${
+      permissions.push === undefined ? "unknown" : permissions.push}).\n  → a classic token with the repo and `
+      + `workflow boxes ticked works, and so does a fine-grained token with Contents and Actions set to write.`;
   }
   return null;
-}
-
-/**
- * Write one file on a branch.
- *
- * A file that is already on the branch - and every path here is relative to a repository that ships mods,
- * so `mods/vendor/<jar>` and `mods/mods.json` usually are - has to be updated with the sha of the copy that
- * is there, or GitHub answers 422 '"sha" wasn't supplied'. That is what the first real build hit: the mod
- * was already in the repository, and the page had no sha to offer.
- */
-async function putFile(token, repo, branch, path, message, contentBase64) {
-  const existing = await github(token, repo, `/contents/${path}?ref=${encodeURIComponent(branch)}`);
-  const body = { message, branch, content: contentBase64 };
-  if (existing.ok) {
-    const current = await existing.json();
-    if (current && current.sha) body.sha = current.sha;
-  }
-  return github(token, repo, `/contents/${path}`, { method: "PUT", body: JSON.stringify(body) });
 }
 
 async function base64Of(file) {
@@ -549,7 +677,6 @@ async function modKey(version, files) {
 
 const modId = (name) => name.replace(/\.(jar|zip)$/i, "").replace(/[^A-Za-z0-9._-]+/g, "-").toLowerCase();
 
-/** A jar with native libraries cannot run in a page: refuse it here, before anything is uploaded. */
 async function refusalFor(file) {
   const head = new Uint8Array(await file.slice(0, Math.min(file.size, 4 * 1024 * 1024)).arrayBuffer());
   let text = "";
@@ -561,62 +688,50 @@ async function refusalFor(file) {
   return null;
 }
 
+/** Write one file on a branch: an existing file needs the sha of the copy that is there. */
+async function putFile(token, repo, branch, path, message, contentBase64) {
+  const existing = await github(token, repo, `/contents/${path}?ref=${encodeURIComponent(branch)}`);
+  const body = { message, branch, content: contentBase64 };
+  if (existing.ok) {
+    const current = await existing.json();
+    if (current?.sha) body.sha = current.sha;
+  }
+  return github(token, repo, `/contents/${path}`, { method: "PUT", body: JSON.stringify(body) });
+}
+
 async function runsFor(token, repo, key) {
   const response = await github(token, repo, `/actions/runs?branch=${encodeURIComponent(`build/${key}`)}&per_page=1`);
   if (!response.ok) return { problem: `${response.status} ${response.statusText}` };
-  const list = (await response.json()).workflow_runs || [];
-  return { run: list[0] || null };
+  return { run: ((await response.json()).workflow_runs || [])[0] || null };
 }
 
 async function startBuildOnGitHub(version, files) {
   const token = el("bToken").value.trim();
   const repo = el("bRepo").value.trim() || "AmphibianDev/webmc-port";
-  if (!token) { log("a token is needed for this option — the Help page walks through making one", "warn"); return; }
+  if (!token) { log("a token is needed for this option — Help walks through making one", "warn"); return; }
   store.token = token;
   store.repo = repo;
-
   for (const file of files) {
     const refusal = await refusalFor(file);
     if (refusal) { log(refusal, "err"); log("nothing was uploaded; remove that jar and try again", "warn"); return; }
   }
-
   el("bStart").disabled = true;
-  el("bProgress").firstElementChild.style.width = "5%";
+  el("bProgress").firstElementChild.style.width = "4%";
   const blocked = await checkWriteAccess(token, repo);
-  if (blocked) {
-    log(blocked, "err");
-    el("bStart").disabled = false;
-    return;
-  }
+  if (blocked) { log(blocked, "err"); el("bStart").disabled = false; return; }
+
   const key = await modKey(version, files);
   log(`mod set key ${key} — the branch is named after it, so the same mods are one build`);
-
   const existing = await runsFor(token, repo, key);
-  if (existing.problem) {
-    log(`could not read the build runs: ${existing.problem}`, "err");
-    log("reading runs needs Actions: Read on the token; starting one needs Actions: Read and write", "warn");
-    el("bStart").disabled = false;
-    return;
-  }
-  if (existing.run) {
-    log(`this exact mod set already has a build (${existing.run.status})`, "ok");
-    pollGitHub(key, repo, token, version);
-    return;
-  }
+  if (existing.problem) { log(`could not read the build runs: ${existing.problem}`, "err"); el("bStart").disabled = false; return; }
+  if (existing.run) { log(`this exact mod set already has a build (${existing.run.status})`, "ok"); return pollGitHub(key, repo, token, version, files); }
 
   const head = await github(token, repo, "/git/ref/heads/main");
   if (!head.ok) { log(await whyFailed(head, "reading main"), "err"); el("bStart").disabled = false; return; }
   const sha = (await head.json()).object.sha;
-
   const branch = `build/${key}`;
-  const created = await github(token, repo, "/git/refs", {
-    method: "POST", body: JSON.stringify({ ref: `refs/heads/${branch}`, sha }),
-  });
-  if (!created.ok && created.status !== 422) {
-    log(await whyFailed(created, `creating ${branch}`), "err");
-    el("bStart").disabled = false;
-    return;
-  }
+  const created = await github(token, repo, "/git/refs", { method: "POST", body: JSON.stringify({ ref: `refs/heads/${branch}`, sha }) });
+  if (!created.ok && created.status !== 422) { log(await whyFailed(created, `creating ${branch}`), "err"); el("bStart").disabled = false; return; }
   log(`branch ${branch} is ready`, "ok");
 
   const mods = [];
@@ -626,144 +741,115 @@ async function startBuildOnGitHub(version, files) {
     const put = await putFile(token, repo, branch, path, `build ${key}: add ${file.name}`, await base64Of(file));
     if (!put.ok) { log(await whyFailed(put, `committing ${file.name}`), "err"); el("bStart").disabled = false; return; }
     mods.push({ id, name: file.name, file: path.slice("mods/".length) });
-    log(`committed ${file.name} to ${branch}`);
+    log(`committed ${file.name}`);
   }
-
   const manifest = { note: `the mod set of build ${key}, from the launcher`,
-    mods: mods.map((mod) => ({ id: mod.id, name: mod.name, version, file: mod.file, game: [version],
-                               loaders: ["fabric", "aot"] })) };
-  for (const [path, body] of [["build-info.json", { version, mods: mods.map((mod) => mod.id), at: new Date().toISOString() }],
-                              ["mods/mods.json", manifest]]) {
+    mods: mods.map((mod) => ({ id: mod.id, name: mod.name, version, file: mod.file, game: [version], loaders: ["fabric", "aot"] })) };
+  for (const [path, payload] of [["build-info.json", { version, mods: mods.map((mod) => mod.id), at: new Date().toISOString() }],
+                                 ["mods/mods.json", manifest]]) {
     const put = await putFile(token, repo, branch, path,
       `build ${key}: ${path === "build-info.json" ? "what this build is for" : "the mod set"}`,
-      await base64Of(new Blob([JSON.stringify(body, null, 2) + "\n"])));
+      await base64Of(new Blob([JSON.stringify(payload, null, 2) + "\n"])));
     if (!put.ok) { log(await whyFailed(put, `writing ${path}`), "err"); el("bStart").disabled = false; return; }
   }
-
   const dispatched = await github(token, repo, "/actions/workflows/build-snapshot.yml/dispatches", {
-    method: "POST",
-    body: JSON.stringify({ ref: branch, inputs: { version, mods: mods.map((mod) => mod.id).join(",") } }),
+    method: "POST", body: JSON.stringify({ ref: branch, inputs: { version, mods: mods.map((mod) => mod.id).join(",") } }),
   });
-  if (dispatched.status !== 204 && !dispatched.ok) {
-    log(await whyFailed(dispatched, "starting the build"), "err");
-    el("bStart").disabled = false;
-    return;
-  }
+  if (dispatched.status !== 204 && !dispatched.ok) { log(await whyFailed(dispatched, "starting the build"), "err"); el("bStart").disabled = false; return; }
   log("the build machine is starting — 30 to 45 minutes", "ok");
-  pollGitHub(key, repo, token, version, mods);
+  pollGitHub(key, repo, token, version, files);
 }
 
-async function pollGitHub(key, repo, token, version, mods = []) {
-  const url = `https://github.com/${repo}/actions?query=branch%3A${encodeURIComponent(`build/${key}`)}`;
-  for (let attempt = 0; attempt < 240; attempt++) {
-    await new Promise((r) => setTimeout(r, attempt < 10 ? 5000 : 20000));
+async function pollGitHub(key, repo, token, version, files) {
+  let announced = false;
+  let jobList = [];
+  for (let attempt = 0; attempt < 400; attempt++) {
+    await new Promise((r) => setTimeout(r, attempt < 6 ? 4000 : 15000));
     const { run, problem } = await runsFor(token, repo, key);
     if (problem) continue;
-    if (!run) { el("bProgress").firstElementChild.style.width = "8%"; continue; }
-    el("bProgress").firstElementChild.style.width = run.status === "in_progress" ? "55%" : "12%";
-    if (run.status === "completed") {
-      if (run.conclusion !== "success") {
-        log(`the build ${run.conclusion}`, "err");
-        log(`the real error is in the run: ${run.html_url}`, "warn");
-        el("bStart").disabled = false;
-        return;
+    if (!run) { renderSteps([], 6, "waiting for the build machine to pick it up"); continue; }
+    const jobs = await github(token, repo, `/actions/runs/${run.id}/jobs`);
+    if (jobs.ok) {
+      jobList = (await jobs.json()).jobs || [];
+      const steps = [];
+      for (const job of jobList) for (const step of job.steps || []) steps.push(step);
+      const finished = steps.filter((step) => step.conclusion).length;
+      const current = steps.find((step) => step.status === "in_progress");
+      renderSteps(steps, steps.length ? Math.round((finished / steps.length) * 100) : 8,
+        current ? `now: ${current.name}` : run.status);
+    }
+    if (run.status !== "completed") continue;
+    if (run.conclusion !== "success") {
+      log(`the build ${run.conclusion}`, "err");
+      for (const job of jobList) {
+        if (job.conclusion && job.conclusion !== "success" && job.check_run_id) {
+          const notes = await github(token, repo, `/check-runs/${job.check_run_id}/annotations`);
+          if (notes.ok) for (const note of (await notes.json()) || []) { log(`${note.level || "failure"}: ${note.message}`, "err"); announced = true; }
+        }
       }
-      el("bProgress").firstElementChild.style.width = "100%";
-      log("done", "ok");
-      const entry = { id: `${version} + your mods`, kind: "compiled",
-                      url: `https://amphibiandev.github.io/webmc-port/clients/${version}/`,
-                      why: `Built on GitHub Actions with ${mods.length || "your"} mod(s): `
-                         + (mods.map((m) => m.name).join(", ") || "your set"),
-                      mods: "the ones you picked", java: null, lwjgl: null };
-      state.doc.installations.unshift(entry);
-      state.doc.counts.playable++;
-      select(entry.id);
+      if (!announced) log(`the run itself has the rest: ${run.html_url}`, "warn");
       el("bStart").disabled = false;
-      log(`run: ${run.html_url}`);
       return;
     }
-    log(`${run.status} on the build machine — ${run.html_url}`);
+    renderSteps(jobList.flatMap((job) => job.steps || []), 100, "done");
+    log("done — the client is published", "ok");
+    const entry = { id: `${version} + your mods`, kind: "built", url: `https://amphibiandev.github.io/webmc-port/clients/${version}/`,
+                    why: `Built on GitHub Actions with ${files.map((file) => file.name).join(", ")}`,
+                    java: null, lwjgl: null };
+    state.doc.installations.unshift(entry);
+    state.doc.counts.playable++;
+    renderChooser();
+    select(entry.id);
+    el("bStart").disabled = false;
+    log(`run: ${run.html_url}`);
+    return;
   }
   el("bStart").disabled = false;
-  log("still building after 80 minutes; the run continues on GitHub", "warn");
+  log("still building; the run continues on GitHub", "warn");
 }
 
-/* ------------------------------------------------------------------ the bake */
-function log(line, cls = "") {
-  const box = el("bLog");
-  box.hidden = false;
-  const span = document.createElement("div");
-  if (cls) span.className = cls;
-  span.textContent = line;
-  box.append(span);
-  box.scrollTop = box.scrollHeight;
-}
-
-async function startBuild() {
-  const version = el("bVersion").value.trim();
-  if (!version) { log("a version is needed", "warn"); return; }
-  if (!state.mods.length) {
-    log("add at least one mod: a build is for a mod set of your own", "warn");
-    return;
-  }
-  if (el("bMode").value === "token") {
-    el("bLog").hidden = false;
-    await startBuildOnGitHub(version, state.mods);
-    return;
-  }
-  const service = el("bService").value.trim().replace(/\/+$/, "") || DEFAULT_SERVICE;
+async function startBuildWithService(version, files) {
+  const service = (el("bService").value.trim() || DEFAULT_SERVICE).replace(/\/+$/, "");
   store.service = service;
   el("bStart").disabled = true;
   el("bProgress").firstElementChild.style.width = "4%";
-  log(`asking ${service} to build ${version} with ${state.mods.length} mod(s)`);
+  log(`asking ${service} to build ${version} with ${files.length} mod(s)`);
   try {
     const body = new FormData();
     body.set("version", version);
-    for (const file of state.mods) body.append("mods", file, file.name);
+    for (const file of files) body.append("mods", file, file.name);
     const response = await fetch(`${service}/api/build`, { method: "POST", body });
     const answer = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(answer.error || `${response.status} ${response.statusText}`);
-    log(`job ${answer.key || answer.id || "?"} accepted`, "ok");
-    poll(answer);
+    log(`job ${answer.id} accepted${answer.cached ? " (already built once)" : ""}`, "ok");
+    pollService(answer);
   } catch (problem) {
     el("bStart").disabled = false;
-    el("bProgress").firstElementChild.style.width = "0";
     log(String(problem.message || problem), "err");
-    log("no build machine answered at that address. Run one with “node tools/build-service.mjs” in "
-      + "webmc-mods for a local build, or deploy gateway/build-worker.js to Cloudflare (free) and put its "
-      + "address in clients.json — see HOW-TO-USE.md.", "warn");
+    log("no build machine answered. Run one with “node tools/build-service.mjs” in webmc-mods, or deploy "
+      + "gateway/build-worker.js to Cloudflare and put its address here.", "warn");
   }
 }
 
-async function poll(job) {
+async function pollService(job) {
   const service = store.service;
-  const id = job.key || job.id;
-  const client = job.client || `/client/${id}/`;
-  let stage = "";
   for (let attempt = 0; attempt < 1200; attempt++) {
-    await new Promise((r) => setTimeout(r, attempt < 10 ? 3000 : 15000));
+    await new Promise((r) => setTimeout(r, attempt < 8 ? 3000 : 15000));
     let answer;
     try {
-      const response = await fetch(`${service}/api/build?id=${encodeURIComponent(id)}`);
-      answer = await response.json();
-    } catch {
-      continue;   // the machine was restarted, or the page slept: keep asking
-    }
-    if (answer.stage && answer.stage !== stage) {
-      stage = answer.stage;
-      const percent = Math.max(6, Math.min(96, Number(answer.percent) || 0));
-      el("bProgress").firstElementChild.style.width = `${percent}%`;
-      log(stage + (answer.detail ? ` — ${answer.detail}` : ""));
+      answer = await (await fetch(`${service}/api/build?id=${encodeURIComponent(job.id)}`)).json();
+    } catch { continue; }
+    if (answer.steps?.length || typeof answer.percent === "number") {
+      renderSteps(answer.steps, answer.percent, answer.step ? `now: ${answer.step}` : answer.detail);
     }
     if (answer.state === "done" || answer.state === "ready") {
-      el("bProgress").firstElementChild.style.width = "100%";
-      log("ready", "ok");
-      const url = answer.client || client;
-      const entry = { id: `${job.version || el("bVersion").value} + your mods`, kind: "compiled", url,
-                      why: `Built by the build machine with ${state.mods.length} of your mod(s).`,
-                      mods: "the ones you picked", java: null, lwjgl: null };
+      renderSteps(answer.steps, 100, "done");
+      log("the client is published", "ok");
+      const url = answer.client || `/client/${job.id}/`;
+      const entry = { id: `${job.version || el("bVersion").value} + your mods`, kind: "built", url,
+                      why: "Built by the build service with your mod set.", java: null, lwjgl: null };
       state.doc.installations.unshift(entry);
-      state.doc.counts.playable++;
+      renderChooser();
       select(entry.id);
       el("bStart").disabled = false;
       return;
@@ -771,144 +857,83 @@ async function poll(job) {
     if (answer.state === "failed") {
       el("bStart").disabled = false;
       log(answer.error || "the build failed", "err");
-      for (const line of (answer.log || "").split("\n").slice(-12)) log(line);
+      for (const line of answer.problems || []) log(line, "err");
+      if (answer.run) log(`the full log is in the run: ${answer.run}`, "warn");
       return;
     }
   }
   el("bStart").disabled = false;
-  log("still building after three hours; the machine keeps going, this dialog does not", "warn");
 }
 
-/* ------------------------------------------------------------------ wiring */
-function openBuildDialog(files = []) {
-  if (files.length) addMods(files);
-  if (!el("bService").value) {
-    el("bService").value = state.doc.build && state.doc.build.service
-      ? state.doc.build.service
-      : (store.service === DEFAULT_SERVICE ? "" : store.service);
-  }
-  el("bServiceNote").textContent = state.doc.build && state.doc.build.service
-    ? "This page is set up to build through " + state.doc.build.service
-    : "No build service is configured for this page. For testing, run “node tools/build-service.mjs” in "
-      + "webmc-mods and leave the address below as it is.";
-  el("bToken").value = store.token;
-  if (store.repo) el("bRepo").value = store.repo;
-  el("bTokenNote").innerHTML = "";
-  const help = document.createElement("span");
-  help.textContent = "The token is stored in this browser and sent only to api.github.com. It needs this "
-    + "repository, with Contents and Actions set to Read and write — ";
-  const link = document.createElement("a");
-  link.className = "link";
-  link.href = "help.html#token";
-  link.target = "_blank";
-  link.textContent = "step-by-step instructions";
-  help.append(link);
-  help.append(document.createTextNode("."));
-  el("bTokenNote").append(help);
-  const forget = document.createElement("button");
-  forget.className = "ghost";
-  forget.style.marginTop = "8px";
-  forget.textContent = "Forget the stored token";
-  forget.addEventListener("click", () => { store.token = ""; el("bToken").value = ""; log("token forgotten", "ok"); });
-  el("bTokenNote").append(document.createElement("br"), forget);
-  renderChips("bChips", state.mods);
-  const options = el("versionOptions");
-  options.textContent = "";
-  const add = (id, why) => {
-    const option = document.createElement("option");
-    option.value = id;
-    if (why) option.label = why;
-    options.append(option);
-  };
-  // a compiled version in the list is a *vanilla* build to start from: the mods are still yours to add
-  for (const entry of state.doc.installations.filter((e) => e.kind === "compiled")) add(entry.id, "vanilla build exists");
-  for (const entry of state.doc.buildable || []) add(entry.id, "no build yet — this will start one");
-  el("buildDialog").showModal();
+async function startBuild() {
+  const version = el("bVersion").value.trim();
+  if (!version) { log("a version is needed", "warn"); return; }
+  if (!state.mods.length) { log("add at least one mod: a build is for a mod set of your own", "warn"); return; }
+  el("bLog").hidden = false;
+  if (el("bMode").value === "token") await startBuildOnGitHub(version, state.mods);
+  else await startBuildWithService(version, state.mods);
 }
 
-function wireDrop(zone, onFiles) {
-  const input = document.createElement("input");
-  input.type = "file";
-  input.multiple = true;
-  input.accept = ".jar,.zip";
-  input.hidden = true;
-  document.body.append(input);
-  input.addEventListener("change", () => { onFiles([...input.files]); input.value = ""; });
-  zone.addEventListener("click", () => input.click());
-  for (const event of ["dragenter", "dragover"]) {
-    zone.addEventListener(event, (e) => { e.preventDefault(); zone.classList.add("hot"); });
-  }
-  for (const event of ["dragleave", "drop"]) {
-    zone.addEventListener(event, () => zone.classList.remove("hot"));
-  }
-  zone.addEventListener("drop", (e) => {
-    e.preventDefault();
-    onFiles([...e.dataTransfer.files]);
+/* ------------------------------------------------------------------------- wiring */
+function pickToken() {
+  el("bToken").addEventListener("change", async () => {
+    store.token = el("bToken").value.trim();
+    if (!store.token) return;
+    const problem = await checkWriteAccess(store.token, el("bRepo").value.trim() || "AmphibianDev/webmc-port");
+    el("bTokenNote").textContent = problem || "this token can write to that repository — builds will work";
+    el("bTokenNote").className = problem ? "note err" : "note ok";
   });
 }
 
 async function main() {
   const response = await fetch("clients.json", { cache: "no-cache" });
   state.doc = await response.json();
-  const chooser = el("chooser");
-  for (const entry of state.doc.installations) {
-    const option = document.createElement("option");
-    option.value = entry.id;
-    option.textContent = `${entry.id} — ${entry.kind === "compiled" ? "compiled" : `real Java ${entry.java || ""}`}`;
-    chooser.append(option);
-  }
-  chooser.addEventListener("change", () => select(chooser.value));
-  el("filter").addEventListener("input", renderList);
+  if (state.doc.build?.service) el("bService").value = state.doc.build.service;
+  renderChooser();
+  renderRows();
+  const wanted = new URLSearchParams(location.search).get("version") || store.pick;
+  select(wanted || state.doc.installations[0].id);
+  show(new URLSearchParams(location.search).get("view") === "installations" ? "install" : "home");
+
+  el("navHome").addEventListener("click", () => show("home"));
+  el("navInstall").addEventListener("click", () => show("install"));
+  el("goInstall").addEventListener("click", (e) => { e.preventDefault(); show("install"); });
+  el("chooser").addEventListener("change", () => select(el("chooser").value));
+  el("filter").addEventListener("input", renderRows);
   el("playBtn").addEventListener("click", () => {
-    const entry = state.doc.installations.find((e) => e.id === state.pick);
-    if (entry) location.href = entry.url;
-  });
-  el("openBtn").addEventListener("click", (e) => { e.preventDefault(); el("playBtn").click(); });
-  el("detailsBtn").addEventListener("click", () => {
-    const entry = state.doc.installations.find((e) => e.id === state.pick);
-    if (entry) window.open(entry.url, "_blank");
+    const entry = state.doc.installations.find((candidate) => candidate.id === state.pick);
+    if (entry) openClient(entry, false);
   });
   el("newBtn").addEventListener("click", () => openBuildDialog());
-  el("sourceBtn").addEventListener("click", () => window.open("https://github.com/AmphibianDev/webmc-port", "_blank"));
   el("helpBtn").addEventListener("click", () => window.open("help.html", "_blank"));
+  el("sourceBtn").addEventListener("click", () => window.open("https://github.com/AmphibianDev/webmc-port", "_blank"));
+  el("logBtn").addEventListener("click", () => {
+    const entry = state.doc.installations.find((candidate) => candidate.id === state.pick);
+    if (!entry) return;
+    location.href = `${entry.url}${entry.url.includes("?") ? "&" : "?"}log=1`;
+  });
   el("bMode").addEventListener("change", () => {
     const mode = el("bMode").value;
     el("tokenPanel").hidden = mode !== "token";
     el("servicePanel").hidden = mode !== "service";
-    el("buildDialog").querySelector("#bNote").textContent = mode === "token"
-      ? "The build runs on GitHub Actions. Your token starts it; your mods are committed to a branch of the "
-        + "build repository for it, and to main never."
-      : "The build service holds the GitHub token, so this page needs none. Deploy gateway/build-worker.js "
-        + "(Cloudflare) or run tools/build-service.mjs locally.";
+    el("bNote").textContent = mode === "token"
+      ? "The build runs on GitHub Actions. Your mods are committed to a branch of the build repository, never to main."
+      : "The build service holds the token, so this page needs none.";
   });
-  el("bToken").addEventListener("change", async () => {
-    store.token = el("bToken").value.trim();
-    const note = el("bTokenNote");
-    if (!store.token) return;
-    const problem = await checkWriteAccess(store.token, el("bRepo").value.trim() || "AmphibianDev/webmc-port");
-    const mark = document.createElement("div");
-    mark.className = problem ? "err" : "ok";
-    mark.style.marginTop = "6px";
-    mark.textContent = problem ? problem : "this token can write to that repository — builds will work";
-    note.querySelectorAll(".check").forEach((node) => node.remove());
-    mark.classList.add("check");
-    note.append(mark);
-  });
-  el("bRepo").addEventListener("change", () => { store.repo = el("bRepo").value.trim(); });
-  wireDrop(el("drop"), (files) => { addMods(files); openBuildDialog(); });
-  wireDrop(el("bDrop"), addMods);
-  el("buildBtn").addEventListener("click", () => openBuildDialog());
-  el("clearBtn").addEventListener("click", () => { state.mods = []; renderChips(); renderChips("bChips", state.mods); });
-  el("bClose").addEventListener("click", (e) => { e.preventDefault(); el("buildDialog").close(); });
-  el("bStart").addEventListener("click", (e) => { e.preventDefault(); startBuild(); });
+  el("bClose").addEventListener("click", () => el("buildDialog").close());
+  el("bStart").addEventListener("click", () => startBuild());
+  wireDrop(el("bDrop"), (files) => addMods(files));
+  pickToken();
 
-  const wanted = new URLSearchParams(location.search).get("version") || store.pick;
-  select(wanted || state.doc.installations[0].id);
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "/" && document.activeElement.tagName !== "INPUT") { event.preventDefault(); el("filter").focus(); show("install"); }
+    if (event.key === "Enter" && !el("buildDialog").open && document.activeElement.tagName !== "INPUT" && document.activeElement.tagName !== "SELECT") el("playBtn").click();
+  });
 }
 
 main().catch((problem) => {
-  el("title").textContent = "Could not load the version list";
-  el("why").textContent = String(problem);
+  el("homeTitle").textContent = "Could not load the version list";
+  el("homeText").textContent = String(problem);
 });
 </script>
 </body>
