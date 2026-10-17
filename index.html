@@ -1,434 +1,586 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>WebMC — Minecraft in the browser</title>
-<meta name="description" content="Minecraft Java Edition, compiled to run in a browser tab. Nine hundred versions, no install, mods baked in at build time." />
+<title>WebMC Launcher</title>
+<!--
+  The launcher, built like the one people already know: an account in the top left, a list of
+  installations down the side, the selected one filling the panel, and PLAY in the bottom right corner.
+
+  Two things are deliberately not here. There is no catalogue of mods to pick from, because the mods a
+  player wants are the player's own - they are dropped in, and for a compiled client they are baked on a
+  build machine, which is what the custom-build flow does. And there are no versions that cannot run: the
+  list is generated (clients.json) from the port's own route data, which decides playability from each
+  version's metadata rather than from anyone's opinion.
+-->
 <style>
   :root {
-    /* The palette is the cover art's: a dark page, lava for the thing to press, grass for what works. */
-    --ink: #0b0b0c;
-    --panel: #131316;
-    --raised: #1a1a1e;
-    --line: #2a2a30;
-    --text: #ececec;
-    --muted: #9a9aa2;
-    --lava: #d2591f;
-    --lava-soft: #7a3413;
-    --grass: #2f9e6b;
-    --amber: #e0b04a;
-    --radius: 10px;
-    --mono: ui-monospace, "SF Mono", Menlo, Consolas, "DejaVu Sans Mono", monospace;
-    font-synthesis: none;
+    --bg: #141415;
+    --panel: #1e1e1f;
+    --panel-2: #262628;
+    --row: #2b2b2d;
+    --row-hover: #343437;
+    --row-on: #3c3c40;
+    --line: #000;
+    --edge: #3a3a3d;
+    --text: #e9e9ea;
+    --muted: #9c9ca1;
+    --dim: #6f6f75;
+    --green: #3c8527;
+    --green-hover: #47a02e;
+    --green-edge: #2a5d1b;
+    --blue: #3b8526;
+    --radius: 4px;
   }
   * { box-sizing: border-box; }
-  html, body { margin: 0; background: var(--ink); color: var(--text); }
-  body { font: 14px/1.55 var(--mono); -webkit-font-smoothing: antialiased; }
-  a { color: inherit; }
-  button, input, select { font: inherit; color: inherit; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    overflow: hidden;
+  }
+  button, input, select, textarea { font: inherit; color: inherit; }
   button { cursor: pointer; }
 
-  .shell { max-width: 1180px; margin: 0 auto; padding: 0 20px 80px; }
+  .app { display: grid; grid-template-columns: 262px 1fr; height: 100vh; }
 
-  /* ---------------------------------------------------------------- header */
-  header.top {
-    position: sticky; top: 0; z-index: 20;
-    backdrop-filter: blur(8px);
-    background: color-mix(in srgb, var(--ink) 82%, transparent);
-    border-bottom: 1px solid var(--line);
+  /* ------------------------------------------------------------------ sidebar */
+  .side {
+    background: var(--panel);
+    border-right: 1px solid var(--line);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
   }
-  header.top .row { max-width: 1180px; margin: 0 auto; padding: 10px 20px; display: flex; align-items: center; gap: 14px; }
-  .mark { display: flex; align-items: center; gap: 9px; font-weight: 700; letter-spacing: .04em; }
-  .mark .cube { width: 16px; height: 16px; background: var(--lava); box-shadow: 4px 4px 0 0 var(--lava-soft); }
-  header.top nav { margin-left: auto; display: flex; gap: 16px; flex-wrap: wrap; }
-  header.top nav a { color: var(--muted); text-decoration: none; }
-  header.top nav a:hover { color: var(--text); }
+  .account { display: flex; align-items: center; gap: 10px; padding: 14px 16px 12px; }
+  .avatar {
+    width: 32px; height: 32px; border-radius: 3px; flex: none;
+    background: linear-gradient(160deg, #79c05a, #3c8527 60%, #2a5d1b);
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.35);
+  }
+  .account b { display: block; font-size: 14px; font-weight: 600; }
+  .account span { display: block; font-size: 12px; color: var(--muted); }
 
-  /* ---------------------------------------------------------------- hero */
-  .hero {
-    position: relative; margin: 22px 0 26px; border: 1px solid var(--line); border-radius: var(--radius);
-    overflow: hidden; min-height: 320px; display: grid; align-items: end;
-    background: #000 url("cover.png") center/cover no-repeat;
+  .side-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 16px 8px;
   }
-  .hero::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(6,6,7,.25) 0%, rgba(6,6,7,.72) 55%, rgba(6,6,7,.95) 100%); }
-  .hero .copy { position: relative; z-index: 1; padding: 26px 26px 22px; }
-  .kicker { color: var(--lava); letter-spacing: .16em; text-transform: uppercase; font-size: 11px; margin: 0 0 6px; }
-  .hero h1 { font-size: clamp(26px, 4.4vw, 44px); line-height: 1.05; margin: 0 0 8px; letter-spacing: -.01em; }
-  .hero p.lede { margin: 0 0 16px; color: #cfcfd4; max-width: 62ch; }
-  .actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
-  .btn {
-    border: 1px solid var(--line); background: var(--raised); color: var(--text);
-    padding: 10px 16px; border-radius: 8px; display: inline-flex; gap: 8px; align-items: center; text-decoration: none;
+  .side-head h2 {
+    font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--muted);
+    margin: 0; font-weight: 700;
   }
-  .btn:hover { border-color: #3d3d46; }
-  .btn.primary { background: var(--lava); border-color: #e97a3f; color: #180a02; font-weight: 700; }
-  .btn.primary:hover { background: #e0662a; }
-  .btn.ghost { background: transparent; }
-  .badge { border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; color: var(--muted); font-size: 12px; }
-  .badge.ok { color: #b7e2cc; border-color: #245c42; }
-  .badge.warn { color: #efd79a; border-color: #6b5420; }
-  .badge.bad { color: #f0b6a2; border-color: #6d2f1f; }
+  .side-head .n { font-size: 11px; color: var(--dim); }
 
-  /* ---------------------------------------------------------------- layout */
-  .grid { display: grid; grid-template-columns: 1.35fr .95fr; gap: 18px; align-items: start; }
-  @media (max-width: 880px) { .grid { grid-template-columns: 1fr; } }
-  section.card { border: 1px solid var(--line); background: var(--panel); border-radius: var(--radius); padding: 16px; }
-  section.card h2 { margin: 0 0 4px; font-size: 15px; letter-spacing: .01em; }
-  section.card p.sub { margin: 0 0 14px; color: var(--muted); }
-  .hint { color: var(--muted); font-size: 12.5px; }
-
-  /* ---------------------------------------------------------------- version list */
-  .filters { display: flex; gap: 8px; flex-wrap: wrap; margin: 0 0 12px; }
-  .filters input[type="search"] {
-    flex: 1 1 200px; min-width: 140px; background: #0f0f12; border: 1px solid var(--line);
-    border-radius: 8px; padding: 8px 10px;
+  .search { padding: 0 12px 10px; }
+  .search input {
+    width: 100%; background: var(--bg); border: 1px solid var(--edge); border-radius: var(--radius);
+    padding: 7px 9px; font-size: 13px;
   }
-  .filters select { background: #0f0f12; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; }
-  .list { max-height: 430px; overflow: auto; border: 1px solid var(--line); border-radius: 8px; }
+  .search input:focus { outline: 1px solid #5a5a60; }
+
+  .list { overflow-y: auto; flex: 1; padding: 0 8px 8px; min-height: 0; }
   .row {
-    display: grid; grid-template-columns: 1fr auto auto; gap: 10px; align-items: center;
-    padding: 8px 11px; border-bottom: 1px solid #1e1e23; cursor: pointer; background: transparent; width: 100%; text-align: left;
+    display: flex; align-items: center; gap: 10px; width: 100%;
+    background: none; border: 0; border-radius: var(--radius);
+    padding: 7px 8px; text-align: left; color: var(--text);
   }
-  .row:last-child { border-bottom: 0; }
-  .row:hover { background: #16161b; }
-  .row[aria-selected="true"] { background: #1d1d23; box-shadow: inset 3px 0 0 0 var(--lava); }
-  .row .id { font-weight: 600; }
-  .row .meta { color: var(--muted); font-size: 12px; }
-
-  /* ---------------------------------------------------------------- detail */
-  dl.facts { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; margin: 12px 0 0; }
-  dl.facts dt { color: var(--muted); }
-  dl.facts dd { margin: 0; }
-  .provenance { margin-top: 12px; border-top: 1px solid var(--line); padding-top: 10px; }
-  .provenance div { display: flex; justify-content: space-between; gap: 10px; padding: 2px 0; color: var(--muted); }
-  .provenance b { color: var(--text); font-weight: 500; }
-
-  /* ---------------------------------------------------------------- mods */
-  table.mods { width: 100%; border-collapse: collapse; }
-  table.mods th, table.mods td { text-align: left; padding: 6px 8px 6px 0; border-bottom: 1px solid #1e1e23; vertical-align: top; }
-  table.mods th { color: var(--muted); font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
-  .meter { height: 6px; background: #232329; border-radius: 4px; overflow: hidden; min-width: 70px; }
-  .meter > i { display: block; height: 100%; background: var(--grass); }
-  .meter.partial > i { background: var(--amber); }
-  .meter.none > i { background: #6d2f1f; }
-  details.more { margin-top: 10px; }
-  details.more summary { cursor: pointer; color: var(--muted); }
-
-  /* ---------------------------------------------------------------- build form */
-  form.build { display: grid; gap: 8px; margin-top: 6px; }
-  form.build label { color: var(--muted); font-size: 12.5px; }
-  form.build input, form.build select, form.build textarea {
-    background: #0f0f12; border: 1px solid var(--line); border-radius: 8px; padding: 8px 10px; width: 100%;
+  .row:hover { background: var(--row-hover); }
+  .row[aria-selected="true"] { background: var(--row-on); }
+  .row .ico {
+    width: 34px; height: 34px; border-radius: 3px; flex: none;
+    display: grid; place-items: center; font-size: 11px; font-weight: 700; color: #0d0d0e;
+    background: linear-gradient(165deg, #b8b8bd, #85858c);
+    box-shadow: inset 0 0 0 1px rgba(0,0,0,.4);
   }
-  form.build textarea { min-height: 62px; resize: vertical; }
-  .job { border: 1px solid var(--line); border-radius: 8px; padding: 10px; margin-top: 10px; background: #0f0f12; }
-  .job ol { margin: 8px 0 0; padding-left: 18px; max-height: 140px; overflow: auto; color: var(--muted); }
-  .job code { color: var(--text); }
+  .row.compiled .ico { background: linear-gradient(165deg, #8fd06c, #3c8527); }
+  .row.real-java .ico { background: linear-gradient(165deg, #9ad0e8, #2f7fa8); }
+  .row .txt { min-width: 0; }
+  .row .txt b { display: block; font-size: 13.5px; font-weight: 600; }
+  .row .txt span { display: block; font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row.new .ico { background: none; box-shadow: none; color: var(--muted); font-size: 20px; }
 
-  footer { margin-top: 34px; color: var(--muted); font-size: 12.5px; border-top: 1px solid var(--line); padding-top: 16px; display: grid; gap: 6px; }
-  footer a { color: #c8c8cf; }
+  .side-foot { border-top: 1px solid var(--line); padding: 8px; display: flex; gap: 6px; }
+  .side-foot button {
+    flex: 1; background: none; border: 0; color: var(--muted); padding: 8px; border-radius: var(--radius);
+    font-size: 12.5px;
+  }
+  .side-foot button:hover { background: var(--row-hover); color: var(--text); }
+
+  /* ------------------------------------------------------------------ main */
+  .main { display: flex; flex-direction: column; min-width: 0; background: var(--panel); }
+  .top {
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 16px;
+    padding: 18px 22px 14px;
+  }
+  .top h1 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: .2px; }
+  .badges { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+  .badge {
+    font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted);
+    border: 1px solid var(--edge); border-radius: 999px; padding: 3px 9px;
+  }
+  .badge.ok { color: #b6e39a; border-color: #3c8527; }
+  .link { color: #8fc7ff; text-decoration: none; font-size: 13px; }
+  .link:hover { text-decoration: underline; }
+
+  .stage { flex: 1; min-height: 0; overflow-y: auto; padding: 0 22px 22px; }
+  .card {
+    background: var(--panel-2); border: 1px solid var(--edge); border-radius: 6px;
+    padding: 14px 16px; margin-bottom: 12px;
+  }
+  .card h3 { margin: 0 0 6px; font-size: 13px; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+  .card p { margin: 0; color: #cfcfd4; font-size: 13.5px; }
+  .facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 12px; }
+  .fact { background: var(--bg); border: 1px solid var(--edge); border-radius: var(--radius); padding: 9px 11px; }
+  .fact b { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--dim); }
+  .fact span { font-size: 13.5px; }
+
+  .drop {
+    border: 2px dashed #4a4a4f; border-radius: 6px; padding: 20px; text-align: center; color: var(--muted);
+    background: rgba(0,0,0,.18); font-size: 13.5px;
+  }
+  .drop.hot { border-color: var(--green); color: #cfe9c2; background: rgba(60,133,39,.14); }
+  .drop b { color: var(--text); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 7px; background: var(--bg); border: 1px solid var(--edge);
+    border-radius: 999px; padding: 4px 10px 4px 12px; font-size: 12.5px;
+  }
+  .chip button { background: none; border: 0; color: var(--muted); font-size: 14px; line-height: 1; padding: 0; }
+  .chip button:hover { color: #ff9b9b; }
+
+  .bar { display: flex; align-items: center; gap: 14px; padding: 14px 22px; border-top: 1px solid var(--line); background: var(--panel); }
+  .bar .spacer { flex: 1; }
+  .bar select {
+    background: var(--bg); border: 1px solid var(--edge); border-radius: var(--radius);
+    padding: 11px 12px; min-width: 190px;
+  }
+  .play {
+    background: var(--green); border: 0; border-radius: var(--radius); color: #fff;
+    font-size: 17px; font-weight: 600; letter-spacing: .06em; padding: 12px 46px;
+    box-shadow: inset 0 -3px 0 rgba(0,0,0,.28);
+  }
+  .play:hover { background: var(--green-hover); }
+  .play:disabled { background: #3a3a3d; color: #8b8b91; box-shadow: none; cursor: not-allowed; }
+  .ghost {
+    background: none; border: 1px solid var(--edge); border-radius: var(--radius); color: var(--text);
+    padding: 11px 16px; font-size: 13.5px;
+  }
+  .ghost:hover { background: var(--row-hover); }
+
+  /* ------------------------------------------------------------------ dialog */
+  dialog {
+    background: var(--panel); color: var(--text); border: 1px solid var(--edge); border-radius: 6px;
+    padding: 0; width: min(560px, 92vw); box-shadow: 0 24px 70px rgba(0,0,0,.6);
+  }
+  dialog::backdrop { background: rgba(0,0,0,.62); }
+  .dlg-head { padding: 16px 18px 6px; }
+  .dlg-head h2 { margin: 0 0 4px; font-size: 18px; }
+  .dlg-head p { margin: 0; color: var(--muted); font-size: 13px; }
+  .dlg-body { padding: 14px 18px; display: grid; gap: 12px; }
+  .dlg-body label { font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  .dlg-body input[type="text"], .dlg-body select {
+    width: 100%; background: var(--bg); border: 1px solid var(--edge); border-radius: var(--radius);
+    padding: 10px 11px; margin-top: 5px;
+  }
+  .dlg-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 12px 18px 18px; }
+  .note { color: var(--muted); font-size: 12.5px; }
+  .warn { color: #ffd28a; }
+  .err { color: #ff9b9b; }
+  .ok { color: #b6e39a; }
+  .log {
+    background: #0f0f10; border: 1px solid var(--edge); border-radius: var(--radius);
+    padding: 10px; font: 12px/1.5 ui-monospace, SFMono-Regular, Menlo, monospace;
+    max-height: 170px; overflow-y: auto; white-space: pre-wrap; color: #bdbdc2;
+  }
+  .progress { height: 6px; background: #0f0f10; border-radius: 999px; overflow: hidden; }
+  .progress i { display: block; height: 100%; width: 0; background: var(--green); transition: width .4s; }
+  @media (max-width: 760px) { .app { grid-template-columns: 200px 1fr; } .play { padding: 12px 26px; } }
 </style>
 </head>
 <body>
-<header class="top">
-  <div class="row">
-    <span class="mark"><span class="cube"></span> WEBMC</span>
-    <nav>
-      <a href="#versions">Versions</a>
-      <a href="#mods">Mods</a>
-      <a href="#build">Custom build</a>
-      <a id="repoLink" href="https://github.com/AmphibianDev/webmc-port" rel="noopener">Source</a>
-    </nav>
-  </div>
-</header>
-
-<div class="shell">
-  <div class="hero">
-    <div class="copy">
-      <p class="kicker">Minecraft Java Edition · compiled for the browser</p>
-      <h1>Play Minecraft in a tab.<br />No install, no launcher.</h1>
-      <p class="lede" id="lede">Loading the catalogue…</p>
-      <div class="actions">
-        <a class="btn primary" id="playLatest" href="#">▶ Play</a>
-        <a class="btn ghost" href="#mods">What about mods?</a>
-        <span class="badge" id="countBadge">…</span>
+<div class="app">
+  <!-- ------------------------------------------------------------- sidebar -->
+  <aside class="side">
+    <div class="account">
+      <div class="avatar" aria-hidden="true"></div>
+      <div>
+        <b id="who">Player</b>
+        <span id="whoSub">playing in the browser</span>
       </div>
     </div>
-  </div>
 
-  <div class="grid">
-    <section class="card" id="versions">
-      <h2 id="versionCount">Versions</h2>
-      <p class="sub">Every version Mojang has released, with what this browser can do with it.</p>
-      <div class="filters">
-        <input type="search" id="search" placeholder="Search a version (26.3, 1.21.11, 1.8.9)…" />
-        <select id="kind">
-          <option value="">All types</option>
-          <option value="release">Releases</option>
-          <option value="snapshot">Snapshots</option>
-          <option value="old_beta">Betas</option>
-          <option value="old_alpha">Alphas</option>
-        </select>
-        <select id="filter">
-          <option value="playable">Playable only</option>
-          <option value="all">Everything</option>
-          <option value="mods">Moddable rows</option>
-        </select>
-      </div>
-      <div class="list" id="list" role="listbox" aria-label="Versions"></div>
-      <p class="hint" id="listHint"></p>
-    </section>
-
-    <section class="card" id="detail">
-      <h2 id="detailTitle">Pick a version</h2>
-      <p class="sub" id="detailSub">What it runs on, and what the browser replaces.</p>
-      <div id="detailBody"></div>
-    </section>
-  </div>
-
-  <section class="card" id="mods" style="margin-top:18px">
-    <h2>Mods</h2>
-    <p class="sub" id="modsSub">Real Fabric mods, merged into the client before it is compiled. Measured, not claimed.</p>
-    <div id="modsBody"></div>
-  </section>
-
-  <section class="card" id="build" style="margin-top:18px">
-    <h2>Custom build</h2>
-    <p class="sub">
-      Baking is a compile — 30–45 minutes on a build machine, cached after the first time — so it cannot happen in this
-      tab. Ask for a client with the mods you want and a build runs for you.
-    </p>
-    <form class="build" id="buildForm">
-      <div>
-        <label for="bVersion">Minecraft version</label>
-        <select id="bVersion"></select>
-      </div>
-      <div>
-        <label for="bMods">Mods — ids from the list above, or one URL per line (Modrinth, GitHub release)</label>
-        <textarea id="bMods" placeholder="meteor-client&#10;fabric-api&#10;https://cdn.modrinth.com/data/…/sodium.jar"></textarea>
-      </div>
-      <div>
-        <label for="bService">Build service</label>
-        <input id="bService" placeholder="http://127.0.0.1:8787" />
-      </div>
-      <div class="actions">
-        <button class="btn primary" type="submit">Ask for a build</button>
-        <span class="hint">A service for this is <code>webmc-mods/tools/build-service.mjs</code>; it drives the build job
-          and serves the finished client.</span>
-      </div>
-    </form>
-    <div id="buildOut"></div>
-  </section>
-
-  <footer>
-    <div>Compiled from the official client at build time. Not an official Minecraft product: not approved by or associated with Mojang or Microsoft.</div>
-    <div id="footCounts"></div>
-    <div>
-      <a href="https://github.com/AmphibianDev/webmc-port" rel="noopener">Source</a> ·
-      <a href="https://github.com/AmphibianDev/webmc-port/blob/main/CREDITS.md" rel="noopener">Credits</a> ·
-      <a href="https://github.com/AmphibianDev/webmc-port/blob/main/COMPLIANCE.md" rel="noopener">Compliance</a> ·
-      <a href="https://github.com/AmphibianDev/webmc-port/blob/main/MIXINS.md" rel="noopener">Mixin contract</a>
+    <div class="side-head">
+      <h2>Installations</h2>
+      <span class="n" id="count">…</span>
     </div>
-  </footer>
+    <div class="search"><input id="filter" type="search" placeholder="Search versions…" autocomplete="off" /></div>
+
+    <div class="list" id="list" role="listbox" aria-label="Installations"></div>
+
+    <div class="side-foot">
+      <button id="newBtn">+ New installation</button>
+      <button id="sourceBtn">Source</button>
+    </div>
+  </aside>
+
+  <!-- ---------------------------------------------------------------- main -->
+  <main class="main">
+    <div class="top">
+      <div>
+        <h1 id="title">Pick an installation</h1>
+        <div class="badges" id="badges"></div>
+      </div>
+      <a class="link" id="openBtn" href="#" hidden>Open the page directly ↗</a>
+    </div>
+
+    <div class="stage">
+      <div class="card">
+        <h3>What this is</h3>
+        <p id="why">Choose a version on the left. Every version in this list runs in the browser — either the
+          official jar in a page (a real JVM compiled to WebAssembly) or a client compiled from it.</p>
+        <div class="facts" id="facts"></div>
+      </div>
+
+      <div class="card">
+        <h3>Mods</h3>
+        <p class="note" id="modsNote">Mods are yours: there is no list to pick from. Compiled clients are built with
+          the mods you drop in; versions on the real-JVM route take them at play time.</p>
+        <div class="drop" id="drop" style="margin-top:12px">
+          Drop mod jars here, or <b>click to choose</b> — then build.
+        </div>
+        <div class="chips" id="chips"></div>
+        <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap">
+          <button class="ghost" id="buildBtn">Build with these mods</button>
+          <button class="ghost" id="clearBtn">Clear</button>
+        </div>
+        <p class="note" id="buildNote" style="margin-top:10px"></p>
+      </div>
+    </div>
+
+    <div class="bar">
+      <select id="chooser" aria-label="Selected installation"></select>
+      <div class="spacer"></div>
+      <button class="ghost" id="detailsBtn">Details</button>
+      <button class="play" id="playBtn">PLAY</button>
+    </div>
+  </main>
 </div>
 
+<dialog id="buildDialog">
+  <form method="dialog" class="dlg-head">
+    <h2>New installation</h2>
+    <p>Pick a version, add the mods you want, and let a build machine do the work. Only the mods you choose are
+      built in — nothing is pre-baked.</p>
+  </form>
+  <div class="dlg-body">
+    <label>Version
+      <input id="bVersion" type="text" list="versionOptions" value="26.2" autocomplete="off" />
+      <datalist id="versionOptions"></datalist>
+    </label>
+    <div>
+      <label>Mod files</label>
+      <div class="drop" id="bDrop" style="margin-top:6px">Drop mod jars here, or click to choose</div>
+      <input id="bFiles" type="file" multiple accept=".jar,.zip" hidden />
+      <div class="chips" id="bChips"></div>
+    </div>
+    <label>Build machine
+      <input id="bService" type="text" spellcheck="false" />
+    </label>
+    <div class="progress" id="bProgress"><i></i></div>
+    <div class="log" id="bLog" hidden></div>
+    <p class="note" id="bNote">A bake compiles a client, which takes 30–45 minutes on the build machine. The mods
+      that cannot be baked (anything with native libraries, such as Distant Horizons) are refused before the
+      build starts, with the reason.</p>
+  </div>
+  <div class="dlg-foot">
+    <button class="ghost" id="bClose">Close</button>
+    <button class="play" id="bStart" style="padding:10px 26px; font-size:15px">Build</button>
+  </div>
+</dialog>
+
 <script>
-"use strict";
-const CLIENT_BASE = "https://amphibiandev.github.io/webmc-port/clients/";
-const $ = (id) => document.getElementById(id);
-const state = { versions: [], playable: new Map(), selected: null, mods: null };
+const DEFAULT_SERVICE = "http://127.0.0.1:8787";
+const state = { doc: null, pick: null, mods: [], job: null };
 
-const cache = {};
-async function loadJson(name) {
-  if (cache[name]) return cache[name];
-  const response = await fetch(name + (name.includes("?") ? "" : "?v=" + Date.now()), { cache: "no-cache" });
-  if (!response.ok) throw new Error(name + ": HTTP " + response.status);
-  cache[name] = await response.json();
-  return cache[name];
-}
-
-const VERDICT_BADGE = {
-  playable: ["ok", "playable"],
-  native: ["warn", "needs LWJGL"],
-  rosetta: ["warn", "needs Rosetta"],
-  blocked: ["bad", "blocked"],
-  unknown: ["", "unchecked"],
+const el = (id) => document.getElementById(id);
+const store = {
+  get service() { try { return localStorage.getItem("webmc.service") || DEFAULT_SERVICE; } catch { return DEFAULT_SERVICE; } },
+  set service(v) { try { localStorage.setItem("webmc.service", v); } catch {} },
+  get pick() { try { return localStorage.getItem("webmc.pick") || ""; } catch { return ""; } },
+  set pick(v) { try { localStorage.setItem("webmc.pick", v); } catch {} },
 };
 
-function verdictOf(entry) {
-  if (!entry) return "unknown";
-  if (entry.playable === false) return "blocked";
-  if (entry.verdict === "playable" || entry.playable === true) return "playable";
-  return entry.verdict || "unknown";
+function bytes(n) {
+  if (!n) return "";
+  const units = ["B", "KB", "MB", "GB"];
+  let i = 0;
+  while (n >= 1024 && i < units.length - 1) { n /= 1024; i++; }
+  return `${n < 10 && i > 0 ? n.toFixed(1) : Math.round(n)} ${units[i]}`;
 }
 
-function badgeFor(entry) {
-  const kind = verdictOf(entry);
-  const [tone, label] = VERDICT_BADGE[kind] || ["", kind];
-  return `<span class="badge ${tone}">${label}</span>`;
+function label(entry) {
+  return entry.kind === "compiled" ? "Compiled client" : `Real Java ${entry.java ? `· Java ${entry.java}` : ""}`;
 }
 
+/* ------------------------------------------------------------------ the list */
 function renderList() {
-  const query = $("search").value.trim().toLowerCase();
-  const kind = $("kind").value;
-  const filter = $("filter").value;
-  const rows = state.versions.filter((version) => {
-    if (query && !version.id.toLowerCase().includes(query)) return false;
-    if (kind && version.type !== kind) return false;
-    const entry = state.playable.get(version.id);
-    if (filter === "playable" && verdictOf(entry) !== "playable") return false;
-    if (filter === "mods" && !(entry && entry.mods)) return false;
-    return true;
+  const filter = el("filter").value.trim().toLowerCase();
+  const rows = state.doc.installations.filter((entry) => {
+    if (!filter) return true;
+    return entry.id.toLowerCase().includes(filter) || entry.kind.includes(filter);
   });
-  const shown = rows.slice(0, 400);
-  $("list").innerHTML = shown.map((version) => {
-    const entry = state.playable.get(version.id) || {};
-    return `<button class="row" role="option" data-id="${version.id}" aria-selected="${state.selected === version.id}">
-      <span><span class="id">${version.id}</span> <span class="meta">${version.type}${version.released ? " · " + version.released : ""}</span></span>
-      <span class="meta">${entry.java ? "Java " + entry.java : ""} ${entry.lwjgl ? "· LWJGL " + entry.lwjgl : ""}</span>
-      <span>${badgeFor(entry)}</span>
-    </button>`;
-  }).join("") || `<p class="hint" style="padding:12px">Nothing matches that.</p>`;
-  for (const row of $("list").querySelectorAll(".row")) {
-    row.onclick = () => select(row.dataset.id);
+  const list = el("list");
+  list.textContent = "";
+  for (const entry of rows.slice(0, 400)) {
+    const row = document.createElement("button");
+    row.className = `row ${entry.kind}`;
+    row.setAttribute("role", "option");
+    row.setAttribute("aria-selected", String(entry.id === state.pick));
+    row.innerHTML = `<span class="ico">${entry.kind === "compiled" ? "AOT" : "JVM"}</span>
+      <span class="txt"><b></b><span></span></span>`;
+    row.querySelector("b").textContent = entry.id;
+    row.querySelector(".txt span").textContent = label(entry)
+      + (entry.kind === "compiled" ? " · mods built in" : " · mods at play time");
+    row.addEventListener("click", () => select(entry.id));
+    list.append(row);
   }
-  $("listHint").textContent = `${rows.length} version(s) match` + (rows.length > shown.length ? `, showing the first ${shown.length}` : "");
+  el("count").textContent = `${state.doc.counts.playable} playable`;
 }
 
 function select(id) {
-  state.selected = id;
-  const version = state.versions.find((item) => item.id === id) || { id, type: "?", released: "" };
-  const entry = state.playable.get(id) || {};
-  const kind = verdictOf(entry);
-  $("detailTitle").textContent = version.id;
-  $("detailSub").innerHTML = `${version.type}${version.released ? " · released " + version.released : ""} · ${badgeFor(entry)}`;
-  const provenance = entry.provenance ? Object.entries(entry.provenance).map(([what, why]) => `<div><span>${what}</span><b>${why}</b></div>`).join("") : "";
-  $("detailBody").innerHTML = `
-    <dl class="facts">
-      <dt>Java</dt><dd>${entry.java || "—"}</dd>
-      <dt>LWJGL</dt><dd>${entry.lwjgl || "—"}</dd>
-      <dt>Mods</dt><dd>${entry.mods ? "baked in at build time" : "not on this row"}</dd>
-      <dt>Loaders</dt><dd>${(entry.loaders || ["—"]).join(", ")}</dd>
-    </dl>
-    ${entry.reason ? `<p class="hint" style="margin-top:10px">${entry.reason}</p>` : ""}
-    ${provenance ? `<div class="provenance">${provenance}</div>` : ""}
-    <div class="actions" style="margin-top:14px">
-      <a class="btn ${kind === "playable" ? "primary" : ""}" href="${CLIENT_BASE}${encodeURIComponent(version.id)}/" rel="noopener">
-        ${kind === "playable" ? "▶ Play in a tab" : "Open (may not run)"}
-      </a>
-      <button class="btn ghost" type="button" id="copyLink">Copy link</button>
-    </div>`;
-  const copy = $("copyLink");
-  if (copy) copy.onclick = () => { navigator.clipboard?.writeText(CLIENT_BASE + encodeURIComponent(version.id) + "/"); copy.textContent = "Copied"; setTimeout(() => (copy.textContent = "Copy link"), 1200); };
+  const entry = state.doc.installations.find((e) => e.id === id) || state.doc.installations[0];
+  if (!entry) return;
+  state.pick = entry.id;
+  store.pick = entry.id;
+  el("title").textContent = entry.id;
+  el("why").textContent = entry.why || "";
+  const badges = el("badges");
+  badges.textContent = "";
+  const add = (text, cls = "") => {
+    const b = document.createElement("span");
+    b.className = `badge ${cls}`;
+    b.textContent = text;
+    badges.append(b);
+  };
+  add(entry.kind === "compiled" ? "compiled client" : "real JVM in the page", "ok");
+  if (entry.java) add(`java ${entry.java}`);
+  if (entry.lwjgl) add(`lwjgl ${entry.lwjgl}`);
+  add(entry.kind === "compiled" ? "mods baked in" : "mods at play time");
+
+  const facts = el("facts");
+  facts.textContent = "";
+  const fact = (name, value) => {
+    const d = document.createElement("div");
+    d.className = "fact";
+    d.innerHTML = "<b></b><span></span>";
+    d.querySelector("b").textContent = name;
+    d.querySelector("span").textContent = value;
+    facts.append(d);
+  };
+  fact("Route", entry.kind === "compiled" ? "compiled from the official client" : "official jar in the page");
+  fact("Engine", entry.kind === "compiled" ? "a browser compiler (TeaVM)" : "CheerpJ, Apache-2.0");
+  fact("Mods", entry.mods || "—");
+  fact("Runs", "entirely in your browser");
+
+  el("openBtn").href = entry.url;
+  el("openBtn").hidden = false;
+  el("chooser").value = entry.id;
+  el("modsNote").textContent = entry.kind === "compiled"
+    ? "This is a compiled client: the mods it was built with are inside it. To use your own, build a new "
+      + "installation with the mods you want — the bake is done on a build machine, not here."
+    : "This one runs the official jar in a real JVM, so mods load at play time — Fabric and its API come "
+      + "from the page. To bake mods into a compiled client instead, use New installation.";
   renderList();
 }
 
-function renderMods(data) {
-  const totals = data.totals || { mods: 0, mixins: 0, appliable: 0 };
-  $("modsSub").innerHTML = `${totals.mods} mods measured · ${totals.appliable} of ${totals.mixins} mixin classes merge today. ` +
-    `Mods are merged into the client before it is compiled — a browser tab has no class loader, so there is nothing to load a jar with afterwards.`;
-  const rows = data.mods.map((mod) => {
-    const ratio = mod.mixins ? mod.appliable / mod.mixins : mod.verdict === "bundle" ? 1 : 0;
-    const tone = mod.verdict === "never" ? "none" : ratio >= 1 ? "" : "partial";
-    const state = mod.verdict === "never" ? "<span class='badge bad'>cannot work</span>"
-      : mod.verdict === "bundle" ? "<span class='badge ok'>container</span>"
-      : ratio >= 1 ? "<span class='badge ok'>supported</span>" : `<span class='badge warn'>${mod.appliable}/${mod.mixins}</span>`;
-    return `<tr>
-      <td><b>${mod.name}</b><br /><span class="hint">${mod.id}${mod.version ? " " + mod.version : ""}</span></td>
-      <td>${state}</td>
-      <td>${mod.mixins ? `<div class="meter ${tone}"><i style="width:${Math.round(ratio * 100)}%"></i></div>` : ""}
-        <span class="hint">${mod.mixins ? mod.appliable + " of " + mod.mixins + " mixins" : mod.kind === "baked" ? "in the build" : "—"}</span></td>
-      <td><span class="hint">${mod.note || (mod.native ? "native libraries" : "")}</span></td>
-    </tr>`;
-  }).join("");
-  $("modsBody").innerHTML = `
-    <table class="mods">
-      <thead><tr><th>Mod</th><th>State</th><th>Mixins merged</th><th>Note</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-    <details class="more">
-      <summary>How a mod gets in, in three routes</summary>
-      <p class="hint">
-        <b>Baked</b> — the jar is read at build time: its entrypoint is called from the client's own initialiser and its
-        mixins are merged into the client's classes before the compile. That is the route for Java/Fabric mods, and it
-        is the one that needs a build.<br />
-        <b>Runs as it is</b> — the jar carries a browser payload; it is added in the mods panel and loads immediately.<br />
-        <b>Cannot work</b> — native libraries, JNI, Unsafe, or mixins generated at run time. No browser client can do
-        those, and the build says so by name instead of dropping them quietly.
-      </p>
-    </details>`;
-}
-
-function fillVersions() {
-  const picker = $("bVersion");
-  const good = state.versions.filter((version) => state.playable.get(version.id));
-  picker.innerHTML = good.slice(0, 120).map((version) => `<option value="${version.id}">${version.id}</option>`).join("");
-  picker.value = "26.2";
-}
-
-async function askForBuild(event) {
-  event.preventDefault();
-  const out = $("buildOut");
-  const service = ($("bService").value.trim() || "http://127.0.0.1:8787").replace(/\/$/, "");
-  localStorage.setItem("webmc.buildService", service);
-  const version = $("bVersion").value;
-  const lines = $("bMods").value.split("\n").map((line) => line.trim()).filter(Boolean);
-  const mods = lines.map((line) => (/^https?:\/\//i.test(line) ? { url: line } : { id: line }));
-  if (!mods.length) { out.innerHTML = `<p class="hint">Name at least one mod.</p>`; return; }
-  out.innerHTML = `<div class="job"><b>Asking ${service}…</b></div>`;
-  try {
-    const response = await fetch(service + "/api/build", {
-      method: "POST", headers: { "content-type": "application/json" },
-      body: JSON.stringify({ version, mods }),
-    });
-    const started = await response.json();
-    if (!response.ok || started.error) throw new Error(started.error || ("HTTP " + response.status));
-    out.innerHTML = `<div class="job">Build <code>${started.id}</code> is queued on the service.
-      <a href="${service}/" rel="noopener">Open the build service</a> to watch it — it takes 30–45 minutes the first
-      time, and is instant afterwards for the same mod set.</div>`;
-  } catch (error) {
-    out.innerHTML = `<div class="job">Could not reach a build service at <code>${service}</code>.
-      <span class="hint">Run it with <code>node webmc-mods/tools/build-service.mjs</code> on a machine with the toolchain
-      (or point this at one that is already running). ${String(error.message || error)}</span></div>`;
+/* ------------------------------------------------------------------ mods */
+function addMods(files) {
+  for (const file of files) {
+    if (!/\.(jar|zip)$/i.test(file.name)) continue;
+    if (state.mods.some((m) => m.name === file.name && m.size === file.size)) continue;
+    state.mods.push(file);
   }
+  renderChips();
+}
+
+function renderChips(into = "chips", list = state.mods) {
+  const box = el(into);
+  box.textContent = "";
+  for (const file of list) {
+    const chip = document.createElement("span");
+    chip.className = "chip";
+    chip.innerHTML = "<span></span><button title=\"remove\">×</button>";
+    chip.querySelector("span").textContent = `${file.name} · ${bytes(file.size)}`;
+    chip.querySelector("button").addEventListener("click", () => {
+      const at = list.indexOf(file);
+      if (at >= 0) list.splice(at, 1);
+      renderChips(into, list);
+    });
+    box.append(chip);
+  }
+}
+
+/* ------------------------------------------------------------------ the bake */
+function log(line, cls = "") {
+  const box = el("bLog");
+  box.hidden = false;
+  const span = document.createElement("div");
+  if (cls) span.className = cls;
+  span.textContent = line;
+  box.append(span);
+  box.scrollTop = box.scrollHeight;
+}
+
+async function startBuild() {
+  const service = el("bService").value.trim().replace(/\/+$/, "") || DEFAULT_SERVICE;
+  store.service = service;
+  const version = el("bVersion").value.trim();
+  if (!version) { log("a version is needed", "warn"); return; }
+  el("bStart").disabled = true;
+  el("bProgress").firstElementChild.style.width = "4%";
+  log(`asking ${service} to build ${version} with ${state.mods.length} mod(s)`);
+  try {
+    const body = new FormData();
+    body.set("version", version);
+    for (const file of state.mods) body.append("mods", file, file.name);
+    const response = await fetch(`${service}/api/build`, { method: "POST", body });
+    const answer = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(answer.error || `${response.status} ${response.statusText}`);
+    log(`job ${answer.key || answer.id || "?"} accepted`, "ok");
+    poll(answer);
+  } catch (problem) {
+    el("bStart").disabled = false;
+    el("bProgress").firstElementChild.style.width = "0";
+    log(String(problem.message || problem), "err");
+    log("the build machine has to be reachable from this page: run it with "
+      + "`node tools/build-service.mjs` in webmc-mods and put its address above.", "warn");
+  }
+}
+
+async function poll(job) {
+  const service = store.service;
+  const id = job.key || job.id;
+  const client = job.client || `/client/${id}/`;
+  let stage = "";
+  for (let attempt = 0; attempt < 1200; attempt++) {
+    await new Promise((r) => setTimeout(r, attempt < 10 ? 3000 : 15000));
+    let answer;
+    try {
+      const response = await fetch(`${service}/api/build?id=${encodeURIComponent(id)}`);
+      answer = await response.json();
+    } catch {
+      continue;   // the machine was restarted, or the page slept: keep asking
+    }
+    if (answer.stage && answer.stage !== stage) {
+      stage = answer.stage;
+      const percent = Math.max(6, Math.min(96, Number(answer.percent) || 0));
+      el("bProgress").firstElementChild.style.width = `${percent}%`;
+      log(stage + (answer.detail ? ` — ${answer.detail}` : ""));
+    }
+    if (answer.state === "done" || answer.state === "ready") {
+      el("bProgress").firstElementChild.style.width = "100%";
+      log("ready", "ok");
+      const url = answer.client || client;
+      const entry = { id: `${job.version || el("bVersion").value} + your mods`, kind: "compiled", url,
+                      why: `Built by the build machine with ${state.mods.length} of your mod(s).`,
+                      mods: "the ones you picked", java: null, lwjgl: null };
+      state.doc.installations.unshift(entry);
+      state.doc.counts.playable++;
+      select(entry.id);
+      el("bStart").disabled = false;
+      return;
+    }
+    if (answer.state === "failed") {
+      el("bStart").disabled = false;
+      log(answer.error || "the build failed", "err");
+      for (const line of (answer.log || "").split("\n").slice(-12)) log(line);
+      return;
+    }
+  }
+  el("bStart").disabled = false;
+  log("still building after three hours; the machine keeps going, this dialog does not", "warn");
+}
+
+/* ------------------------------------------------------------------ wiring */
+function openBuildDialog(files = []) {
+  if (files.length) addMods(files);
+  el("bService").value = store.service;
+  renderChips("bChips", state.mods);
+  const options = el("versionOptions");
+  options.textContent = "";
+  const add = (id, why) => {
+    const option = document.createElement("option");
+    option.value = id;
+    if (why) option.label = why;
+    options.append(option);
+  };
+  for (const entry of state.doc.installations.filter((e) => e.kind === "compiled")) add(entry.id, "already built");
+  for (const entry of state.doc.buildable || []) add(entry.id, "can be built");
+  el("buildDialog").showModal();
+}
+
+function wireDrop(zone, onFiles) {
+  const input = document.createElement("input");
+  input.type = "file";
+  input.multiple = true;
+  input.accept = ".jar,.zip";
+  input.hidden = true;
+  document.body.append(input);
+  input.addEventListener("change", () => { onFiles([...input.files]); input.value = ""; });
+  zone.addEventListener("click", () => input.click());
+  for (const event of ["dragenter", "dragover"]) {
+    zone.addEventListener(event, (e) => { e.preventDefault(); zone.classList.add("hot"); });
+  }
+  for (const event of ["dragleave", "drop"]) {
+    zone.addEventListener(event, () => zone.classList.remove("hot"));
+  }
+  zone.addEventListener("drop", (e) => {
+    e.preventDefault();
+    onFiles([...e.dataTransfer.files]);
+  });
 }
 
 async function main() {
-  $("bService").value = localStorage.getItem("webmc.buildService") || "http://127.0.0.1:8787";
-  try {
-    const [versions, playable, mods] = await Promise.all([loadJson("versions.json"), loadJson("playable.json"), loadJson("mods.json")]);
-    state.versions = versions.versions || [];
-    for (const entry of playable.versions || []) state.playable.set(entry.id, entry);
-    state.mods = mods;
-    const playableCount = state.versions.filter((version) => verdictOf(state.playable.get(version.id)) === "playable").length;
-    const latest = versions.latest || {};
-    $("lede").textContent = `${versions.count} versions of Minecraft Java Edition, compiled to run in a tab: `
-      + `${playableCount} of them playable right now, ${state.mods.totals.mods} mods measured for the modded rows. `
-      + `Single-player is included; joining a server needs a gateway, because a page cannot open a TCP socket.`;
-    $("countBadge").textContent = `${versions.count} versions`;
-    const playTarget = latest.release && state.playable.get(latest.release) ? latest.release
-      : (state.versions.find((version) => verdictOf(state.playable.get(version.id)) === "playable") || {}).id;
-    $("playLatest").href = CLIENT_BASE + encodeURIComponent(playTarget || "26.3") + "/";
-    $("playLatest").textContent = "▶ Play " + (playTarget || "26.3");
-    $("versionCount").textContent = `${versions.count} versions`;
-    $("footCounts").textContent = `Latest release ${latest.release || "?"} · latest snapshot ${latest.snapshot || "?"} · `
-      + `catalogue generated ${playable.generated || "?"} on a ${playable.machine || "?"}`;
-    $("repoLink").href = "https://github.com/AmphibianDev/webmc-port";
-    renderMods(state.mods);
-    fillVersions();
-    $("search").oninput = renderList;
-    $("kind").onchange = renderList;
-    $("filter").onchange = renderList;
-    $("buildForm").onsubmit = askForBuild;
-    const preferred = ["26.3", "26.2", "1.21.11"].find((id) => state.playable.has(id)) || state.versions[0].id;
-    select(preferred);
-  } catch (error) {
-    $("lede").textContent = "The catalogue could not be read: " + String(error.message || error);
+  const response = await fetch("clients.json", { cache: "no-cache" });
+  state.doc = await response.json();
+  const chooser = el("chooser");
+  for (const entry of state.doc.installations) {
+    const option = document.createElement("option");
+    option.value = entry.id;
+    option.textContent = `${entry.id} — ${entry.kind === "compiled" ? "compiled" : `real Java ${entry.java || ""}`}`;
+    chooser.append(option);
   }
+  chooser.addEventListener("change", () => select(chooser.value));
+  el("filter").addEventListener("input", renderList);
+  el("playBtn").addEventListener("click", () => {
+    const entry = state.doc.installations.find((e) => e.id === state.pick);
+    if (entry) location.href = entry.url;
+  });
+  el("openBtn").addEventListener("click", (e) => { e.preventDefault(); el("playBtn").click(); });
+  el("detailsBtn").addEventListener("click", () => {
+    const entry = state.doc.installations.find((e) => e.id === state.pick);
+    if (entry) window.open(entry.url, "_blank");
+  });
+  el("newBtn").addEventListener("click", () => openBuildDialog());
+  el("sourceBtn").addEventListener("click", () => window.open("https://github.com/AmphibianDev/webmc-port", "_blank"));
+  wireDrop(el("drop"), (files) => { addMods(files); openBuildDialog(); });
+  wireDrop(el("bDrop"), addMods);
+  el("buildBtn").addEventListener("click", () => openBuildDialog());
+  el("clearBtn").addEventListener("click", () => { state.mods = []; renderChips(); renderChips("bChips", state.mods); });
+  el("bClose").addEventListener("click", (e) => { e.preventDefault(); el("buildDialog").close(); });
+  el("bStart").addEventListener("click", (e) => { e.preventDefault(); startBuild(); });
+
+  const wanted = new URLSearchParams(location.search).get("version") || store.pick;
+  select(wanted || state.doc.installations[0].id);
 }
 
-main();
+main().catch((problem) => {
+  el("title").textContent = "Could not load the version list";
+  el("why").textContent = String(problem);
+});
 </script>
 </body>
 </html>
