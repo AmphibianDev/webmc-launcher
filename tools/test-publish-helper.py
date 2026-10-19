@@ -8,6 +8,7 @@ matching the helper they download. These checks are the guard.
     python3 tools/test-publish-helper.py
 """
 
+import base64
 import os
 import re
 import subprocess
@@ -17,12 +18,7 @@ import zipfile
 from pathlib import Path
 
 # The download installs nothing: the helper, the page it serves, its launcher and a README.
-EXPECTED = sorted([
-    "webmc-helper/README.md",
-    "webmc-helper/helper/start-helper.command",
-    "webmc-helper/helper/webmc_helper.py",
-    "webmc-helper/page/index.html",
-])
+EXPECTED = ["webmc-helper.command"]
 
 HERE = Path(__file__).resolve().parent
 SITE = HERE.parent
@@ -79,24 +75,25 @@ def main():
     print("== the archive a visitor downloads")
     with zipfile.ZipFile(zip_path) as zf:
         names = sorted(zf.namelist())
-        check("the helper and nothing else (no app, no tests, no templates)",
-              names == EXPECTED, str(names))
-        command = zf.getinfo("webmc-helper/helper/start-helper.command")
+        check("exactly one file, and nothing else", names == EXPECTED, str(names))
+        command = zf.getinfo("webmc-helper.command")
         mode = (command.external_attr >> 16) & 0o777
-        check("the launcher is executable inside the archive", bool(mode & 0o111),
+        # A downloaded script gets no executable bit; the zip is the only thing that carries it,
+        # so this bit is the difference between "double-click and play" and "does nothing".
+        check("the single file is executable inside the archive", bool(mode & 0o111),
               "mode %o" % mode)
         check("no tests, templates or build output anywhere in the archive",
               not any("/tests/" in n or "/out/" in n or ".github" in n or n.endswith(".pyc")
                       for n in names))
-        helper = zf.read("webmc-helper/helper/webmc_helper.py").decode()
+        helper = zf.read("webmc-helper.command").decode()
         check("the helper still allows the site's origin",
               "ORIGIN_PATTERNS" in helper and "github" in helper)
         check("the helper still answers the private-network preflight",
               "Access-Control-Allow-Private-Network" in helper)
         check("the helper still deletes its sandbox on a signal", "install_signal_handlers" in helper)
         check("the helper can clean up after itself",
-              "--uninstall" in helper and "launchctl" in helper)
-        served = zf.read("webmc-helper/page/index.html").decode()
+              "def cleanup" in helper and "launchctl" in helper)
+        served = base64.b64decode(re.search(r'_EMBEDDED_PAGE = "([^"]*)"', helper).group(1)).decode()
         note = re.compile(r"<!-- This file is generated from .*?-->\n", re.S)
         check("the published page is the shipped page plus only the generated note",
               note.sub("", page, count=1) == served,
@@ -113,7 +110,7 @@ def main():
                                     capture_output=True, text=True)
             check("ditto can unpack the archive", result.returncode == 0,
                   (result.stderr or "").strip()[:120])
-            run_path = Path(tmp) / "webmc-helper" / "helper" / "start-helper.command"
+            run_path = Path(tmp) / "webmc-helper.command"
             unpacked = run_path.stat().st_mode & 0o777 if run_path.exists() else 0
             check("Apple's unarchiver keeps the launcher executable (ditto drops it otherwise)",
                   bool(unpacked & 0o111), "mode %o" % unpacked)

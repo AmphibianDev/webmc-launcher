@@ -8,10 +8,11 @@ needs two things from there:
     local.html                  the launcher page, identical to the one the helper serves
     helper/webmc-helper.zip     the helper, as a Finder-launchable app
 
-The download is deliberately small and installs nothing: the helper, the page it serves, its
-launcher script and a README. No tests, no templates, no app bundle, no login item, no
-repository furniture - somebody asked for exactly that, and `--check` fails if the site drifts
-from the source either way.
+The download is one file, and it installs nothing: `webmc-helper.command`, a shell script that
+carries the whole helper and the launcher page inside it. It has to be inside a zip - macOS gives
+a downloaded script no executable bit, so a bare download cannot be double-clicked, and a zip is
+the only thing that carries the bit across. No app bundle, no login item, no repository
+furniture, and `--check` fails if the site drifts from the source either way.
 
     python3 tools/publish-helper.py            # copy + pack
     python3 tools/publish-helper.py --check    # exit 1 if anything is out of date
@@ -116,28 +117,84 @@ def build_page(src_dir):
     return (note + text).encode()
 
 
-def stage_app(src_dir, stage):
-    """Lay the download out on disk. Returns the list of relative paths staged.
+SINGLE_FILE = "webmc-helper.command"
 
-    Named `stage_app` for historical reasons; there is no app bundle any more. The download is
-    the helper itself - something you run and can delete, with nothing installed and nothing
-    left running behind it.
+HEADER = """#!/bin/bash
+# webmc-helper - one file, and nothing installed.
+#
+# Double-click it. It starts in the background, closes this window itself, and waits for you to
+# press Play on the launcher page. The game is downloaded into a throwaway folder under /tmp and
+# that folder is deleted when the session ends - no daemon, no login item, nothing to uninstall.
+#
+#   press Play at:   https://amphibiandev.github.io/webmc-launcher/local.html
+#   stop it with:    pkill -f webmc_helper        (or leave it; it exits by itself when idle)
+#   watch it work:   WEBMC_FOREGROUND=1 ./webmc-helper.command
+#
+# Needs python3, which macOS provides with its command line tools:  xcode-select --install
+set -u
+PY="$(command -v python3 || true)"
+if [ -z "$PY" ]; then
+  echo "This needs python3. Run:  xcode-select --install   then double-click it again."
+  read -r -p "press return to close " _
+  exit 1
+fi
+
+# The helper is carried below as a heredoc. It is written out once (bash cannot put two heredocs
+# in one if/else) and the copy is deleted again the moment python has read it, so the only thing
+# that outlives a session is whatever is still running.
+SOURCE="${TMPDIR:-/tmp}/webmc-helper-$$.py"
+cat > "$SOURCE" <<'WEBMC_HELPER_SOURCE'
+"""
+FOOTER = """WEBMC_HELPER_SOURCE
+
+export WEBMC_SELF_DELETE="$SOURCE"
+ARGS=("--open" "--idle-exit" "1800")
+PAGE="${WEBMC_PAGE_URL-https://amphibiandev.github.io/webmc-launcher/local.html}"
+[ -n "$PAGE" ] && ARGS+=("--page-url" "$PAGE")
+LOGFILE="${TMPDIR:-/tmp}/webmc-helper-run.log"
+
+if [ "${WEBMC_FOREGROUND:-0}" != "0" ]; then
+  exec "$PY" -u "$SOURCE" "${ARGS[@]}" "$@"
+fi
+
+nohup "$PY" -u "$SOURCE" "${ARGS[@]}" "$@" >"$LOGFILE" 2>&1 &
+HELPER_PID=$!
+sleep 2
+if kill -0 "$HELPER_PID" 2>/dev/null || curl -s -o /dev/null -m 3 http://127.0.0.1:7645/api/hello; then
+  echo "webmc-helper is running in the background - this window closes itself."
+  echo "The launcher page should be opening in your browser; press Play there."
+else
+  echo "It did not start. What it said:"
+  tail -20 "$LOGFILE" 2>/dev/null
+  read -r -p "press return to close " _
+fi
+exit 0
+"""
+
+
+def build_single_file(src_dir):
+    """One shell script that carries the whole helper and the page it serves.
+
+    macOS cannot run a downloaded script at all (no executable bit survives a download) and an
+    .app is a directory, so "one file" means this: a single .command inside a zip, because the zip
+    is the only thing that carries the executable bit to the other side.
     """
-    files = [("webmc-helper/README.md", (src_dir / "README.md").read_bytes(), 0o644)]
-    for rel, _inside, mode in APP_FILES:
-        path = src_dir / rel
-        if not path.exists():
-            raise SystemExit("missing %s - cannot build the download" % path)
-        files.append(("webmc-helper/" + rel, path.read_bytes(), mode))
+    import base64
+    source = (src_dir / "helper" / "webmc_helper.py").read_text()
+    if "_EMBEDDED_PAGE = \"\"" not in source:
+        raise SystemExit("helper/webmc_helper.py no longer has an empty _EMBEDDED_PAGE to fill")
+    page = (src_dir / "page" / "index.html").read_bytes()
+    source = source.replace('_EMBEDDED_PAGE = ""',
+                            '_EMBEDDED_PAGE = "%s"' % base64.b64encode(page).decode(), 1)
+    return (HEADER + source + FOOTER).encode()
 
-    staged = []
-    for name, data, mode in sorted(files):
-        target = stage / name
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes(data)
-        target.chmod(mode)
-        staged.append(name)
-    return staged
+
+def stage_app(src_dir, stage):
+    """Lay the download out on disk. Returns the list of relative paths staged."""
+    target = stage / SINGLE_FILE
+    target.write_bytes(build_single_file(src_dir))
+    target.chmod(0o755)
+    return [SINGLE_FILE]
 
 
 def zip_cli():
