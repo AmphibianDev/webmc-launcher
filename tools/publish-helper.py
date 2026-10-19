@@ -122,79 +122,127 @@ SINGLE_FILE = "webmc-helper.command"
 HEADER = """#!/bin/bash
 # webmc-helper - one file, and nothing installed.
 #
-# Double-click it. It starts in the background, closes this window itself, and waits for you to
-# press Play on the launcher page. The game is downloaded into a throwaway folder under /tmp and
-# that folder is deleted when the session ends - no daemon, no login item, nothing to uninstall.
+# Double-click it. It makes one staging directory under /tmp, puts everything it needs in there
+# (a Python runtime if this machine has none, the helper itself, the game, the Java runtime), and
+# deletes the whole directory when the session ends.
 #
 #   press Play at:   https://amphibiandev.github.io/webmc-launcher/local.html
-#   stop it with:    pkill -f webmc_helper        (or leave it; it exits by itself when idle)
+#   stop it with:    pkill -f webmc_helper        (or let it exit by itself when idle)
 #   watch it work:   WEBMC_FOREGROUND=1 ./webmc-helper.command
+#   uninstall:       ./webmc-helper.command --uninstall
 #
-# Needs python3, which macOS provides with its command line tools:  xcode-select --install
+# WHAT IT NEEDS FROM THE MACHINE: bash, curl and tar. That is all - all three ship with macOS and
+# with Windows 10+, and nothing here needs Xcode command line tools, Homebrew, or Java installed.
 set -u
-PY="$(command -v python3 || true)"
-if [ -z "$PY" ]; then
-  echo "This needs python3. Run:  xcode-select --install   then double-click it again."
-  read -r -p "press return to close " _
-  exit 1
+
+STAGE="$(mktemp -d "${TMPDIR:-/tmp}/webmc.XXXXXX")" || exit 1
+SOURCE="$STAGE/webmc_helper.py"
+export WEBMC_CLEANUP_DIR="$STAGE"
+
+PY=""
+if [ "${WEBMC_FORCE_FETCH:-0}" = "0" ] && command -v python3 >/dev/null 2>&1; then
+  if python3 -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 8) else 1)' 2>/dev/null; then
+    PY="$(command -v python3)"
+  fi
 fi
 
-# The helper is carried below as a heredoc. It is written out once (bash cannot put two heredocs
-# in one if/else) and the copy is deleted again the moment python has read it, so the only thing
-# that outlives a session is whatever is still running.
-SOURCE="${TMPDIR:-/tmp}/webmc-helper-$$.py"
+if [ -z "$PY" ]; then
+  case "$(uname -s)-$(uname -m)" in
+    Darwin-arm64)  PBSTARGET="aarch64-apple-darwin" ;;
+    Darwin-x86_64) PBSTARGET="x86_64-apple-darwin" ;;
+    Linux-x86_64)  PBSTARGET="x86_64-unknown-linux-gnu" ;;
+    Linux-aarch64) PBSTARGET="aarch64-unknown-linux-gnu" ;;
+    *) echo "webmc-helper: unsupported system $(uname -s) $(uname -m)"; exit 1 ;;
+  esac
+  PBSURL="https://github.com/astral-sh/python-build-standalone/releases/download/20261013/cpython-3.11.17+20261013-${PBSTARGET}-install_only.tar.gz"
+  echo "This machine has no Python 3, so webmc-helper is fetching one into its own folder:"
+  echo "    $STAGE"
+  echo "Nothing is installed, and it is deleted with the rest when the session ends."
+  if ! curl -fsSL --retry 2 -m 600 "$PBSURL" -o "$STAGE/python.tar.gz"; then
+    echo "Could not fetch the Python runtime. Check this machine can reach github.com."
+    curl -s -o /dev/null -m 5 https://github.com || echo "  (github.com is unreachable from here)"
+    rm -rf "$STAGE"
+    read -r -p "press return to close " _
+    exit 1
+  fi
+  mkdir -p "$STAGE/py" && tar -xzf "$STAGE/python.tar.gz" -C "$STAGE/py" || { rm -rf "$STAGE"; exit 1; }
+  rm -f "$STAGE/python.tar.gz"
+  PY="$STAGE/py/python/bin/python3"
+  if [ ! -x "$PY" ]; then
+    echo "The fetched runtime did not unpack where expected. Nothing was left behind; giving up."
+    rm -rf "$STAGE"
+    read -r -p "press return to close " _
+    exit 1
+  fi
+fi
+
 cat > "$SOURCE" <<'WEBMC_HELPER_SOURCE'
 """
+
 FOOTER = """WEBMC_HELPER_SOURCE
 
 PAGE="${WEBMC_PAGE_URL-https://amphibiandev.github.io/webmc-launcher/local.html}"
-LOGFILE="${TMPDIR:-/tmp}/webmc-helper-run.log"
-INSTALLED="$HOME/Library/Application Support/webmc/helper/webmc_helper.py"
+LOGFILE="$STAGE/run.log"
 
-# Uninstall is the one thing this file does to itself, so it is handled before anything else.
 if [ "${1:-}" = "--uninstall" ]; then
   "$PY" -u "$SOURCE" --uninstall "${@:2}"
   STATUS=$?
-  rm -f "$SOURCE"
+  rm -rf "$STAGE"
   exit $STATUS
 fi
 
 if [ "${WEBMC_FOREGROUND:-0}" != "0" ]; then
   export WEBMC_SELF_DELETE="$SOURCE"
-  exec "$PY" -u "$SOURCE" "${ARGS:-}" --open "$@" --page-url "$PAGE"
+  if [ -n "$PAGE" ]; then
+    exec "$PY" -u "$SOURCE" --open --page-url "$PAGE" "$@"
+  fi
+  exec "$PY" -u "$SOURCE" --open "$@"
 fi
 
-# Transient: run from wherever this file was unpacked (usually /tmp), leave nothing at all
-# behind. This is the mode a Shortcut uses, so a session costs the machine nothing permanent -
-# no install, no staging directory, no sandbox.
+# Transient: run out of the staging directory, leave nothing at all behind. This is the mode a
+# Shortcut uses, so a session costs the machine nothing permanent - no install, no staging
+# directory, no sandbox. Everything, including a fetched Python, goes when the helper exits.
 if [ "${WEBMC_TRANSIENT:-0}" != "0" ]; then
   export WEBMC_SELF_DELETE="$SOURCE"
-  export WEBMC_CLEANUP_DIR="$(pwd)"
-  PAGEFLAG=()
-  [ -n "$PAGE" ] && PAGEFLAG=(--page-url "$PAGE")
-  nohup "$PY" -u "$SOURCE" --server-only --idle-exit 1800 --port 7645 "${PAGEFLAG[@]}" >>"$LOGFILE" 2>&1 &
-  sleep 2
-  if curl -s -o /dev/null -m 3 http://127.0.0.1:7645/api/hello; then
-    echo "webmc-helper is running from $(pwd) - nothing here survives the session."
+  CACHEARG=""
+  [ "${WEBMC_CACHE:-0}" != "0" ] && CACHEARG="$HOME/Library/Caches/webmc"
+  if [ -n "$PAGE" ] && [ -n "$CACHEARG" ]; then
+    nohup "$PY" -u "$SOURCE" --server-only --idle-exit 1800 --port 7645 --page-url "$PAGE" --cache "$CACHEARG" >>"$LOGFILE" 2>&1 &
+  elif [ -n "$PAGE" ]; then
+    nohup "$PY" -u "$SOURCE" --server-only --idle-exit 1800 --port 7645 --page-url "$PAGE" >>"$LOGFILE" 2>&1 &
+  elif [ -n "$CACHEARG" ]; then
+    nohup "$PY" -u "$SOURCE" --server-only --idle-exit 1800 --port 7645 --cache "$CACHEARG" >>"$LOGFILE" 2>&1 &
+  else
+    nohup "$PY" -u "$SOURCE" --server-only --idle-exit 1800 --port 7645 >>"$LOGFILE" 2>&1 &
+  fi
+  # Wait for it properly: fetching a Python and starting a JVM-less HTTP server takes a moment,
+  # and reporting "did not come up" while it is coming up is how a working helper looks broken.
+  READY=0
+  WAITED=0
+  while [ "$WAITED" -lt 30 ]; do
+    if [ -n "$(curl -s -m 2 http://127.0.0.1:7645/api/hello 2>/dev/null)" ]; then READY=1; break; fi
+    sleep 1
+    WAITED=$((WAITED + 1))
+  done
+  if [ "$READY" = "1" ]; then
+    echo "webmc-helper is running from $STAGE - nothing here survives the session."
     exit 0
   fi
-  echo "The helper did not come up; see $LOGFILE"
-  tail -5 "$LOGFILE" 2>/dev/null
+  echo "The helper did not come up. What it said:"
+  tail -10 "$LOGFILE" 2>/dev/null
   read -r -p "press return to close " _
   exit 1
 fi
 
-# First run: keep the helper where it can be found, and let launchd start it now and at every
-# login. After this the download is disposable - the running copy lives in Application Support.
-ARGS=(--install --install-source "$SOURCE" --port 7645)
-[ -n "$PAGE" ] && ARGS+=(--page-url "$PAGE")
-"$PY" -u - "${ARGS[@]}" <<'WEBMC_INSTALL_SOURCE' >/dev/null 2>&1
-WEBMC_INSTALL_SOURCE
-"$PY" -u "$SOURCE" "${ARGS[@]}" >>"$LOGFILE" 2>&1
+# Install: keep a copy in Application Support and let launchd start it now and at every login.
+if [ -n "$PAGE" ]; then
+  "$PY" -u "$SOURCE" --install --install-source "$SOURCE" --port 7645 --page-url "$PAGE" >>"$LOGFILE" 2>&1
+else
+  "$PY" -u "$SOURCE" --install --install-source "$SOURCE" --port 7645 >>"$LOGFILE" 2>&1
+fi
 STATUS=$?
-rm -f "$SOURCE"
 
-if [ "$STATUS" = "0" ] && curl -s -o /dev/null -m 3 http://127.0.0.1:7645/api/hello; then
+if [ "$STATUS" = "0" ]; then
   echo "WebMC Helper is installed and running - this window closes itself."
   echo
   echo "From now on it starts by itself at every login: press Play on the launcher page"
