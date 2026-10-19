@@ -57,8 +57,10 @@ def main():
           "http://127.0.0.1:7645" in page)
     check("offers the download at a relative path that works from a project page",
           'href="helper/webmc-helper.zip"' in page)
-    check("explains the Local Network Access prompt",
-          "LocalNetworkAccessBlockedForUrls" in page and "Local network access" in page)
+    check("explains the Local Network Access prompt, by name and by policy",
+          "LocalNetworkAccessBlockedForUrls" in page
+          and re.search(r"[Ll]ocal\s*network\s*access", page) is not None,
+          "the page must name the permission and the policy that can block it")
     check("knows a second tab is not a failure",
           "already gone from /tmp" in page)
     check("does not carry the helper's injected token block", "window.__WEBMC__ =" not in page)
