@@ -8,10 +8,10 @@ needs two things from there:
     local.html                  the launcher page, identical to the one the helper serves
     helper/webmc-helper.zip     the helper, as a Finder-launchable app
 
-The download is deliberately one thing: `WebMC Helper.app`, containing the helper, the page it
-serves and its own launcher script, plus a README. No tests, no templates, no repository
-furniture - somebody asked for exactly that, and `--check` fails if the site drifts from the
-source either way.
+The download is deliberately small and installs nothing: the helper, the page it serves, its
+launcher script and a README. No tests, no templates, no app bundle, no login item, no
+repository furniture - somebody asked for exactly that, and `--check` fails if the site drifts
+from the source either way.
 
     python3 tools/publish-helper.py            # copy + pack
     python3 tools/publish-helper.py --check    # exit 1 if anything is out of date
@@ -117,17 +117,18 @@ def build_page(src_dir):
 
 
 def stage_app(src_dir, stage):
-    """Lay the app out on disk. Returns the list of relative paths staged."""
-    version = helper_version(src_dir)
-    files = [(APP + "/Contents/Info.plist",
-              (INFO_PLIST % (BUNDLE_ID, version, version)).encode(), 0o644),
-             (APP + "/Contents/MacOS/run", RUN_SCRIPT.encode(), 0o755)]
-    for rel, inside, mode in APP_FILES:
+    """Lay the download out on disk. Returns the list of relative paths staged.
+
+    Named `stage_app` for historical reasons; there is no app bundle any more. The download is
+    the helper itself - something you run and can delete, with nothing installed and nothing
+    left running behind it.
+    """
+    files = [("webmc-helper/README.md", (src_dir / "README.md").read_bytes(), 0o644)]
+    for rel, _inside, mode in APP_FILES:
         path = src_dir / rel
         if not path.exists():
-            raise SystemExit("missing %s - cannot build the app" % path)
-        files.append((APP + "/" + inside, path.read_bytes(), mode))
-    files.append(("README.md", (src_dir / "README.md").read_bytes(), 0o644))
+            raise SystemExit("missing %s - cannot build the download" % path)
+        files.append(("webmc-helper/" + rel, path.read_bytes(), mode))
 
     staged = []
     for name, data, mode in sorted(files):

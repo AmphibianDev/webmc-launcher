@@ -28,6 +28,17 @@ import json
 import pathlib
 
 PORT_DEFAULT = pathlib.Path.home() / "devspace" / "WebMC" / "webmc-port"
+# This project supports up to 1.21.11. The 26.x line needs Java 25, which no browser runtime has, and listing a
+# version the engine cannot run is worse than not listing it - so it is excluded here, once, for every list the
+# launcher draws.
+SUPPORTED = ("1.", "a", "b", "rd", "c", "in", "inf", "pre", "alpha", "beta",
+             "13w", "14w", "15w", "16w", "17w", "18w")
+
+
+def supported(version: str) -> bool:
+    """Anything that is not a version this project runs: 26.x and later, and the odd non-version id."""
+    text = str(version)
+    return text.startswith(SUPPORTED) and not text.startswith("26.")
 BASE = "https://amphibiandev.github.io/webmc-port"
 
 
@@ -51,6 +62,8 @@ def main(argv=None) -> int:
 
     installations, buildable = [], []
     for version, route in sorted(routes.items()):
+        if not supported(version):
+            continue
         compiled = route.get("route") == "aot"
         # a client that is on the site is playable, whatever the route file last recorded about it
         live = compiled and (version in published or route.get("playable"))

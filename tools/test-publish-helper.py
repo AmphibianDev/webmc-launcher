@@ -16,16 +16,12 @@ import tempfile
 import zipfile
 from pathlib import Path
 
-APP = "WebMC Helper.app"
-BUNDLE_ID = "dev.amphibian.webmc-helper"
+# The download installs nothing: the helper, the page it serves, its launcher and a README.
 EXPECTED = sorted([
-    "README.md",
-    APP + "/Contents/Info.plist",
-    APP + "/Contents/MacOS/run",
-    APP + "/Contents/Resources/README.md",
-    APP + "/Contents/Resources/helper/start-helper.command",
-    APP + "/Contents/Resources/helper/webmc_helper.py",
-    APP + "/Contents/Resources/page/index.html",
+    "webmc-helper/README.md",
+    "webmc-helper/helper/start-helper.command",
+    "webmc-helper/helper/webmc_helper.py",
+    "webmc-helper/page/index.html",
 ])
 
 HERE = Path(__file__).resolve().parent
@@ -83,30 +79,24 @@ def main():
     print("== the archive a visitor downloads")
     with zipfile.ZipFile(zip_path) as zf:
         names = sorted(zf.namelist())
-        check("one app plus a README, and nothing else", names == EXPECTED, str(names))
-        plist = zf.read(APP + "/Contents/Info.plist").decode()
-        check("the app is a real bundle: launcher named, no dock icon",
-              "<key>CFBundleExecutable</key><string>run</string>" in plist
-              and BUNDLE_ID in plist and "<key>LSUIElement</key><true/>" in plist)
-        run = zf.getinfo(APP + "/Contents/MacOS/run")
-        mode = (run.external_attr >> 16) & 0o777
-        check("the app's launcher is executable inside the archive", bool(mode & 0o111),
+        check("the helper and nothing else (no app, no tests, no templates)",
+              names == EXPECTED, str(names))
+        command = zf.getinfo("webmc-helper/helper/start-helper.command")
+        mode = (command.external_attr >> 16) & 0o777
+        check("the launcher is executable inside the archive", bool(mode & 0o111),
               "mode %o" % mode)
-        command = zf.getinfo(APP + "/Contents/Resources/helper/start-helper.command")
-        check("the command-line path stays executable too",
-              ((command.external_attr >> 16) & 0o111) != 0)
         check("no tests, templates or build output anywhere in the archive",
               not any("/tests/" in n or "/out/" in n or ".github" in n or n.endswith(".pyc")
                       for n in names))
-        helper = zf.read(APP + "/Contents/Resources/helper/webmc_helper.py").decode()
+        helper = zf.read("webmc-helper/helper/webmc_helper.py").decode()
         check("the helper still allows the site's origin",
               "ORIGIN_PATTERNS" in helper and "github" in helper)
         check("the helper still answers the private-network preflight",
               "Access-Control-Allow-Private-Network" in helper)
         check("the helper still deletes its sandbox on a signal", "install_signal_handlers" in helper)
-        check("the helper can install itself without a terminal",
-              "--install" in helper and "launchctl" in helper)
-        served = zf.read(APP + "/Contents/Resources/page/index.html").decode()
+        check("the helper can clean up after itself",
+              "--uninstall" in helper and "launchctl" in helper)
+        served = zf.read("webmc-helper/page/index.html").decode()
         note = re.compile(r"<!-- This file is generated from .*?-->\n", re.S)
         check("the published page is the shipped page plus only the generated note",
               note.sub("", page, count=1) == served,
@@ -123,9 +113,9 @@ def main():
                                     capture_output=True, text=True)
             check("ditto can unpack the archive", result.returncode == 0,
                   (result.stderr or "").strip()[:120])
-            run_path = Path(tmp) / APP / "Contents/MacOS/run"
+            run_path = Path(tmp) / "webmc-helper" / "helper" / "start-helper.command"
             unpacked = run_path.stat().st_mode & 0o777 if run_path.exists() else 0
-            check("Apple's unarchiver keeps the app launchable (exec bit survives)",
+            check("Apple's unarchiver keeps the launcher executable (ditto drops it otherwise)",
                   bool(unpacked & 0o111), "mode %o" % unpacked)
 
     print("\n%d passed, %d failed" % (passed, failed))
