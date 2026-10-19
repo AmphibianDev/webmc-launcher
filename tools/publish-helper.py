@@ -147,26 +147,67 @@ cat > "$SOURCE" <<'WEBMC_HELPER_SOURCE'
 """
 FOOTER = """WEBMC_HELPER_SOURCE
 
-export WEBMC_SELF_DELETE="$SOURCE"
-ARGS=("--open" "--idle-exit" "1800")
 PAGE="${WEBMC_PAGE_URL-https://amphibiandev.github.io/webmc-launcher/local.html}"
-[ -n "$PAGE" ] && ARGS+=("--page-url" "$PAGE")
 LOGFILE="${TMPDIR:-/tmp}/webmc-helper-run.log"
+INSTALLED="$HOME/Library/Application Support/webmc/helper/webmc_helper.py"
 
-if [ "${WEBMC_FOREGROUND:-0}" != "0" ]; then
-  exec "$PY" -u "$SOURCE" "${ARGS[@]}" "$@"
+# Uninstall is the one thing this file does to itself, so it is handled before anything else.
+if [ "${1:-}" = "--uninstall" ]; then
+  "$PY" -u "$SOURCE" --uninstall "${@:2}"
+  STATUS=$?
+  rm -f "$SOURCE"
+  exit $STATUS
 fi
 
-nohup "$PY" -u "$SOURCE" "${ARGS[@]}" "$@" >"$LOGFILE" 2>&1 &
-HELPER_PID=$!
-sleep 2
-if kill -0 "$HELPER_PID" 2>/dev/null || curl -s -o /dev/null -m 3 http://127.0.0.1:7645/api/hello; then
-  echo "webmc-helper is running in the background - this window closes itself."
-  echo "The launcher page should be opening in your browser; press Play there."
+if [ "${WEBMC_FOREGROUND:-0}" != "0" ]; then
+  export WEBMC_SELF_DELETE="$SOURCE"
+  exec "$PY" -u "$SOURCE" "${ARGS:-}" --open "$@" --page-url "$PAGE"
+fi
+
+# Transient: run from wherever this file was unpacked (usually /tmp), leave nothing at all
+# behind. This is the mode a Shortcut uses, so a session costs the machine nothing permanent -
+# no install, no staging directory, no sandbox.
+if [ "${WEBMC_TRANSIENT:-0}" != "0" ]; then
+  export WEBMC_SELF_DELETE="$SOURCE"
+  export WEBMC_CLEANUP_DIR="$(pwd)"
+  PAGEFLAG=()
+  [ -n "$PAGE" ] && PAGEFLAG=(--page-url "$PAGE")
+  nohup "$PY" -u "$SOURCE" --server-only --idle-exit 1800 --port 7645 "${PAGEFLAG[@]}" >>"$LOGFILE" 2>&1 &
+  sleep 2
+  if curl -s -o /dev/null -m 3 http://127.0.0.1:7645/api/hello; then
+    echo "webmc-helper is running from $(pwd) - nothing here survives the session."
+    exit 0
+  fi
+  echo "The helper did not come up; see $LOGFILE"
+  tail -5 "$LOGFILE" 2>/dev/null
+  read -r -p "press return to close " _
+  exit 1
+fi
+
+# First run: keep the helper where it can be found, and let launchd start it now and at every
+# login. After this the download is disposable - the running copy lives in Application Support.
+ARGS=(--install --install-source "$SOURCE" --port 7645)
+[ -n "$PAGE" ] && ARGS+=(--page-url "$PAGE")
+"$PY" -u - "${ARGS[@]}" <<'WEBMC_INSTALL_SOURCE' >/dev/null 2>&1
+WEBMC_INSTALL_SOURCE
+"$PY" -u "$SOURCE" "${ARGS[@]}" >>"$LOGFILE" 2>&1
+STATUS=$?
+rm -f "$SOURCE"
+
+if [ "$STATUS" = "0" ] && curl -s -o /dev/null -m 3 http://127.0.0.1:7645/api/hello; then
+  echo "WebMC Helper is installed and running - this window closes itself."
+  echo
+  echo "From now on it starts by itself at every login: press Play on the launcher page"
+  echo "and Minecraft starts on this computer. You can delete this downloaded file."
+  echo
+  echo "To remove it completely later:"
+  echo "    \"$HOME/Library/Application Support/webmc/helper/webmc_helper.py\" --uninstall"
+  echo "    (or run this downloaded file again with --uninstall)"
 else
-  echo "It did not start. What it said:"
+  echo "It did not finish. What it said:"
   tail -20 "$LOGFILE" 2>/dev/null
   read -r -p "press return to close " _
+  exit 1
 fi
 exit 0
 """
