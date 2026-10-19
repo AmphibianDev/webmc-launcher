@@ -573,8 +573,16 @@ async function onSessionEnd(st){
     return;
   }
   state.result = res;
-  logLine("session finished — " + res.files + " files, " + fmt(res.bytes) +
-          (res.worlds && res.worlds.length ? ", worlds: " + res.worlds.join(", ") : ""), "g");
+  const worlds = res.worlds && res.worlds.length ? ", worlds: " + res.worlds.join(", ") : "";
+  logLine("session finished — " + res.files + " files, " + fmt(res.bytes) + worlds, "g");
+  if (res.available === false){
+    // Another tab already took these files and the helper has deleted the sandbox. That
+    // is the ordinary outcome of leaving two tabs open, not a failure.
+    logLine("this session's files are already gone from /tmp — another tab saved them, " +
+            "or they were cleaned up. Nothing to do here.", "g");
+    $("phase").textContent = "Session already saved elsewhere";
+    return;
+  }
   $("phase").textContent = "Saving the session into this browser";
   await saveToBrowser(res);
 }
@@ -602,8 +610,12 @@ async function saveToBrowser(res){
     $("sandbox").innerHTML = 'sandbox <code>' + r.path + '</code> ' +
       (r.gone ? '<span class="tag">deleted</span>' : '<span class="tag">kept</span>');
   } catch (e){
-    logLine("could not store the session: " + e.message + " (the sandbox is still intact; " +
-            "you can fetch /api/bundle.zip by hand)", "e");
+    if (e && e.status === 404)
+      logLine("the sandbox was already cleaned up, so there is nothing to store (another " +
+              "tab most likely has it)", "g");
+    else
+      logLine("could not store the session: " + e.message + " (the sandbox is still intact; " +
+              "you can fetch /api/bundle.zip by hand)", "e");
     $("phase").textContent = "Session finished — storage step failed";
   }
 }
