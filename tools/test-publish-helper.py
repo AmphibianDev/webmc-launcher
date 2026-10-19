@@ -8,10 +8,25 @@ matching the helper they download. These checks are the guard.
     python3 tools/test-publish-helper.py
 """
 
+import os
 import re
+import subprocess
 import sys
+import tempfile
 import zipfile
 from pathlib import Path
+
+APP = "WebMC Helper.app"
+BUNDLE_ID = "dev.amphibian.webmc-helper"
+EXPECTED = sorted([
+    "README.md",
+    APP + "/Contents/Info.plist",
+    APP + "/Contents/MacOS/run",
+    APP + "/Contents/Resources/README.md",
+    APP + "/Contents/Resources/helper/start-helper.command",
+    APP + "/Contents/Resources/helper/webmc_helper.py",
+    APP + "/Contents/Resources/page/index.html",
+])
 
 HERE = Path(__file__).resolve().parent
 SITE = HERE.parent
@@ -36,8 +51,8 @@ def main():
                           capture_output=True, text=True)
     check("publish-helper.py --check exits 0", proc.returncode == 0,
           (proc.stdout + proc.stderr).strip().splitlines()[-1] if proc.stdout else "")
-    check("and says the archive's file count",
-          "files in the archive" in proc.stdout, proc.stdout.strip()[-80:])
+    check("and reports what it compared",
+          "the site matches webmc-helper" in proc.stdout, proc.stdout.strip()[-80:])
 
     page_path = SITE / "local.html"
     zip_path = SITE / "helper" / "webmc-helper.zip"
@@ -67,41 +82,51 @@ def main():
 
     print("== the archive a visitor downloads")
     with zipfile.ZipFile(zip_path) as zf:
-        names = zf.namelist()
-        check("unpacks into one webmc-helper/ directory",
-              all(n.startswith("webmc-helper/") for n in names), str(names[:2]))
-        check("contains the helper itself",
-              "webmc-helper/helper/webmc_helper.py" in names)
-        check("contains the page the helper serves",
-              "webmc-helper/page/index.html" in names)
-        for exe in ("webmc-helper/helper/start-helper.command",
-                    "webmc-helper/tests/hello-mod/build.sh"):
-            info = zf.getinfo(exe) if exe in names else None
-            mode = (info.external_attr >> 16) & 0o777 if info else 0
-            check("%s is executable inside the zip (archive utility honours this)" % Path(exe).name,
-                  mode & 0o111 != 0, "mode %o" % mode)
-        check("leaves build output out of the archive",
-              not any("/out/" in n or n.endswith(".pyc") for n in names))
-        helper = zf.read("webmc-helper/helper/webmc_helper.py").decode()
+        names = sorted(zf.namelist())
+        check("one app plus a README, and nothing else", names == EXPECTED, str(names))
+        plist = zf.read(APP + "/Contents/Info.plist").decode()
+        check("the app is a real bundle: launcher named, no dock icon",
+              "<key>CFBundleExecutable</key><string>run</string>" in plist
+              and BUNDLE_ID in plist and "<key>LSUIElement</key><true/>" in plist)
+        run = zf.getinfo(APP + "/Contents/MacOS/run")
+        mode = (run.external_attr >> 16) & 0o777
+        check("the app's launcher is executable inside the archive", bool(mode & 0o111),
+              "mode %o" % mode)
+        command = zf.getinfo(APP + "/Contents/Resources/helper/start-helper.command")
+        check("the command-line path stays executable too",
+              ((command.external_attr >> 16) & 0o111) != 0)
+        check("no tests, templates or build output anywhere in the archive",
+              not any("/tests/" in n or "/out/" in n or ".github" in n or n.endswith(".pyc")
+                      for n in names))
+        helper = zf.read(APP + "/Contents/Resources/helper/webmc_helper.py").decode()
         check("the helper still allows the site's origin",
-              "github" in helper and "ORIGIN_PATTERNS" in helper)
+              "ORIGIN_PATTERNS" in helper and "github" in helper)
         check("the helper still answers the private-network preflight",
               "Access-Control-Allow-Private-Network" in helper)
-        check("the helper still deletes its sandbox on a signal",
-              "install_signal_handlers" in helper)
-        served = zf.read("webmc-helper/page/index.html").decode()
-        # The published page is the shipped page with one generated comment inserted after
-        # the doctype. Stripping it must give back exactly the file in the archive, which is
-        # the actual anti-drift claim: one page, not two that look alike.
+        check("the helper still deletes its sandbox on a signal", "install_signal_handlers" in helper)
+        check("the helper can install itself without a terminal",
+              "--install" in helper and "launchctl" in helper)
+        served = zf.read(APP + "/Contents/Resources/page/index.html").decode()
         note = re.compile(r"<!-- This file is generated from .*?-->\n", re.S)
         check("the published page is the shipped page plus only the generated note",
               note.sub("", page, count=1) == served,
-              "published %d bytes, shipped %d bytes" % (len(note.sub("", page, count=1)), len(served)))
-        check("the shipped page is what publish-helper.py would rebuild",
-              served == (SITE.parent / "webmc-helper" / "page" / "index.html").read_text()
-              if (SITE.parent / "webmc-helper" / "page" / "index.html").exists()
-              else "webmc-helper/ is not checked out beside this repository",
-              "")
+              "published %d bytes, shipped %d bytes"
+              % (len(note.sub("", page, count=1)), len(served)))
+
+    if sys.platform == "darwin":
+        # The failure this check exists for: Apple's own unarchiver (ditto, and therefore
+        # double-clicking the zip in Finder) dropped the executable bit, and macOS then refused
+        # to launch the app at all - "Launch failed. Launchd job spawn failed". Python's zipfile
+        # produces an archive that suffers from it; the system zip does not. Measured, so tested.
+        with tempfile.TemporaryDirectory() as tmp:
+            result = subprocess.run(["ditto", "-x", "-k", str(zip_path), tmp],
+                                    capture_output=True, text=True)
+            check("ditto can unpack the archive", result.returncode == 0,
+                  (result.stderr or "").strip()[:120])
+            run_path = Path(tmp) / APP / "Contents/MacOS/run"
+            unpacked = run_path.stat().st_mode & 0o777 if run_path.exists() else 0
+            check("Apple's unarchiver keeps the app launchable (exec bit survives)",
+                  bool(unpacked & 0o111), "mode %o" % unpacked)
 
     print("\n%d passed, %d failed" % (passed, failed))
     return 1 if failed else 0
