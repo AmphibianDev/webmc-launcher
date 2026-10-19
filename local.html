@@ -1093,6 +1093,13 @@ $("openlocal").onclick = (e) => { e.preventDefault(); window.open("http://127.0.
 $("openlocal2").onclick = (e) => { e.preventDefault(); window.open("http://127.0.0.1:7645/", "_blank", "noopener"); };
 
 (function init(){
+  // An embedding page cannot read this document (different origin), so it can only ask us who we
+  // are. Answering is what lets a hosted page prove the local launcher really loaded.
+  window.addEventListener("message", (e) => {
+    if (e.data && e.data.webmc === "hello" && e.source){
+      e.source.postMessage({ webmc: "hello-back", name: "webmc-helper", version: "0.1.0" }, "*");
+    }
+  });
   loadSlugs();
   renderMods();
   $("helper").value = state.helper || "http://127.0.0.1:7645";
