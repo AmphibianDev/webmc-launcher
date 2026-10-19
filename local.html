@@ -272,7 +272,11 @@ including Minecraft's own, so a crash is readable instead of mysterious.</span><
       <code>/tmp</code>. The helper does that part. This page only asks it to, watches the log, and
       keeps what the session produced.</p>
     <div class="hint" id="aboutkvs"></div>
-    <div style="margin-top:16px;text-align:right"><button id="aboutclose">Close</button></div>
+    <div style="margin-top:16px;display:flex;gap:9px;justify-content:flex-end">
+      <button id="copydiag">Copy diagnostics for a report</button>
+      <button id="aboutclose">Close</button>
+    </div>
+    <div class="hint" id="diagstate" style="text-align:right"></div>
   </div>
 </dialog>
 
@@ -467,6 +471,7 @@ async function probe(explicit){
     $("aboutkvs").innerHTML = "helper " + hello.version + " · " + hello.platform.os + " " +
       hello.platform.arch + " · proxy " + hello.proxy + " · storage " + Store.kind +
       " · sandbox " + hello.sandbox;
+    state.hello = hello;
     remember();
     $("play").disabled = false;
     loadVersions();
@@ -854,6 +859,53 @@ $("stop").onclick = async () => {
 };
 $("help").onclick = () => $("about").showModal();
 $("aboutclose").onclick = () => $("about").close();
+
+async function diagnostics(){
+  const h = state.hello || {};
+  const platform = h.platform || {};
+  const est = await Store.usage();
+  const mods = await Store.list("mods");
+  const bundle = await Store.get(KEY);
+  const log = $("log").textContent.trim().split("\n");
+  const lines = [
+    "webmc-helper diagnostics",
+    "helper     : " + (h.version || "not connected") +
+      (platform.os ? "  (" + platform.os + " " + platform.version + ", " + platform.arch + ")" : ""),
+    "page       : " + (hosted ? "hosted copy at " + location.host : "served by the helper") ,
+    "helper url : " + (state.helper || "(none)") + "  vault: " + (state.token ? "stored" : "none"),
+    "downloads  : " + (h.proxy || "?") + "  ",
+    "sandbox    : " + (h.sandbox || "?"),
+    "browser sto: " + Store.kind + ", " + fmt(est.used) + " of " + fmt(est.quota),
+    "world zip  : " + (bundle ? fmt(bundle.size) : "none stored"),
+    "my mods    : " + (mods.length ? mods.map(m => m.name + " (" + fmt(m.size) + ")").join(", ") : "none"),
+    "modrinth   : " + (state.slugs.length ? state.slugs.join(", ") : "none"),
+    "version    : " + ($("version").value || "?") + "  loader: " + $("loader").value +
+      "  memory: " + $("memory").value + "  assets: " + ($("assets").value === "1" ? "yes" : "no"),
+    "phase      : " + $("phase").textContent + "  | " + $("instance").textContent,
+    "launcher   : " + location.href,
+    "",
+    "last session reported:",
+    state.result ? JSON.stringify(state.result) : "  (nothing this page load)",
+    "",
+    "--- the helper's log, last 200 lines ---",
+    ...log.slice(-200)
+  ];
+  const text = lines.join("\n");
+  try {
+    await navigator.clipboard.writeText(text);
+    $("diagstate").textContent = "copied to the clipboard — paste it into the issue";
+    return text;
+  } catch (e){
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.cssText = "position:fixed;top:10px;left:10px;width:90%;height:50%;z-index:99";
+    document.body.appendChild(ta);
+    ta.select();
+    $("diagstate").textContent = "select all and copy (the clipboard API was refused)";
+    return text;
+  }
+}
+$("copydiag").onclick = diagnostics;
 $("loader").onchange = () => {
   $("loadercustom").style.display = $("loader").value === "custom" ? "" : "none";
 };
