@@ -189,6 +189,7 @@
     <div class="rail-tools">
       <button id="settingsBtn">Settings…</button>
       <button id="helpBtn">Help &amp; how it works</button>
+      <button id="localBtn" title="Real Minecraft and real Fabric on this machine, from a throwaway folder in /tmp">Run it natively (real Fabric)…</button>
       <button id="logBtn">Open the selected client with its log</button>
       <button id="sourceBtn">Source code</button>
     </div>
@@ -996,6 +997,10 @@ async function main() {
   el("newBtn").addEventListener("click", () => openBuildDialog());
   el("settingsBtn").addEventListener("click", () => show("settings"));
   el("helpBtn").addEventListener("click", () => window.open("help.html", "_blank"));
+  // local.html drives a helper the visitor runs on their own machine: real Java, real
+  // Fabric, launched into /tmp and deleted afterwards. GitHub Pages cannot start a
+  // process, which is exactly why that page exists separately from this one.
+  el("localBtn").addEventListener("click", () => window.open("local.html", "_blank"));
   el("sName").addEventListener("change", () => {
     store.name = el("sName").value.trim().replace(/[^A-Za-z0-9_]/g, "").slice(0, 16);
     el("sName").value = store.name;

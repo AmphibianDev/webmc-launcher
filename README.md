@@ -18,6 +18,24 @@ run on which machine:
 
 ## Run it
 
+There are two local paths, and they keep different promises:
+
+| | `local.html` + **webmc-helper** | `tools/local-ui.py` (below) |
+| --- | --- | --- |
+| Where the game lives | one throwaway directory in `/tmp`, deleted when the session ends | `~/.webmc/minecraft`, kept |
+| What it needs | macOS and the Python 3 that is already there | Python 3.10+ and `minecraft-launcher-lib` in a venv it makes |
+| What it leaves behind | nothing, except the world saved into your browser | the installation |
+| How you start it | download `helper/webmc-helper.zip`, double-click `webmc-helper/helper/start-helper.command` | `python3 tools/local-ui.py` |
+| What it can run | anything Fabric supports, mods fetched from Modrinth or taken from a local jar | the same, from `mods/` |
+
+The published `local.html` and the zip are generated from `webmc-helper/` (the repository where
+the helper is written and tested):
+
+```sh
+python3 tools/publish-helper.py            # copy the page + repack the helper
+python3 tools/publish-helper.py --check    # fails if the site has gone stale
+```
+
 ```sh
 python3 tools/local-ui.py            # serves 127.0.0.1:8130 and opens a browser
 python3 tools/local-ui.py --port 9000

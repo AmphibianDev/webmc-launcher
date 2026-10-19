@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<!-- This file is generated from webmc-helper/page/index.html by
+     tools/publish-helper.py. Edit it there, then run that tool. -->
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>WebMC local — run real Minecraft, keep nothing</title>
+<!--
+  The page is only a remote control. It cannot start a process, cannot read files,
+  cannot see /tmp. All it can do is talk to a helper on 127.0.0.1 that the visitor
+  started, show what that helper is doing, and keep the session's files in this
+  browser so the helper's sandbox can be deleted.
+
+  Rules this page keeps:
+    * it never probes the helper behind your back. Without a stored connection it
+      waits for a click, and a failed probe is remembered and never repeated
+      automatically.
+    * a version that needs a compiled client and a version that runs the real jar
+      are labelled differently, because they are different things.
+    * nothing is uploaded anywhere. The bundle from /tmp goes into this browser's
+      own storage (OPFS), and nowhere else.
+-->
+<style>
+  :root{
+    --bg:#17171a; --rail:#1d1d20; --panel:#232327; --panel2:#28282d; --edge:#37373d;
+    --text:#ececed; --muted:#a2a2a9; --dim:#74747b; --green:#3c8527; --green2:#4b9e32;
+    --blue:#3a7fd5; --red:#c2554d; --amber:#d8a12a; --radius:6px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{background:var(--bg);color:var(--text);font:15px/1.55 system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:var(--blue)}
+  code,kbd{font:13px ui-monospace,SFMono-Regular,Menlo,monospace;background:#0e0e11;border:1px solid var(--edge);padding:2px 6px;border-radius:4px}
+  header{display:flex;align-items:center;gap:14px;padding:14px 20px;border-bottom:1px solid #000;background:var(--rail)}
+  header h1{margin:0;font-size:15px;letter-spacing:.02em;font-weight:600}
+  header h1 small{color:var(--dim);font-weight:400;letter-spacing:.14em;text-transform:uppercase;font-size:10px;margin-left:8px}
+  .grow{flex:1}
+  .pill{display:inline-flex;align-items:center;gap:7px;font-size:12px;padding:4px 11px;border-radius:99px;border:1px solid var(--edge);color:var(--muted);background:var(--panel)}
+  .dot{width:7px;height:7px;border-radius:50%;background:var(--dim)}
+  .dot.ok{background:var(--green2);box-shadow:0 0 8px var(--green2)}
+  .dot.bad{background:var(--red)}
+  .dot.busy{background:var(--amber)}
+  main{display:grid;grid-template-columns:360px 1fr;gap:0;height:calc(100% - 58px);min-height:0}
+  .left{border-right:1px solid #000;background:var(--rail);padding:18px 18px 26px;overflow:auto;min-height:0}
+  .right{display:flex;flex-direction:column;min-height:0;min-width:0}
+  h2{font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--dim);margin:20px 0 9px;font-weight:600}
+  h2:first-child{margin-top:0}
+  label{display:block;font-size:12px;color:var(--muted);margin:11px 0 5px}
+  input,select{width:100%;background:#131316;border:1px solid var(--edge);border-radius:var(--radius);padding:8px 10px;font:inherit;font-size:14px;color:var(--text)}
+  input:focus,select:focus{outline:none;border-color:var(--blue)}
+  .row{display:flex;gap:8px}
+  .row>*{flex:1}
+  button{font:inherit;cursor:pointer;border-radius:var(--radius);border:1px solid var(--edge);background:var(--panel2);color:var(--text);padding:9px 13px;font-size:14px}
+  button:hover:not(:disabled){border-color:#55555e}
+  button:disabled{opacity:.42;cursor:not-allowed}
+  button.play{width:100%;margin-top:16px;padding:13px;font-size:16px;font-weight:600;background:var(--green);border-color:var(--green);color:#fff}
+  button.play:hover:not(:disabled){background:var(--green2);border-color:var(--green2)}
+  button.stop{width:100%;margin-top:16px;padding:13px;font-size:15px;font-weight:600;background:#3a2523;border-color:#6b3a35;color:#ffb3ab}
+  button.ghost{padding:6px 10px;font-size:12px;background:transparent}
+  .hint{font-size:12px;color:var(--dim);margin-top:8px;line-height:1.5}
+  .warn{border:1px solid #6b5a20;background:#2a2413;color:#e8cf8a;padding:10px 12px;border-radius:var(--radius);font-size:12.5px;margin-top:10px;line-height:1.5}
+  .okbox{border:1px solid #2f6a1e;background:#1b2a15;padding:10px 12px;border-radius:var(--radius);font-size:12.5px;margin-top:10px;line-height:1.5}
+  .bar{height:7px;background:#101013;border-radius:99px;overflow:hidden;margin-top:9px;border:1px solid var(--edge)}
+  .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--green),var(--green2));transition:width .25s}
+  .bar.indet i{width:35%;animation:slide 1.1s ease-in-out infinite}
+  @keyframes slide{0%{margin-left:-35%}100%{margin-left:100%}}
+  .statline{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-top:8px;gap:10px}
+  .console{flex:1;min-height:0;overflow:auto;background:#0d0d10;border-top:1px solid #000;padding:12px 16px;font:12px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:pre-wrap;word-break:break-word;color:#c9c9d1}
+  .console .e{color:#ff9a90}
+  .console .g{color:#8bd075}
+  .pad{padding:16px 18px;border-bottom:1px solid #000;background:var(--panel)}
+  .files{font-size:13px;color:var(--muted);max-height:180px;overflow:auto;margin:8px 0 0}
+  .files div{display:flex;justify-content:space-between;gap:12px;padding:2px 0;border-bottom:1px dotted #2c2c33}
+  .tag{display:inline-block;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);border:1px solid var(--edge);border-radius:99px;padding:1px 7px;margin-left:6px}
+  dialog{border:1px solid var(--edge);background:var(--panel);color:var(--text);border-radius:10px;max-width:620px;padding:0}
+  dialog::backdrop{background:rgba(0,0,0,.6)}
+  dialog .inner{padding:22px 24px}
+  dialog h3{margin:0 0 10px;font-size:17px}
+  dialog p, dialog li{font-size:13.5px;color:var(--muted);line-height:1.65}
+  dialog ol{padding-left:20px}
+  .kvs{font-size:12px;color:var(--dim);margin-top:14px;border-top:1px solid var(--edge);padding-top:10px}
+  ol.steps{margin:10px 0 0;padding-left:20px;font-size:13px;color:var(--muted);line-height:1.8}
+  ol.steps li{margin-bottom:4px}
+  ol.steps a{color:var(--blue)}
+  .netblock{border:1px solid #6b3a35;background:#2b1c1a;color:#ffb3ab;padding:10px 12px;border-radius:var(--radius);font-size:12.5px;margin-top:10px;line-height:1.55}
+</style>
+</head>
+<body>
+<header>
+  <h1>WebMC <small>local helper</small></h1>
+  <span class="pill" id="conn"><i class="dot" id="cd"></i><span id="ct">checking…</span></span>
+  <span class="grow"></span>
+  <span class="pill" id="where">—</span>
+  <button class="ghost" id="help">How this works</button>
+</header>
+
+<main>
+  <section class="left">
+    <h2>Helper</h2>
+    <label for="helper">Address on this machine</label>
+    <div class="row">
+      <input id="helper" placeholder="http://127.0.0.1:7645" />
+      <button id="connect" style="flex:0 0 auto">Connect</button>
+    </div>
+    <div class="hint" id="connhint">Not connected yet.</div>
+
+    <div id="offline" style="display:none">
+      <div class="warn" id="offlinetext">
+        No helper answered on that address. The page cannot start a program by itself —
+        that is what the helper is for.
+      </div>
+      <div id="gethelper" style="display:none">
+        <div class="hint" style="margin-top:14px">
+          <strong style="color:var(--text)">One-time setup, then Play always works.</strong>
+        </div>
+        <ol class="steps">
+          <li><a id="zipdl" href="helper/webmc-helper.zip" download>Download webmc-helper.zip</a> and unzip it.</li>
+          <li>Double-click <code>webmc-helper/helper/start-helper.command</code>. The Terminal window it opens must stay open while you play.</li>
+          <li>Come back to this tab and press <strong>Connect</strong>.</li>
+        </ol>
+        <div class="hint">
+          Needs macOS with Python 3 (already there, or <code>xcode-select --install</code>).
+          Nothing is installed: the helper downloads Minecraft into a throwaway folder under
+          <code>/tmp</code> and deletes it when the session ends. Read it first if you like —
+          it is one Python file.
+        </div>
+        <div class="hint">
+          Already running the helper? <a href="#" id="openlocal">Open its own page</a> instead
+          &mdash; it needs no token handoff.<br>
+          If macOS refuses to open the file (&ldquo;unidentified developer&rdquo;), right-click it and choose
+          <strong>Open</strong>, or run
+          <code>xattr -d com.apple.quarantine webmc-helper/helper/start-helper.command</code>.
+        </div>
+      </div>
+    </div>
+
+    <h2>Session</h2>
+    <label for="version">Minecraft version</label>
+    <div class="row">
+      <select id="version"></select>
+      <button id="reloadv" style="flex:0 0 auto" title="Reload the version list from Mojang">↻</button>
+    </div>
+    <label for="loader">Loader</label>
+    <select id="loader">
+      <option value="stable" selected>Fabric — newest stable</option>
+      <option value="latest">Fabric — newest, even if unstable</option>
+      <option value="custom">Fabric — a specific loader version…</option>
+      <option value="none">None — vanilla</option>
+    </select>
+    <input id="loadercustom" placeholder="0.19.5" style="display:none;margin-top:6px" />
+    <label for="mods">Mods <span class="tag">Modrinth slugs</span></label>
+    <input id="mods" value="fabric-api" placeholder="fabric-api,modmenu,sodium" />
+    <div class="hint">Fetched for the chosen version while the game is being prepared. Real jars, loaded by Fabric at play time.</div>
+
+    <h2>Account</h2>
+    <label for="username">Offline username</label>
+    <input id="username" value="Player" maxlength="16" />
+    <div class="hint">Singleplayer only: this launch is offline. Online servers need a real login.</div>
+
+    <h2>Machine</h2>
+    <div class="row">
+      <div>
+        <label for="memory">Heap</label>
+        <input id="memory" value="2G" />
+      </div>
+      <div>
+        <label for="assets">Assets</label>
+        <select id="assets">
+          <option value="1" selected>Download (~430 MB)</option>
+          <option value="0">Skip (missing sounds)</option>
+        </select>
+      </div>
+    </div>
+    <label style="display:flex;gap:8px;align-items:center;margin-top:12px;color:var(--text)">
+      <input type="checkbox" id="restore" checked style="width:auto" />
+      <span>Put this browser's last session back first</span>
+    </label>
+
+    <button class="play" id="play" disabled>▶ &nbsp;Play</button>
+    <button class="stop" id="stop" style="display:none">■ &nbsp;Stop the game</button>
+  </section>
+
+  <section class="right">
+    <div class="pad">
+      <div class="statline">
+        <strong id="phase" style="color:var(--text);font-weight:600">Ready</strong>
+        <span id="pct"></span>
+      </div>
+      <div class="bar" id="bar"><i></i></div>
+      <div class="statline">
+        <span id="instance">no session yet</span>
+        <span id="netstat"></span>
+      </div>
+      <div id="sandbox" class="kvs" style="border:0;padding-top:8px"></div>
+    </div>
+    <div class="console" id="log"><span style="color:#5e5e66">The helper's log appears here — including Minecraft's own, so a crash is readable instead of mysterious.</span></div>
+  </section>
+</main>
+
+<dialog id="about">
+  <div class="inner">
+    <h3>What runs where</h3>
+    <p>
+      Minecraft never becomes a web app here. A small helper on this machine downloads a
+      real Java runtime if there isn't one, plus Mojang's client, Fabric, and the mods you
+      asked for — all of it into a single throwaway directory under <code>/tmp</code> — then
+      starts the ordinary Java client with Fabric's loader.
+    </p>
+    <p>
+      When the game closes, the helper collects its saves, logs, screenshots and crash
+      reports into one zip. This page takes that zip into this browser's own storage
+      (OPFS, private to this origin, never uploaded), and then tells the helper to delete
+      the whole <code>/tmp</code> directory.
+    </p>
+    <p>
+      So the machine is borrowed, not used. Nothing is installed, no service is
+      registered, no folder survives — except the copy of your world that lives in the
+      browser and can be restored on the next launch.
+    </p>
+    <div class="kvs" id="aboutkvs"></div>
+    <div style="margin-top:16px;text-align:right"><button id="aboutclose">Close</button></div>
+  </div>
+</dialog>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+const LS = "webmc.local.";
+const state = { helper:null, token:null, since:0, timer:null, online:false, probed:false, result:null };
+
+/* ------------------------------------------------------------------ storage
+   OPFS when the browser has it, IndexedDB when it does not. Both are per-origin
+   and neither is a server, which is the whole point: the world comes back from
+   the browser, not from an account somewhere. */
+const Store = (() => {
+  const DBN = "webmc-local", LOG = "log";
+  function idb(){
+    return new Promise((res, rej) => {
+      const r = indexedDB.open(DBN, 1);
+      r.onupgradeneeded = () => r.result.createObjectStore(LOG);
+      r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+    });
+  }
+  async function idbPut(k, v){
+    const db = await idb();
+    return new Promise((res, rej) => {
+      const t = db.transaction(LOG, "readwrite");
+      t.objectStore(LOG).put(v, k);
+      t.oncomplete = () => res(true); t.onerror = () => rej(t.error);
+    });
+  }
+  async function idbGet(k){
+    const db = await idb();
+    return new Promise((res, rej) => {
+      const q = db.transaction(LOG, "readonly").objectStore(LOG).get(k);
+      q.onsuccess = () => res(q.result || null); q.onerror = () => rej(q.error);
+    });
+  }
+  const opfs = !!(navigator.storage && navigator.storage.getDirectory);
+  return {
+    kind: opfs ? "OPFS" : (window.indexedDB ? "IndexedDB" : "none"),
+    async put(key, blob){
+      if (opfs){
+        const root = await navigator.storage.getDirectory();
+        const fh = await root.getFileHandle(key, { create:true });
+        const w = await fh.createWritable();
+        await w.write(blob); await w.close(); return;
+      }
+      await idbPut(key, blob);
+    },
+    async get(key){
+      if (opfs){
+        try {
+          const root = await navigator.storage.getDirectory();
+          const fh = await root.getFileHandle(key);
+          return await fh.getFile();
+        } catch (e){ return null; }
+      }
+      return await idbGet(key);
+    },
+    async persist(){
+      try { return navigator.storage && navigator.storage.persist
+              ? await navigator.storage.persist() : false; } catch(e){ return false; }
+    },
+    async usage(){
+      try { const e = await navigator.storage.estimate();
+            return { used:e.usage||0, quota:e.quota||0 }; } catch(e){ return {used:0,quota:0}; }
+    }
+  };
+})();
+
+const KEY = "last-session.zip";
+
+/* ------------------------------------------------------------------ connection */
+function origin(url){ try { return new URL(url).origin; } catch(e){ return null; } }
+
+function remember(){
+  if (!state.helper) return;
+  try {
+    localStorage.setItem(LS+"helper", state.helper);
+    if (state.token) localStorage.setItem(LS+"token", state.token);
+  } catch(e){}
+}
+function forget(){
+  try { localStorage.removeItem(LS+"token"); } catch(e){}
+}
+
+function adoptFragment(){
+  const f = new URLSearchParams(location.hash.replace(/^#/, ""));
+  if (f.get("helper")) state.helper = f.get("helper").replace(/\/$/, "");
+  if (f.get("t")) state.token = f.get("t");
+  if (state.helper){
+    history.replaceState(null, "", location.pathname + location.search);
+    remember();
+  }
+}
+
+function connection(){
+  if (window.__WEBMC__ && window.__WEBMC__.helper){
+    state.helper = window.__WEBMC__.helper;
+    state.token = window.__WEBMC__.token;
+    return { where:"helper", trust:true };
+  }
+  adoptFragment();
+  if (!state.helper){
+    try { state.helper = localStorage.getItem(LS+"helper"); state.token = localStorage.getItem(LS+"token"); } catch(e){}
+  }
+  // Served by the helper itself? Then this page's own origin already is the helper,
+  // which takes no configuration at all. (The token still comes from the helper.)
+  if (!state.helper && /^(127\.0\.0\.1|localhost|\[::1\])$/.test(location.hostname) && location.port){
+    state.helper = location.origin;
+    return { where:"origin", trust: !!state.token };
+  }
+  return { where: state.helper ? "stored" : "none", trust: !!state.token };
+}
+
+async function api(path, opts){
+  const url = state.helper.replace(/\/$/, "") + path;
+  const o = Object.assign({ cache:"no-store" }, opts || {});
+  o.headers = Object.assign({}, o.headers);
+  if (state.token) o.headers["X-WebMC-Token"] = state.token;
+  if (o.body && typeof o.body === "string") o.headers["Content-Type"] = "application/json";
+  if (o.timeout){
+    const ac = new AbortController();
+    o.signal = ac.signal;
+    setTimeout(() => ac.abort(), o.timeout);
+  }
+  const r = await fetch(url, o);
+  if (!r.ok){
+    let detail = r.status + " " + r.statusText;
+    try { const j = await r.json(); if (j.error) detail = j.error; } catch(e){}
+    const err = new Error(detail); err.status = r.status; throw err;
+  }
+  return r;
+}
+
+function setConn(kind, text){
+  $("cd").className = "dot " + kind;
+  $("ct").textContent = text;
+}
+
+async function probe(explicit){
+  if (!state.helper){
+    setConn("bad", "no helper set"); $("offline").style.display = "";
+    return false;
+  }
+  if (explicit) setConn("busy", "contacting…");
+  try {
+    const r = await api("/api/hello", { timeout: 1500 });
+    const hello = await r.json();
+    state.online = true; state.probed = true;
+    setConn("ok", "helper " + hello.version);
+    $("offline").style.display = "none";
+    $("where").textContent = hello.platform.os + "/" + hello.platform.arch + " · " + Store.kind;
+    $("connhint").innerHTML = "Connected. Downloads " +
+      (hello.proxy === "direct" ? "go straight out" : "go through <code>" + hello.proxy + "</code>") +
+      " · sandbox <code>" + hello.sandbox + "</code>";
+    remember();
+    $("sandbox").innerHTML = "sandbox <code>" + hello.sandbox + "</code>";
+    $("aboutkvs").innerHTML = "helper " + hello.version + " · " + hello.platform.os + " " +
+      hello.platform.arch + " · proxy " + hello.proxy + " · storage " + Store.kind +
+      " · sandbox " + hello.sandbox;
+    loadVersions();
+    refresh();
+    return true;
+  } catch (e){
+    state.online = false;
+    const token = e && e.status === 403;
+    setConn("bad", token ? "token rejected" : "no helper");
+    $("connhint").innerHTML = "Last error: <code>" + (e.message || e) + "</code>";
+    showOffline(token ? "token" : "blocked");
+    return false;
+  }
+}
+
+// A page on github.io is a different origin from a helper on 127.0.0.1, so it has to be
+// told where the helper is and what its token is (the /go redirect does that once), and
+// current Chromium asks the visitor for Local Network Access before allowing the request
+// at all. Both cases deserve their own explanation rather than one generic failure.
+const hosted = !/^(127\.0\.0\.1|localhost|\[::1\])$/.test(location.hostname);
+
+function showOffline(kind){
+  $("offline").style.display = "";
+  const t = $("offlinetext");
+  if (kind === "token"){
+    t.className = "netblock";
+    t.innerHTML = "A helper is listening on that address but rejected this page's token — " +
+      "it was started by an earlier run. Stop it, start it again, and use the link it opens " +
+      "(it carries a fresh token).";
+  } else if (kind === "blocked"){
+    t.className = "warn";
+    t.innerHTML = "Nothing answered on <code>" + (state.helper || "") + "</code>. Either no " +
+      "helper is running, or this browser <strong>blocked local network access</strong> for " +
+      "this site. Chrome 142+ and Edge 143+ ask once &mdash; allow it (the padlock icon, " +
+      "Site settings, \u201cLocal network access\u201d). Where an administrator has blocked it " +
+      "with policy <code>LocalNetworkAccessBlockedForUrls</code>, nothing on the page can " +
+      "reach a local helper at all.";
+  } else {
+    t.className = "warn";
+    t.innerHTML = "No helper answered on that address. The page cannot start a program by " +
+      "itself &mdash; that is what the helper is for.";
+  }
+  $("gethelper").style.display = hosted ? "" : "none";
+  $("where").textContent = hosted ? "hosted page · helper on this machine" : "—";
+}
+
+/* ------------------------------------------------------------------ versions */
+let versionsLoaded = false;
+async function loadVersions(){
+  if (versionsLoaded || !state.online) return;
+  const sel = $("version");
+  sel.innerHTML = '<option value="">loading…</option>';
+  try {
+    const j = await (await api("/api/versions")).json();
+    const keep = sel.dataset.want || "1.21.11";
+    sel.innerHTML = "";
+    for (const id of j.releases.slice(0, 25)){
+      const o = document.createElement("option"); o.value = id; o.textContent = id;
+      sel.appendChild(o);
+    }
+    sel.value = [...sel.options].some(o => o.value === keep) ? keep : sel.options[0].value;
+    versionsLoaded = true;
+  } catch (e){
+    sel.innerHTML = '<option value="1.21.11">1.21.11</option>';
+  }
+}
+
+/* ------------------------------------------------------------------ status */
+function fmt(b){
+  if (!b) return "0 B";
+  const u = ["B","KB","MB","GB"]; let i = 0;
+  while (b >= 1024 && i < u.length-1){ b /= 1024; i++; }
+  return b.toFixed(b < 10 && i > 0 ? 1 : 0) + " " + u[i];
+}
+
+function busy(b){
+  $("play").disabled = b; $("stop").disabled = b;
+}
+function showStop(on){
+  $("stop").style.display = on ? "" : "none";
+  $("play").style.display = on ? "none" : "";
+}
+
+async function refresh(){
+  if (!state.online) return;
+  let st;
+  try { st = await (await api("/api/status")).json(); }
+  catch (e){ return; }
+  const running = st.state === "running";
+  showStop(running);
+  busy(false);
+  $("play").disabled = !state.online || running;
+  $("phase").textContent = st.phaseLabel || st.phase || st.state;
+  const p = st.progress || {};
+  const bar = $("bar");
+  if (p.percent === null || p.percent === undefined){
+    bar.className = running ? "bar indet" : "bar";
+    $("pct").textContent = p.total ? (p.done + " / " + p.total) : "";
+  } else {
+    bar.className = "bar"; bar.firstChild.style.width = p.percent + "%";
+    $("pct").textContent = p.percent + "%  (" + p.done + " / " + p.total + ")";
+  }
+  const inst = st.instance || {};
+  $("instance").textContent = inst.version
+    ? (inst.version + " · " + (inst.loader || "vanilla") +
+       (inst.mods && inst.mods.length ? " · " + inst.mods.join(", ") : " · no mods") +
+       (inst.username ? " · " + inst.username : ""))
+    : "no session yet";
+  $("netstat").textContent = st.downloadedBytes ? "downloaded " + fmt(st.downloadedBytes) : "";
+  if (st.error){
+    $("phase").textContent = "Failed";
+    logLine(st.error, "e");
+  }
+  if (st.state === "exited" || st.state === "failed" || st.state === "cancelled"){
+    if (st.result && !state.result) await onSessionEnd(st);
+  }
+  pollLog();
+}
+
+async function pollLog(){
+  if (!state.online) return;
+  try {
+    const j = await (await api("/api/log?since=" + state.since)).json();
+    for (const line of j.lines) logLine(line);
+    state.since = j.next;
+  } catch (e){}
+}
+
+function logLine(text, cls){
+  const el = $("log");
+  const div = document.createElement("div");
+  if (cls) div.className = cls;
+  else if (/\bERROR\b|Exception|FAILED|crash/i.test(text)) div.className = "e";
+  else if (/fabric|Loading \d+ mods|minecraft is running/i.test(text)) div.className = "g";
+  div.textContent = text;
+  el.appendChild(div);
+  while (el.childNodes.length > 900) el.removeChild(el.firstChild);
+  el.scrollTop = el.scrollHeight;
+}
+
+/* ------------------------------------------------------------------ the loop */
+async function launch(){
+  const loader = $("loader").value === "custom" ? ($("loadercustom").value.trim() || "stable")
+                                                : $("loader").value;
+  const body = {
+    version: $("version").value || "1.21.11",
+    loader: loader,
+    mods: $("mods").value.split(",").map(s => s.trim()).filter(Boolean),
+    username: $("username").value.trim() || "Player",
+    memory: $("memory").value.trim() || "2G",
+    assets: $("assets").value === "1"
+  };
+  state.result = null;
+  $("log").innerHTML = "";
+  state.since = 0;
+  logLine("asking the helper to start " + body.version + " (" + body.loader + ")");
+  busy(true); showStop(true);
+  try {
+    if ($("restore").checked){
+      const blob = await Store.get(KEY);
+      if (blob && blob.size){
+        logLine("restoring " + fmt(blob.size) + " from this browser's storage first");
+        await api("/api/restore", { method:"POST", body: blob, timeout: 120000 });
+      }
+    }
+    await api("/api/launch", { method:"POST", body: JSON.stringify(body) });
+  } catch (e){
+    logLine("could not launch: " + e.message, "e");
+    busy(false); showStop(false);
+    return;
+  }
+  startPolling();
+}
+
+function startPolling(){
+  stopPolling();
+  state.timer = setInterval(refresh, 900);
+  refresh();
+}
+function stopPolling(){
+  if (state.timer) clearInterval(state.timer);
+  state.timer = null;
+}
+
+async function onSessionEnd(st){
+  stopPolling();
+  await pollLog();
+  showStop(false);
+  const res = st.result;
+  if (!res){
+    $("phase").textContent = st.state === "failed" ? "Failed" : "Finished";
+    return;
+  }
+  state.result = res;
+  logLine("session finished — " + res.files + " files, " + fmt(res.bytes) +
+          (res.worlds && res.worlds.length ? ", worlds: " + res.worlds.join(", ") : ""), "g");
+  $("phase").textContent = "Saving the session into this browser";
+  await saveToBrowser(res);
+}
+
+async function saveToBrowser(res){
+  try {
+    const blob = await api("/api/bundle.zip", { timeout: 180000 }).then(r => r.blob());
+    await Store.put(KEY, blob);
+    await Store.persist();
+    const u = await Store.usage();
+    logLine("stored " + fmt(blob.size) + " in " + Store.kind +
+            " (this origin holds " + fmt(u.used) + " of " + fmt(u.quota) + ")", "g");
+    const r = await (await api("/api/cleanup", { method:"POST" })).json();
+    logLine("helper deleted " + r.path + (r.removed ? " — " + fmt(r.removed) + " freed" : "") +
+            (r.gone ? "; the sandbox is gone" : ""), "g");
+    $("phase").textContent = "Session stored in this browser; /tmp cleaned";
+    const el = $("log");
+    const box = document.createElement("div");
+    box.className = "g";
+    box.innerHTML = "\n  ✔ " + (res.worlds && res.worlds.length ? "world: " + res.worlds.join(", ") : "no world saved") +
+      "\n  ✔ " + res.files + " files (" + fmt(res.bytes) + ") in " + Store.kind +
+      "\n  ✔ " + (r.gone ? "sandbox deleted" : "sandbox still present") +
+      "\n  next Play restores it automatically.\n";
+    el.appendChild(box); el.scrollTop = el.scrollHeight;
+    $("sandbox").innerHTML = 'sandbox <code>' + r.path + '</code> ' +
+      (r.gone ? '<span class="tag">deleted</span>' : '<span class="tag">kept</span>');
+  } catch (e){
+    logLine("could not store the session: " + e.message + " (the sandbox is still intact; " +
+            "you can fetch /api/bundle.zip by hand)", "e");
+    $("phase").textContent = "Session finished — storage step failed";
+  }
+}
+
+/* ------------------------------------------------------------------ wiring */
+$("connect").onclick = () => { state.helper = $("helper").value.trim().replace(/\/$/, ""); probe(true); };
+$("reloadv").onclick = () => { versionsLoaded = false; loadVersions(); };
+$("play").onclick = launch;
+$("stop").onclick = async () => {
+  busy(true);
+  try { await api("/api/stop", { method:"POST" }); logLine("stop requested"); }
+  catch (e){ logLine("stop failed: " + e.message, "e"); }
+  startPolling();
+};
+$("help").onclick = () => $("about").showModal();
+$("aboutclose").onclick = () => $("about").close();
+$("loader").onchange = () => {
+  $("loadercustom").style.display = $("loader").value === "custom" ? "" : "none";
+};
+
+(function init(){
+  const c = connection();
+  $("helper").value = state.helper || "http://127.0.0.1:7645";
+  if (hosted){
+    // The download link is relative, so it works from a project page
+    // (user.github.io/repo/local.html) as well as from a custom domain.
+    $("zipdl").href = "helper/webmc-helper.zip";
+  }
+  if (state.helper){
+    setConn("busy", "contacting…");
+    probe(false);
+  } else {
+    setConn("bad", "not connected");
+    showOffline("down");
+    $("connhint").innerHTML = "Start the helper, then press Connect. A page cannot start a " +
+      "program on your machine by itself.";
+  }
+  // A hosted copy can be handed the helper by a /go redirect, or be served by the helper
+  // itself. If neither has happened yet, look once more after the document has fully
+  // loaded, in case the helper's own script was injected late.
+  if (!state.helper){
+    window.addEventListener("load", () => {
+      if (connection().where !== "none"){
+        $("helper").value = state.helper;
+        setConn("busy", "contacting…");
+        probe(false);
+      }
+    }, { once:true });
+  }
+  $("openlocal").onclick = (e) => {
+    e.preventDefault();
+    window.open("http://127.0.0.1:7645/", "_blank", "noopener");
+  };
+  Store.usage().then(u => {
+    if (u.used) logLine("this browser already holds " + fmt(u.used) + " from earlier sessions");
+  });
+})();
+</script>
+</body>
+</html>
