@@ -92,6 +92,8 @@
   <span class="pill" id="conn"><i class="dot" id="cd"></i><span id="ct">checking…</span></span>
   <span class="grow"></span>
   <span class="pill" id="where">—</span>
+  <a href="#" id="openlocal2" class="pill" style="display:none;text-decoration:none"
+     title="The identical page, served by the helper itself: no permission prompt, no cross-origin request">helper's own page</a>
   <button class="ghost" id="help">How this works</button>
 </header>
 
@@ -669,6 +671,14 @@ $("loader").onchange = () => {
     e.preventDefault();
     window.open("http://127.0.0.1:7645/", "_blank", "noopener");
   };
+  $("openlocal2").onclick = (e) => {
+    e.preventDefault();
+    window.open("http://127.0.0.1:7645/", "_blank", "noopener");
+  };
+  // Always offer the permission-free route on a hosted page, not only after a failure:
+  // Chromium 142+ asks before a public page may touch 127.0.0.1, and the helper's own
+  // page (same origin as the helper) never needs that permission at all.
+  if (hosted) $("openlocal2").style.display = "";
   Store.usage().then(u => {
     if (u.used) logLine("this browser already holds " + fmt(u.used) + " from earlier sessions");
   });
