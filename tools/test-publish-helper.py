@@ -146,6 +146,15 @@ def main():
     check("a purge covers the cache and the installed files, not just the sandbox",
           "download cache" in read("helper/webmc_helper.py")
           and '("log", "log file")' in read("helper/webmc_helper.py"))
+    check("the first run opens no Terminal: it ships an app bundle",
+          "build_mac_app" in pathlib.Path("tools/publish-helper.py").read_text()
+          and (SITE / "helper" / "WebMC-Helper-mac.zip").exists())
+    check("and the login item comes back if the helper stops",
+          "<key>KeepAlive</key><true/>" in read("helper/webmc_helper.py"))
+    check("a page can sit open all afternoon without the helper giving up",
+          "--idle-exit 21600" in read("helper/start-helper.command"))
+    check("the helper's own root is a sandbox it can identify later",
+          '"role": "helper root"' in read("helper/webmc_helper.py"))
     check("Apple's unarchiver keeps the launcher executable (ditto drops it otherwise)",
                   bool(unpacked & 0o111), "mode %o" % unpacked)
 
