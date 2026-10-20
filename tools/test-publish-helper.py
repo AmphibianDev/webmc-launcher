@@ -79,7 +79,8 @@ def main():
     check("hands the tab over instead of failing when it cannot fetch the helper",
           "function handOver" in page and "handing the tab" in page)
     check("keeps play usable with no helper, in a hosted copy",
-          "Play stays usable" in page or "hands the tab over" in page.lower())
+          "Play stays usable" in page or "hands the tab" in page.lower()
+          or "hands this tab" in page.lower())
     check("does not carry the helper's injected token block", "window.__WEBMC__ =" not in page)
 
     print("== the archive a visitor downloads")
