@@ -70,8 +70,10 @@ def main():
           "the page must name the permission and the policy that can block it")
     check("treats an already-collected session as normal, not as a failure",
           "already collected" in page)
-    check("lists sessions, so more than one can run at once",
-          'id="sessions"' in page and "/api/sessions" in page)
+    # The interface deliberately has no session list: a session is stored for you when it ends, so
+    # there is nothing to press. The API still keeps them, and the page still asks it.
+    check("asks the helper for its sessions, and stores each one without being told to",
+          "/api/sessions" in page and "sessionEnded" in page and "last-session.zip" in page)
     check("documents itself: a Documentation view with sections",
           "Documentation" in page and page.count("<h3 id=\"d") >= 6)
     check("hands the tab over instead of failing when it cannot fetch the helper",
