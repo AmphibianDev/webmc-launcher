@@ -629,7 +629,9 @@
               uses it, resolving names at the proxy, or takes <code>--proxy socks5h://host:port</code>.</td></tr>
           <tr><td>Mojang is unreachable</td>
             <td><b>Automatic.</b> The launcher's own relay fetches for you over ordinary HTTPS, from
-              Cloudflare instead of from this machine, and caches what it fetched at the edge. A
+              Cloudflare instead of from this machine, and caches what it fetched at the edge. A network that blocks the relay's own hostname is
+              answered with the same relay somewhere it does not — the Worker and a Node version
+              of it are both in this repository. A
               network that blocks Mojang is exactly what it exists for, so nobody has to deploy
               anything. <b>Settings → Relay → My own relay</b> points it at one you deployed instead,
               and <b>Never</b> turns it off.</td></tr>
