@@ -138,6 +138,14 @@ def main():
           'id="relayInUse"' in page and "showRelayInUse" in page)
     check("the relay test reads what the Worker really returns",
           "j.files || j.prefixes" in page and "j.tunnel" in page)
+    check("the promise is checkable: the page can see what is on the machine",
+          'id="machineState"' in page and "showMachineState" in page
+          and 'footprint' in read("helper/webmc_helper.py"))
+    check("and can remove all of it without a terminal",
+          'id="purge"' in page and "/api/purge" in page and 'def purge(' in read("helper/webmc_helper.py"))
+    check("a purge covers the cache and the installed files, not just the sandbox",
+          "download cache" in read("helper/webmc_helper.py")
+          and '("log", "log file")' in read("helper/webmc_helper.py"))
     check("Apple's unarchiver keeps the launcher executable (ditto drops it otherwise)",
                   bool(unpacked & 0o111), "mode %o" % unpacked)
 
