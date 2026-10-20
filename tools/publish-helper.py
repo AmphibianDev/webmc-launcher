@@ -261,6 +261,37 @@ exit 0
 """
 
 
+def build_mac_app(src_dir, out_path, log=print):
+    import pathlib as _pathlib
+    """A launcher the visitor double-clicks, with no Terminal window anywhere in it.
+
+    A .command always opens a shell window. This wraps the same work in an app bundle built from
+    AppleScript, so the whole first run is: download, double-click, done - and what it installs is two
+    small files and a login item that keeps the helper alive afterwards.
+    """
+    import shutil, subprocess
+    script = (src_dir / "helper" / "webmc-app.applescript").read_text()
+    work = _pathlib.Path(tempfile.mkdtemp(prefix="webmc-app-"))
+    try:
+        source = work / "app.applescript"
+        source.write_text(script)
+        app = work / "WebMC Helper.app"
+        if app.exists():
+            shutil.rmtree(app)
+        subprocess.run(["osacompile", "-o", str(app), str(source)], check=True)
+        plist = app / "Contents" / "Info.plist"
+        text = plist.read_text()
+        if "LSUIElement" not in text:
+            plist.write_text(text.replace("<dict>", "<dict>\n\t<key>LSUIElement</key>\n\t<true/>", 1))
+        if out_path.exists():
+            out_path.unlink()
+        subprocess.run(["ditto", "-c", "-k", "--sequesterRsrc", "--keepParent", str(app), str(out_path)],
+                       check=True)
+        log("  built %s (%.1f KB)" % (out_path.name, out_path.stat().st_size / 1024.0))
+    finally:
+        shutil.rmtree(work, ignore_errors=True)
+
+
 def build_single_file(src_dir):
     """One shell script that carries the whole helper and the page it serves.
 
@@ -282,6 +313,11 @@ def stage_app(src_dir, stage):
     """Lay the download out on disk. Returns the list of relative paths staged."""
     target = stage / SINGLE_FILE
     target.write_bytes(build_single_file(src_dir))
+
+    try:
+        build_mac_app(src_dir, SITE / "helper" / "WebMC-Helper-mac.zip", log=print)
+    except Exception as exc:  # noqa: BLE001
+        print("  the mac app could not be built (osacompile?): %s" % exc)
     target.chmod(0o755)
     return [SINGLE_FILE]
 
