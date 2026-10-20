@@ -68,8 +68,16 @@ def main():
           "LocalNetworkAccessBlockedForUrls" in page
           and re.search(r"[Ll]ocal\s*network\s*access", page) is not None,
           "the page must name the permission and the policy that can block it")
-    check("knows a second tab is not a failure",
-          "already gone from /tmp" in page)
+    check("treats an already-collected session as normal, not as a failure",
+          "already collected" in page)
+    check("lists sessions, so more than one can run at once",
+          'id="sessions"' in page and "/api/sessions" in page)
+    check("documents itself: a Documentation view with sections",
+          "Documentation" in page and page.count("<h3 id=\"d") >= 6)
+    check("hands the tab over instead of failing when it cannot fetch the helper",
+          "function handOver" in page and "handing the tab" in page)
+    check("keeps play usable with no helper, in a hosted copy",
+          "Play stays usable" in page or "hands the tab over" in page.lower())
     check("does not carry the helper's injected token block", "window.__WEBMC__ =" not in page)
 
     print("== the archive a visitor downloads")
