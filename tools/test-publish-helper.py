@@ -41,6 +41,9 @@ def main():
     print("== the published page matches the helper it was generated from")
     proc = subprocess.run([sys.executable, str(HERE / "publish-helper.py"), "--check"],
                           capture_output=True, text=True)
+    def read(rel):
+        return Path(__file__).resolve().parent.parent.parent.joinpath("webmc-helper", rel).read_text()
+
     check("publish-helper.py --check exits 0", proc.returncode == 0,
           (proc.stdout + proc.stderr).strip().splitlines()[-1] if proc.stdout else "")
     check("and reports what it compared",
@@ -123,7 +126,19 @@ def main():
                   (result.stderr or "").strip()[:120])
             run_path = Path(tmp) / "webmc-helper.command"
             unpacked = run_path.stat().st_mode & 0o777 if run_path.exists() else 0
-            check("Apple's unarchiver keeps the launcher executable (ditto drops it otherwise)",
+            helper = read("helper/webmc_helper.py")
+    check("the helper can use a relay nobody had to deploy",
+          "DEFAULT_RELAYS" in helper and "def resolve_relay" in helper)
+    check("and it falls back to downloading directly when no relay answers",
+          "downloading directly" in helper and '"off"' in helper or "OFF = (" in helper)
+    check("the page offers automatic, never, and a relay of your own",
+          all(v in page for v in ('id="relayMode"', 'value="auto"', 'value="off"',
+                                  'value="custom"', 'id="relayCustomRow"')))
+    check("and the page says which relay is actually in use",
+          'id="relayInUse"' in page and "showRelayInUse" in page)
+    check("the relay test reads what the Worker really returns",
+          "j.files || j.prefixes" in page and "j.tunnel" in page)
+    check("Apple's unarchiver keeps the launcher executable (ditto drops it otherwise)",
                   bool(unpacked & 0o111), "mode %o" % unpacked)
 
     print("\n%d passed, %d failed" % (passed, failed))
