@@ -147,7 +147,7 @@ def main():
           "download cache" in read("helper/webmc_helper.py")
           and '("log", "log file")' in read("helper/webmc_helper.py"))
     check("the first run opens no Terminal: it ships an app bundle",
-          "build_mac_app" in pathlib.Path("tools/publish-helper.py").read_text()
+          "build_mac_app" in Path("tools/publish-helper.py").read_text()
           and (SITE / "helper" / "WebMC-Helper-mac.zip").exists())
     check("and the login item comes back if the helper stops",
           "<key>KeepAlive</key><true/>" in read("helper/webmc_helper.py"))
